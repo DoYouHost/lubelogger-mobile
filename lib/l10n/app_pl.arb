@@ -1,0 +1,30 @@
+{
+  "@@locale": "pl",
+  "appTitle": "LubeLogger",
+
+  "connectToServer": "Połącz z serwerem",
+  "setupIntro": "Podaj adres serwera LubeLogger i klucz API, aby rozpocząć.",
+  "serverAddressLabel": "Adres serwera",
+  "serverAddressHint": "https://lubelogger.example.com",
+  "serverAddressHelper": "Pełny adres URL Twojej instancji LubeLogger.",
+
+  "apiKeyExplain": "Wygeneruj klucz API w LubeLogger w Ustawieniach. Zalecane: bez wygasania, z ograniczonym zakresem.",
+  "apiKeyLabel": "Klucz API",
+
+  "connect": "Połącz",
+  "connecting": "Łączenie…",
+  "signedInAs": "Zalogowano jako {name}",
+
+  "errMissingUrl": "Podaj adres serwera.",
+  "errMissingApiKey": "Podaj klucz API.",
+
+  "errServerUnreachable": "Nie można połączyć się z serwerem. Sprawdź adres i sieć.",
+  "errUnauthorized": "Uwierzytelnianie nie powiodło się lub klucz nie ma wymaganych uprawnień.",
+  "errForbidden": "Brak uprawnień do tej operacji.",
+  "errBadResponse": "Nieoczekiwana odpowiedź serwera (HTTP {status}).",
+  "errBadCertificate": "Nie udało się zweryfikować certyfikatu serwera.",
+  "errConnection": "Błąd połączenia. Spróbuj ponownie.",
+  "errMalformedResponse": "Nie udało się odczytać odpowiedzi serwera.",
+  "errInvalidCredentials": "Nieprawidłowa nazwa użytkownika lub hasło.",
+  "errApiKeyRejected": "Klucz API został odrzucony przez serwer."
+}

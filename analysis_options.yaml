@@ -1,0 +1,13 @@
+# Static analysis configuration. Enables the recommended Flutter lint set.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    # Generated localizations and json_serializable output.
+    - lib/l10n/app_localizations*.dart
+    - "**/*.g.dart"
+
+linter:
+  rules:
+    # Project convention: prefer single quotes for string literals.
+    prefer_single_quotes: true

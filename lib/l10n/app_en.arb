@@ -1,0 +1,47 @@
+{
+  "@@locale": "en",
+  "appTitle": "LubeLogger",
+  "@appTitle": {
+    "description": "Application name, shown in the launcher and title bar."
+  },
+
+  "connectToServer": "Connect to server",
+  "@connectToServer": {
+    "description": "Title of the login / server setup screen."
+  },
+  "setupIntro": "Enter your LubeLogger server address and API key to get started.",
+  "serverAddressLabel": "Server address",
+  "serverAddressHint": "https://lubelogger.example.com",
+  "serverAddressHelper": "Full URL of your LubeLogger instance.",
+
+  "apiKeyExplain": "Generate an API key in LubeLogger under Settings. Recommended: no expiry and scoped access.",
+  "apiKeyLabel": "API key",
+
+  "connect": "Connect",
+  "connecting": "Connecting…",
+  "signedInAs": "Signed in as {name}",
+  "@signedInAs": {
+    "description": "Confirmation after a successful connection.",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "errMissingUrl": "Enter the server address.",
+  "errMissingApiKey": "Enter your API key.",
+
+  "errServerUnreachable": "Cannot reach the server. Check the address and your network.",
+  "errUnauthorized": "Authentication failed or the key lacks the required permission.",
+  "errForbidden": "You do not have permission for this action.",
+  "errBadResponse": "Unexpected server response (HTTP {status}).",
+  "@errBadResponse": {
+    "placeholders": {
+      "status": { "type": "int" }
+    }
+  },
+  "errBadCertificate": "The server's security certificate could not be verified.",
+  "errConnection": "Connection error. Please try again.",
+  "errMalformedResponse": "The server response could not be understood.",
+  "errInvalidCredentials": "Invalid username or password.",
+  "errApiKeyRejected": "The API key was rejected by the server."
+}
