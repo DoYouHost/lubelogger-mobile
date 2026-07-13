@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'features/dashboard/dashboard_screen.dart';
 import 'features/garage/garage_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/setup/setup_screen.dart';
+import 'features/vehicle/vehicle_screen.dart';
 import 'providers.dart';
 
 /// Root navigator key — lets us push routes from outside the widget tree.
@@ -33,7 +33,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, _) => const GarageScreen()),
       GoRoute(
         path: '/vehicle/:id',
-        builder: (_, state) => DashboardScreen(
+        builder: (_, state) => VehicleScreen(
           vehicleId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
         ),
       ),

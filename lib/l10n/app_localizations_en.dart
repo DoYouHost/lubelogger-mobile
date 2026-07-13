@@ -72,6 +72,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFuelEconomy => 'Fuel economy';
 
   @override
+  String get settingsDateFormat => 'Date format';
+
+  @override
+  String get settingsDateSeparator => 'Date separator';
+
+  @override
   String get settingsServer => 'Server';
 
   @override
@@ -145,6 +151,141 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catTax => 'Tax';
+
+  @override
+  String get tabDashboard => 'Dashboard';
+
+  @override
+  String get tabOdometer => 'Odometer';
+
+  @override
+  String get colDate => 'Date';
+
+  @override
+  String get colOdometer => 'Odometer';
+
+  @override
+  String get colDescription => 'Description';
+
+  @override
+  String get colCost => 'Cost';
+
+  @override
+  String get recordsEmpty => 'No records yet.';
+
+  @override
+  String fuelPillRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count records',
+      one: '1 record',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fuelPillAvg(String value) {
+    return 'Avg $value';
+  }
+
+  @override
+  String fuelPillMin(String value) {
+    return 'Min $value';
+  }
+
+  @override
+  String fuelPillMax(String value) {
+    return 'Max $value';
+  }
+
+  @override
+  String fuelPillDistance(String value) {
+    return 'Distance $value';
+  }
+
+  @override
+  String fuelPillFuel(String value) {
+    return 'Fuel $value';
+  }
+
+  @override
+  String fuelPillCost(String value) {
+    return 'Cost $value';
+  }
+
+  @override
+  String get addRecordTitle => 'Add record';
+
+  @override
+  String get formFuelTitle => 'Add Fuel Record';
+
+  @override
+  String get formFuelEditTitle => 'Edit Fuel Record';
+
+  @override
+  String formOdometerLabel(String unit) {
+    return 'Odometer reading ($unit)';
+  }
+
+  @override
+  String formFuelLabel(String unit) {
+    return 'Fuel consumed ($unit)';
+  }
+
+  @override
+  String get formFillToFull => 'Filled to full';
+
+  @override
+  String get formMissedFuelUp => 'Missed fuel-up (skip economy)';
+
+  @override
+  String get formTagsOptional => 'Tags (optional)';
+
+  @override
+  String get formNotesOptional => 'Notes (optional)';
+
+  @override
+  String get actionCancel => 'Cancel';
+
+  @override
+  String get actionAdd => 'Add';
+
+  @override
+  String get actionSave => 'Save';
+
+  @override
+  String get actionDelete => 'Delete';
+
+  @override
+  String get validationRequired => 'Required';
+
+  @override
+  String get validationNumber => 'Enter a valid number';
+
+  @override
+  String get recordAdded => 'Record added';
+
+  @override
+  String get recordAddError => 'Couldn\'t add the record. Try again.';
+
+  @override
+  String get recordUpdated => 'Record updated';
+
+  @override
+  String get recordUpdateError => 'Couldn\'t save the record. Try again.';
+
+  @override
+  String get recordDeleted => 'Record deleted';
+
+  @override
+  String get recordDeleteError => 'Couldn\'t delete the record. Try again.';
+
+  @override
+  String get confirmDeleteTitle => 'Delete this record?';
+
+  @override
+  String get confirmDeleteMessage => 'This can\'t be undone.';
 
   @override
   String get urgencyNotUrgent => 'Not Urgent';

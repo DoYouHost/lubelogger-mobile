@@ -24,6 +24,8 @@
   "settingsCurrency": "Waluta",
   "settingsDistance": "Dystans",
   "settingsFuelEconomy": "Zużycie paliwa",
+  "settingsDateFormat": "Format daty",
+  "settingsDateSeparator": "Separator daty",
   "settingsServer": "Serwer",
   "settingsStorageBase": "Dane serwera",
   "baseMetric": "Metryczne",
@@ -51,6 +53,93 @@
   "catUpgrades": "Ulepszenia",
   "catFuel": "Paliwo",
   "catTax": "Podatki",
+
+  "tabDashboard": "Pulpit",
+  "tabOdometer": "Licznik kilometrów",
+
+  "colDate": "Data",
+  "colOdometer": "Licznik",
+  "colDescription": "Opis",
+  "colCost": "Koszt",
+
+  "recordsEmpty": "Brak wpisów.",
+
+  "fuelPillRecords": "{count, plural, =1{1 wpis} few{{count} wpisy} many{{count} wpisów} other{{count} wpisu}}",
+  "@fuelPillRecords": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "fuelPillAvg": "Śr. {value}",
+  "@fuelPillAvg": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillMin": "Min {value}",
+  "@fuelPillMin": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillMax": "Maks. {value}",
+  "@fuelPillMax": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillDistance": "Dystans {value}",
+  "@fuelPillDistance": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillFuel": "Paliwo {value}",
+  "@fuelPillFuel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillCost": "Koszt {value}",
+  "@fuelPillCost": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+
+  "addRecordTitle": "Dodaj wpis",
+  "formFuelTitle": "Dodaj tankowanie",
+  "formFuelEditTitle": "Edytuj tankowanie",
+  "formOdometerLabel": "Stan licznika ({unit})",
+  "@formOdometerLabel": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "formFuelLabel": "Zatankowane paliwo ({unit})",
+  "@formFuelLabel": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "formFillToFull": "Do pełna",
+  "formMissedFuelUp": "Pominięte tankowanie (bez spalania)",
+  "formTagsOptional": "Tagi (opcjonalnie)",
+  "formNotesOptional": "Notatki (opcjonalnie)",
+  "actionCancel": "Anuluj",
+  "actionAdd": "Dodaj",
+  "actionSave": "Zapisz",
+  "actionDelete": "Usuń",
+  "validationRequired": "Wymagane",
+  "validationNumber": "Podaj poprawną liczbę",
+  "recordAdded": "Dodano wpis",
+  "recordAddError": "Nie udało się dodać wpisu. Spróbuj ponownie.",
+  "recordUpdated": "Zapisano zmiany",
+  "recordUpdateError": "Nie udało się zapisać wpisu. Spróbuj ponownie.",
+  "recordDeleted": "Usunięto wpis",
+  "recordDeleteError": "Nie udało się usunąć wpisu. Spróbuj ponownie.",
+  "confirmDeleteTitle": "Usunąć ten wpis?",
+  "confirmDeleteMessage": "Tej operacji nie można cofnąć.",
 
   "urgencyNotUrgent": "Niepilne",
   "urgencyUrgent": "Pilne",

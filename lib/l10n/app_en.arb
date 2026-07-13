@@ -30,6 +30,8 @@
   "settingsCurrency": "Currency",
   "settingsDistance": "Distance",
   "settingsFuelEconomy": "Fuel economy",
+  "settingsDateFormat": "Date format",
+  "settingsDateSeparator": "Date separator",
   "settingsServer": "Server",
   "settingsStorageBase": "Server data",
   "baseMetric": "Metric",
@@ -62,6 +64,93 @@
   "catUpgrades": "Upgrades",
   "catFuel": "Fuel",
   "catTax": "Tax",
+
+  "tabDashboard": "Dashboard",
+  "tabOdometer": "Odometer",
+
+  "colDate": "Date",
+  "colOdometer": "Odometer",
+  "colDescription": "Description",
+  "colCost": "Cost",
+
+  "recordsEmpty": "No records yet.",
+
+  "fuelPillRecords": "{count, plural, =1{1 record} other{{count} records}}",
+  "@fuelPillRecords": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "fuelPillAvg": "Avg {value}",
+  "@fuelPillAvg": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillMin": "Min {value}",
+  "@fuelPillMin": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillMax": "Max {value}",
+  "@fuelPillMax": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillDistance": "Distance {value}",
+  "@fuelPillDistance": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillFuel": "Fuel {value}",
+  "@fuelPillFuel": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "fuelPillCost": "Cost {value}",
+  "@fuelPillCost": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+
+  "addRecordTitle": "Add record",
+  "formFuelTitle": "Add Fuel Record",
+  "formFuelEditTitle": "Edit Fuel Record",
+  "formOdometerLabel": "Odometer reading ({unit})",
+  "@formOdometerLabel": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "formFuelLabel": "Fuel consumed ({unit})",
+  "@formFuelLabel": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "formFillToFull": "Filled to full",
+  "formMissedFuelUp": "Missed fuel-up (skip economy)",
+  "formTagsOptional": "Tags (optional)",
+  "formNotesOptional": "Notes (optional)",
+  "actionCancel": "Cancel",
+  "actionAdd": "Add",
+  "actionSave": "Save",
+  "actionDelete": "Delete",
+  "validationRequired": "Required",
+  "validationNumber": "Enter a valid number",
+  "recordAdded": "Record added",
+  "recordAddError": "Couldn't add the record. Try again.",
+  "recordUpdated": "Record updated",
+  "recordUpdateError": "Couldn't save the record. Try again.",
+  "recordDeleted": "Record deleted",
+  "recordDeleteError": "Couldn't delete the record. Try again.",
+  "confirmDeleteTitle": "Delete this record?",
+  "confirmDeleteMessage": "This can't be undone.",
 
   "urgencyNotUrgent": "Not Urgent",
   "urgencyUrgent": "Urgent",

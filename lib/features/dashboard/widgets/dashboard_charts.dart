@@ -347,11 +347,11 @@ class MonthlyBars extends StatelessWidget {
   }
 }
 
-/// A "nice" grid step (1, 2, or 5 × a power of ten) giving ~4 lines up to
-/// [maxY], so axis labels land on round numbers across any unit.
-double niceAxisInterval(double maxY) {
+/// A "nice" grid step (1, 2, or 5 × a power of ten) giving roughly [divisions]
+/// lines up to [maxY], so axis labels land on round numbers across any unit.
+double niceAxisInterval(double maxY, {int divisions = 4}) {
   if (maxY <= 0) return 1;
-  final rough = maxY / 4;
+  final rough = maxY / divisions;
   final magnitude =
       math.pow(10, (math.log(rough) / math.ln10).floor()).toDouble();
   final normalized = rough / magnitude;
@@ -429,11 +429,11 @@ class MonthlyComboChart extends StatelessWidget {
       );
     }
 
-    final costInterval = niceAxisInterval(maxCost);
+    final costInterval = niceAxisInterval(maxCost, divisions: 3);
     final costMax = maxCost <= 0
         ? costInterval
         : (maxCost / costInterval).ceilToDouble() * costInterval;
-    final distInterval = niceAxisInterval(maxDistance);
+    final distInterval = niceAxisInterval(maxDistance, divisions: 3);
     final distMax = maxDistance <= 0
         ? distInterval
         : (maxDistance / distInterval).ceilToDouble() * distInterval;
@@ -503,10 +503,9 @@ class MonthlyComboChart extends StatelessWidget {
                 if (value <= 0 || value >= meta.max) {
                   return const SizedBox.shrink();
                 }
-                return Text(
-                  '$currencySymbol${_compact(value)}',
-                  style: _axisStyle(t),
-                );
+                // No currency symbol here — the "Expenses" legend already names
+                // this axis, and repeating the symbol just adds clutter.
+                return Text(_compact(value), style: _axisStyle(t));
               },
             ),
           ),
@@ -561,9 +560,14 @@ class MonthlyComboChart extends StatelessWidget {
         titlesData: FlTitlesData(
           topTitles:
               const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: const AxisTitles(
-            sideTitles:
-                SideTitles(showTitles: true, reservedSize: _reservedBottom),
+          // Reserve the bottom/left gutters to match the bar chart's plot area,
+          // but draw nothing (the bar chart owns the month + cost labels).
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: _reservedBottom,
+              getTitlesWidget: (_, _) => const SizedBox.shrink(),
+            ),
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -588,9 +592,13 @@ class MonthlyComboChart extends StatelessWidget {
         ),
         lineBarsData: [
           LineChartBarData(
+            // Break the line over months with no odometer data instead of
+            // dragging it down to zero, so it spans only the active range.
             spots: [
               for (var i = 0; i < months.length; i++)
-                FlSpot(i.toDouble(), months[i].distance),
+                months[i].distance > 0
+                    ? FlSpot(i.toDouble(), months[i].distance)
+                    : FlSpot.nullSpot,
             ],
             isCurved: true,
             preventCurveOverShooting: true,

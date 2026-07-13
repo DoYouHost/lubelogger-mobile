@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/format/formatters.dart';
 import '../../core/format/gas_stats.dart';
 import '../../core/format/monthly_breakdown.dart';
-import '../../core/models/vehicle.dart';
 import '../../core/models/vehicle_info.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
@@ -36,9 +35,10 @@ Color _categoryColor(ExpenseCategory category, DashTokens t) =>
     };
 
 /// Vehicle dashboard (design screen #5): at-a-glance stats plus expense,
-/// reminder, and fuel-mileage charts for one vehicle.
-class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key, required this.vehicleId});
+/// reminder, and fuel-mileage charts for one vehicle. Rendered as the first tab
+/// of [VehicleScreen], which supplies the surrounding chrome and vehicle header.
+class DashboardTab extends ConsumerWidget {
+  const DashboardTab({super.key, required this.vehicleId});
 
   final int vehicleId;
 
@@ -54,22 +54,16 @@ class DashboardScreen extends ConsumerWidget {
       await ref.read(vehicleInfoProvider(vehicleId).future);
     }
 
-    return DashBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: dashAppBar(context),
-        body: RefreshIndicator(
-          onRefresh: refresh,
-          child: infoAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => AsyncErrorView(
-              message: l10n.dashLoadError,
-              onRetry: refresh,
-              retryLabel: l10n.retry,
-            ),
-            data: (info) => _DashboardBody(vehicleId: vehicleId, info: info),
-          ),
+    return RefreshIndicator(
+      onRefresh: refresh,
+      child: infoAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => AsyncErrorView(
+          message: l10n.dashLoadError,
+          onRetry: refresh,
+          retryLabel: l10n.retry,
         ),
+        data: (info) => _DashboardBody(vehicleId: vehicleId, info: info),
       ),
     );
   }
@@ -88,14 +82,10 @@ class _DashboardBody extends ConsumerWidget {
     final symbol = ref.watch(currencySymbolProvider);
     final stats = ref.watch(gasStatsProvider(vehicleId)).valueOrNull;
     final breakdown = ref.watch(monthlyBreakdownProvider(vehicleId)).valueOrNull;
-    final baseUrl = ref.watch(serverProfileProvider)?.baseUrl ?? '';
-    final apiKey = ref.watch(apiKeyProvider).valueOrNull;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        _Header(vehicle: info.vehicle, baseUrl: baseUrl, apiKey: apiKey),
-        const SizedBox(height: 16),
         _StatBlock(info: info, stats: stats, units: units, symbol: symbol),
         const SizedBox(height: 16),
         ChartCard(
@@ -238,84 +228,6 @@ class _DashboardBody extends ConsumerWidget {
                   byMonth[month]!, 1, units.base, units.economy),
         ),
     ];
-  }
-}
-
-/// Circular vehicle photo, name (year + make/model), and plate/tag in parens.
-class _Header extends StatelessWidget {
-  const _Header({required this.vehicle, required this.baseUrl, this.apiKey});
-
-  final Vehicle vehicle;
-  final String baseUrl;
-  final String? apiKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = DashTokens.of(context);
-    final name = [
-      if (vehicle.year > 0) '${vehicle.year}',
-      vehicle.makeModel,
-    ].where((s) => s.isNotEmpty).join(' ');
-
-    return Row(
-      children: [
-        _avatar(t),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: TextStyle(
-                  fontFamily: DashTokens.fontUi,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: t.textPrimary,
-                ),
-              ),
-              if (vehicle.licensePlate.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    '(${vehicle.licensePlate})',
-                    style: TextStyle(
-                      fontFamily: DashTokens.fontUi,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: t.textTertiary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _avatar(DashTokens t) {
-    final placeholder = Icon(Icons.directions_car, size: 26, color: t.textTertiary);
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: t.subCard,
-        shape: BoxShape.circle,
-        border: Border.all(color: t.cardBorder),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: vehicle.imageLocation.isEmpty
-          ? Center(child: placeholder)
-          : Image.network(
-              '$baseUrl${vehicle.imageLocation}',
-              fit: BoxFit.cover,
-              headers: apiKey == null ? null : {'x-api-key': apiKey!},
-              errorBuilder: (_, _, _) => Center(child: placeholder),
-              loadingBuilder: (context, child, progress) =>
-                  progress == null ? child : const SizedBox.shrink(),
-            ),
-    );
   }
 }
 

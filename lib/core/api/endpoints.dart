@@ -30,6 +30,16 @@ abstract final class Endpoints {
   /// app recomputes economy locally from odometer + fuel.
   static const gasRecords = '$apiPrefix/vehicle/gasrecords';
 
+  /// Add a refuel: `POST ?vehicleId=` + JSON body. Returns an
+  /// `OperationResponse` (`{success, message, additionalData:{recordId}}`).
+  static const gasRecordsAdd = '$gasRecords/add';
+
+  /// Update a refuel: `PUT` + JSON body including `id`. No query params.
+  static const gasRecordsUpdate = '$gasRecords/update';
+
+  /// Delete a refuel: `DELETE ?id=`.
+  static const gasRecordsDelete = '$gasRecords/delete';
+
   // Record types with a date + cost, aggregated into the monthly expense chart.
   static const serviceRecords = '$apiPrefix/vehicle/servicerecords';
   static const repairRecords = '$apiPrefix/vehicle/repairrecords';

@@ -85,6 +85,26 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: unitsCtl.setEconomy,
                   ),
                 ),
+                _divider(t),
+                _SettingRow(
+                  label: l10n.settingsDateFormat,
+                  control: _Dropdown<DateOrder>(
+                    value: units.dateOrder,
+                    items: DateOrder.values,
+                    labelOf: (o) => o.labelWith(units.dateSeparator),
+                    onChanged: unitsCtl.setDateOrder,
+                  ),
+                ),
+                _divider(t),
+                _SettingRow(
+                  label: l10n.settingsDateSeparator,
+                  control: _Dropdown<DateSeparator>(
+                    value: units.dateSeparator,
+                    items: DateSeparator.values,
+                    labelOf: (s) => units.dateOrder.labelWith(s),
+                    onChanged: unitsCtl.setDateSeparator,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 18),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../auth/credentials_store.dart';
 import '../settings/server_profile.dart';
@@ -27,6 +28,9 @@ class ApiClient {
   }) : dio = dio ?? createBareDio() {
     this.dio.options.baseUrl = profile.baseUrl;
     this.dio.interceptors.add(AuthInterceptor(credentials: credentials));
+    if (kDebugMode) {
+      this.dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+    }
   }
 
   final Dio dio;

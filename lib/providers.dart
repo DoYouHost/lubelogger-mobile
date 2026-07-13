@@ -10,8 +10,11 @@ import 'core/auth/credentials_store.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
+import 'core/models/gas_record.dart';
+import 'core/models/odometer_record.dart';
 import 'core/models/server_info.dart';
 import 'core/models/vehicle_info.dart';
+import 'core/models/vehicle_record.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
 import 'core/settings/units_settings.dart';
@@ -56,6 +59,12 @@ class UnitsSettingsNotifier extends Notifier<UnitsSettings> {
 
   Future<void> setEconomy(FuelEconomyUnit economy) =>
       _save(state.copyWith(economy: economy));
+
+  Future<void> setDateOrder(DateOrder dateOrder) =>
+      _save(state.copyWith(dateOrder: dateOrder));
+
+  Future<void> setDateSeparator(DateSeparator dateSeparator) =>
+      _save(state.copyWith(dateSeparator: dateSeparator));
 }
 
 /// The currency symbol to display: the user's forced choice, or the server's
@@ -171,33 +180,63 @@ final gasStatsProvider = FutureProvider.family<GasStats, int>(
   },
 );
 
+/// Raw refuel log for one vehicle, powering the Fuel tab's per-record table
+/// (economy is computed by [fuelRows]). Distinct from [gasStatsProvider], which
+/// aggregates the same records into lifetime/monthly stats.
+final gasRecordsProvider = FutureProvider.family<List<GasRecord>, int>(
+  (ref, vehicleId) =>
+      ref.watch(vehiclesRepositoryProvider).gasRecords(vehicleId),
+);
+
+/// Odometer readings for one vehicle, powering the Odometer tab's table.
+final odometerRecordsProvider =
+    FutureProvider.family<List<OdometerRecord>, int>(
+  (ref, vehicleId) =>
+      ref.watch(vehiclesRepositoryProvider).odometerRecords(vehicleId),
+);
+
+/// Full records for one vehicle's generic (date + cost) record tab, keyed by
+/// vehicle + [RecordKind] (service / repair / upgrade / tax).
+final vehicleRecordsProvider = FutureProvider.family<List<VehicleRecord>,
+    ({int vehicleId, RecordKind kind})>(
+  (ref, key) => ref
+      .watch(vehiclesRepositoryProvider)
+      .records(key.kind, key.vehicleId),
+);
+
 /// Monthly expense (by category) + distance breakdown for one vehicle. Fetches
 /// every cost-bearing record type plus odometer readings in parallel, then
 /// aggregates them per calendar month for the combo chart.
 final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
   (ref, vehicleId) async {
     final repo = ref.watch(vehiclesRepositoryProvider);
-    final results = await Future.wait([
+    final (service, repair, upgrade, tax, gas, odometers) = await (
       repo.datedCosts(Endpoints.serviceRecords, vehicleId),
       repo.datedCosts(Endpoints.repairRecords, vehicleId),
       repo.datedCosts(Endpoints.upgradeRecords, vehicleId),
       repo.datedCosts(Endpoints.taxRecords, vehicleId),
-      repo.gasRecords(vehicleId).then(
-            (records) => [
-              for (final r in records) DatedCost(date: r.date, cost: r.cost),
-            ],
-          ),
-    ]);
-    final odometers = await repo.odometerRecords(vehicleId);
+      repo.gasRecords(vehicleId),
+      repo.odometerRecords(vehicleId),
+    ).wait;
+
+    // Distance timeline: every odometer reading from fuel-ups and dedicated
+    // odometer records, so a fuel-only vehicle still charts distance.
+    final readings = <OdometerReading>[
+      for (final g in gas) (date: g.date, odometer: g.odometer),
+      for (final o in odometers) (date: o.date, odometer: o.odometer),
+    ];
+
     return MonthlyBreakdown.from(
       costsByCategory: {
-        ExpenseCategory.service: results[0],
-        ExpenseCategory.repair: results[1],
-        ExpenseCategory.upgrade: results[2],
-        ExpenseCategory.tax: results[3],
-        ExpenseCategory.fuel: results[4],
+        ExpenseCategory.service: service,
+        ExpenseCategory.repair: repair,
+        ExpenseCategory.upgrade: upgrade,
+        ExpenseCategory.tax: tax,
+        ExpenseCategory.fuel: [
+          for (final r in gas) DatedCost(date: r.date, cost: r.cost),
+        ],
       },
-      odometerRecords: odometers,
+      odometerReadings: readings,
     );
   },
 );

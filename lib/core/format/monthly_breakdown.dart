@@ -1,15 +1,19 @@
 import '../models/dated_cost.dart';
-import '../models/odometer_record.dart';
+
+/// A single odometer reading on the shared distance timeline (sourced from both
+/// gas and odometer records). Raw stored distance unit.
+typedef OdometerReading = ({DateTime? date, double odometer});
 
 /// Expense record type, for coloring the monthly-expense bars by their dominant
 /// category (colors are assigned in the UI layer).
 enum ExpenseCategory { service, repair, upgrade, fuel, tax }
 
 /// One calendar month's expenses (broken down by category) and distance, for the
-/// "Expenses and Distance Traveled by Month" combo chart. Costs are summed
-/// across every record type per month; distance comes from odometer records —
-/// mirroring LubeLogger's report aggregation. Distance stays in raw stored
-/// units (converted at display time).
+/// "Expenses and Distance by Month" combo chart. Costs are summed across every
+/// record type per month. Distance is derived from a single timeline of every
+/// odometer reading (gas + odometer records) — the delta between consecutive
+/// readings is attributed to the later reading's month — so a vehicle that only
+/// logs fuel still gets a distance line. Distance stays in raw stored units.
 class MonthlyBreakdown {
   const MonthlyBreakdown({required this.months});
 
@@ -20,11 +24,10 @@ class MonthlyBreakdown {
 
   factory MonthlyBreakdown.from({
     required Map<ExpenseCategory, List<DatedCost>> costsByCategory,
-    required List<OdometerRecord> odometerRecords,
+    required List<OdometerReading> odometerReadings,
   }) {
     final entries = [
-      for (var month = 1; month <= 12; month++)
-        _MutableEntry(month: month),
+      for (var month = 1; month <= 12; month++) _MutableEntry(month: month),
     ];
 
     costsByCategory.forEach((category, records) {
@@ -36,15 +39,25 @@ class MonthlyBreakdown {
       }
     });
 
-    for (final r in odometerRecords) {
-      final m = r.date?.month;
-      if (m == null) continue;
-      entries[m - 1].distance += r.distanceTraveled;
+    // Build the distance line from a chronological odometer timeline: each
+    // reading's gain over the previous one lands in that reading's month.
+    final timeline = [
+      for (final r in odometerReadings)
+        if (r.date != null && r.odometer > 0) r,
+    ]..sort((a, b) {
+        final byDate = a.date!.compareTo(b.date!);
+        return byDate != 0 ? byDate : a.odometer.compareTo(b.odometer);
+      });
+    double? previous;
+    for (final r in timeline) {
+      if (previous != null) {
+        final delta = r.odometer - previous;
+        if (delta > 0) entries[r.date!.month - 1].distance += delta;
+      }
+      previous = r.odometer;
     }
 
-    return MonthlyBreakdown(
-      months: [for (final e in entries) e.freeze()],
-    );
+    return MonthlyBreakdown(months: [for (final e in entries) e.freeze()]);
   }
 }
 

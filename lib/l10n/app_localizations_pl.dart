@@ -73,6 +73,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsFuelEconomy => 'Zużycie paliwa';
 
   @override
+  String get settingsDateFormat => 'Format daty';
+
+  @override
+  String get settingsDateSeparator => 'Separator daty';
+
+  @override
   String get settingsServer => 'Serwer';
 
   @override
@@ -147,6 +153,145 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get catTax => 'Podatki';
+
+  @override
+  String get tabDashboard => 'Pulpit';
+
+  @override
+  String get tabOdometer => 'Licznik kilometrów';
+
+  @override
+  String get colDate => 'Data';
+
+  @override
+  String get colOdometer => 'Licznik';
+
+  @override
+  String get colDescription => 'Opis';
+
+  @override
+  String get colCost => 'Koszt';
+
+  @override
+  String get recordsEmpty => 'Brak wpisów.';
+
+  @override
+  String fuelPillRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wpisu',
+      many: '$count wpisów',
+      few: '$count wpisy',
+      one: '1 wpis',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fuelPillAvg(String value) {
+    return 'Śr. $value';
+  }
+
+  @override
+  String fuelPillMin(String value) {
+    return 'Min $value';
+  }
+
+  @override
+  String fuelPillMax(String value) {
+    return 'Maks. $value';
+  }
+
+  @override
+  String fuelPillDistance(String value) {
+    return 'Dystans $value';
+  }
+
+  @override
+  String fuelPillFuel(String value) {
+    return 'Paliwo $value';
+  }
+
+  @override
+  String fuelPillCost(String value) {
+    return 'Koszt $value';
+  }
+
+  @override
+  String get addRecordTitle => 'Dodaj wpis';
+
+  @override
+  String get formFuelTitle => 'Dodaj tankowanie';
+
+  @override
+  String get formFuelEditTitle => 'Edytuj tankowanie';
+
+  @override
+  String formOdometerLabel(String unit) {
+    return 'Stan licznika ($unit)';
+  }
+
+  @override
+  String formFuelLabel(String unit) {
+    return 'Zatankowane paliwo ($unit)';
+  }
+
+  @override
+  String get formFillToFull => 'Do pełna';
+
+  @override
+  String get formMissedFuelUp => 'Pominięte tankowanie (bez spalania)';
+
+  @override
+  String get formTagsOptional => 'Tagi (opcjonalnie)';
+
+  @override
+  String get formNotesOptional => 'Notatki (opcjonalnie)';
+
+  @override
+  String get actionCancel => 'Anuluj';
+
+  @override
+  String get actionAdd => 'Dodaj';
+
+  @override
+  String get actionSave => 'Zapisz';
+
+  @override
+  String get actionDelete => 'Usuń';
+
+  @override
+  String get validationRequired => 'Wymagane';
+
+  @override
+  String get validationNumber => 'Podaj poprawną liczbę';
+
+  @override
+  String get recordAdded => 'Dodano wpis';
+
+  @override
+  String get recordAddError => 'Nie udało się dodać wpisu. Spróbuj ponownie.';
+
+  @override
+  String get recordUpdated => 'Zapisano zmiany';
+
+  @override
+  String get recordUpdateError =>
+      'Nie udało się zapisać wpisu. Spróbuj ponownie.';
+
+  @override
+  String get recordDeleted => 'Usunięto wpis';
+
+  @override
+  String get recordDeleteError =>
+      'Nie udało się usunąć wpisu. Spróbuj ponownie.';
+
+  @override
+  String get confirmDeleteTitle => 'Usunąć ten wpis?';
+
+  @override
+  String get confirmDeleteMessage => 'Tej operacji nie można cofnąć.';
 
   @override
   String get urgencyNotUrgent => 'Niepilne';

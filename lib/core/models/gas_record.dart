@@ -11,6 +11,8 @@ class GasRecord {
     required this.cost,
     required this.isFillToFull,
     required this.missedFuelUp,
+    this.notes = '',
+    this.tags = '',
   });
 
   factory GasRecord.fromJson(Map<String, dynamic> json) => GasRecord(
@@ -21,6 +23,8 @@ class GasRecord {
         cost: _toDouble(json['cost']),
         isFillToFull: _toBool(json['isFillToFull']),
         missedFuelUp: _toBool(json['missedFuelUp']),
+        notes: (json['notes'] as String?) ?? '',
+        tags: (json['tags'] as String?) ?? '',
       );
 
   final int id;
@@ -30,6 +34,12 @@ class GasRecord {
   final double cost;
   final bool isFillToFull;
   final bool missedFuelUp;
+
+  /// Not shown in the fuel table, but read so editing a record can prefill
+  /// (and round-trip) its notes/tags instead of the update silently clearing
+  /// them.
+  final String notes;
+  final String tags;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

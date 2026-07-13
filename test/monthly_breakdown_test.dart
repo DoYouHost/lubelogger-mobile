@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/format/monthly_breakdown.dart';
 import 'package:lubelogger_mobile/core/models/dated_cost.dart';
-import 'package:lubelogger_mobile/core/models/odometer_record.dart';
 
 DatedCost cost(String date, double amount) =>
     DatedCost(date: DateTime.parse(date), cost: amount);
+
+OdometerReading reading(String date, double odo) =>
+    (date: DateTime.parse(date), odometer: odo);
 
 void main() {
   group('MonthlyBreakdown.from', () {
@@ -15,7 +17,7 @@ void main() {
           ExpenseCategory.fuel: [cost('2026-03-10', 30), cost('2026-07-01', 40)],
           ExpenseCategory.tax: [cost('2025-03-15', 200)], // different year, same month
         },
-        odometerRecords: const [],
+        odometerReadings: const [],
       );
 
       final march = b.months.firstWhere((m) => m.month == 3);
@@ -32,31 +34,31 @@ void main() {
           ExpenseCategory.repair: [cost('2026-03-06', 250)],
           ExpenseCategory.fuel: [cost('2026-03-07', 40)],
         },
-        odometerRecords: const [],
+        odometerReadings: const [],
       );
       final march = b.months.firstWhere((m) => m.month == 3);
       expect(march.dominantCategory, ExpenseCategory.repair);
     });
 
-    test('distance sums odometer spans per month', () {
+    test('distance is the delta between consecutive odometer readings', () {
       final b = MonthlyBreakdown.from(
         costsByCategory: const {},
-        odometerRecords: [
-          OdometerRecord.fromJson(
-              {'date': '2026-04-01', 'initialOdometer': 1000, 'odometer': 1200}),
-          OdometerRecord.fromJson(
-              {'date': '2026-04-20', 'initialOdometer': 1200, 'odometer': 1350}),
+        odometerReadings: [
+          reading('2026-03-25', 1000), // primer: no prior reading
+          reading('2026-04-01', 1200), // +200 → April
+          reading('2026-04-20', 1350), // +150 → April
+          reading('2026-05-10', 1500), // +150 → May
         ],
       );
-      final april = b.months.firstWhere((m) => m.month == 4);
-      expect(april.distance, 350); // 200 + 150
+      expect(b.months.firstWhere((m) => m.month == 4).distance, 350);
+      expect(b.months.firstWhere((m) => m.month == 5).distance, 150);
       expect(b.hasDistance, isTrue);
     });
 
     test('always yields 12 months; empty input is all zeros', () {
       final b = MonthlyBreakdown.from(
         costsByCategory: const {},
-        odometerRecords: const [],
+        odometerReadings: const [],
       );
       expect(b.months.length, 12);
       expect(b.hasCost, isFalse);

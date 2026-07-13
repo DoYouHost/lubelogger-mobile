@@ -218,6 +218,18 @@ abstract class AppLocalizations {
   /// **'Fuel economy'**
   String get settingsFuelEconomy;
 
+  /// No description provided for @settingsDateFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format'**
+  String get settingsDateFormat;
+
+  /// No description provided for @settingsDateSeparator.
+  ///
+  /// In en, this message translates to:
+  /// **'Date separator'**
+  String get settingsDateSeparator;
+
   /// No description provided for @settingsServer.
   ///
   /// In en, this message translates to:
@@ -361,6 +373,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tax'**
   String get catTax;
+
+  /// No description provided for @tabDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get tabDashboard;
+
+  /// No description provided for @tabOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer'**
+  String get tabOdometer;
+
+  /// No description provided for @colDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get colDate;
+
+  /// No description provided for @colOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer'**
+  String get colOdometer;
+
+  /// No description provided for @colDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get colDescription;
+
+  /// No description provided for @colCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get colCost;
+
+  /// No description provided for @recordsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No records yet.'**
+  String get recordsEmpty;
+
+  /// No description provided for @fuelPillRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 record} other{{count} records}}'**
+  String fuelPillRecords(int count);
+
+  /// No description provided for @fuelPillAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg {value}'**
+  String fuelPillAvg(String value);
+
+  /// No description provided for @fuelPillMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Min {value}'**
+  String fuelPillMin(String value);
+
+  /// No description provided for @fuelPillMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max {value}'**
+  String fuelPillMax(String value);
+
+  /// No description provided for @fuelPillDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance {value}'**
+  String fuelPillDistance(String value);
+
+  /// No description provided for @fuelPillFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel {value}'**
+  String fuelPillFuel(String value);
+
+  /// No description provided for @fuelPillCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost {value}'**
+  String fuelPillCost(String value);
+
+  /// No description provided for @addRecordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add record'**
+  String get addRecordTitle;
+
+  /// No description provided for @formFuelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Fuel Record'**
+  String get formFuelTitle;
+
+  /// No description provided for @formFuelEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Fuel Record'**
+  String get formFuelEditTitle;
+
+  /// No description provided for @formOdometerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer reading ({unit})'**
+  String formOdometerLabel(String unit);
+
+  /// No description provided for @formFuelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel consumed ({unit})'**
+  String formFuelLabel(String unit);
+
+  /// No description provided for @formFillToFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled to full'**
+  String get formFillToFull;
+
+  /// No description provided for @formMissedFuelUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed fuel-up (skip economy)'**
+  String get formMissedFuelUp;
+
+  /// No description provided for @formTagsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags (optional)'**
+  String get formTagsOptional;
+
+  /// No description provided for @formNotesOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get formNotesOptional;
+
+  /// No description provided for @actionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get actionCancel;
+
+  /// No description provided for @actionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get actionAdd;
+
+  /// No description provided for @actionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get actionSave;
+
+  /// No description provided for @actionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get actionDelete;
+
+  /// No description provided for @validationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get validationRequired;
+
+  /// No description provided for @validationNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get validationNumber;
+
+  /// No description provided for @recordAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Record added'**
+  String get recordAdded;
+
+  /// No description provided for @recordAddError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the record. Try again.'**
+  String get recordAddError;
+
+  /// No description provided for @recordUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Record updated'**
+  String get recordUpdated;
+
+  /// No description provided for @recordUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the record. Try again.'**
+  String get recordUpdateError;
+
+  /// No description provided for @recordDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Record deleted'**
+  String get recordDeleted;
+
+  /// No description provided for @recordDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the record. Try again.'**
+  String get recordDeleteError;
+
+  /// No description provided for @confirmDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this record?'**
+  String get confirmDeleteTitle;
+
+  /// No description provided for @confirmDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone.'**
+  String get confirmDeleteMessage;
 
   /// No description provided for @urgencyNotUrgent.
   ///

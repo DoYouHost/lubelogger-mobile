@@ -1,0 +1,426 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/api/api_exceptions.dart';
+import '../../../core/format/shift_digits_formatter.dart';
+import '../../../core/models/gas_record.dart';
+import '../../../core/theme/dash_theme.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/error_messages.dart';
+import '../../../providers.dart';
+
+const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
+const _volumeFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
+const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
+
+/// Opens the "Add fuel record" form as a modal bottom sheet. Pass [existing] to
+/// edit that record instead (prefilled, with a delete option). Resolves to
+/// `true` once a record was added/updated/deleted (so the caller can refresh
+/// or confirm), or `null` if cancelled.
+Future<bool?> showAddFuelForm(
+  BuildContext context,
+  int vehicleId, {
+  GasRecord? existing,
+}) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => _AddFuelForm(vehicleId: vehicleId, existing: existing),
+  );
+}
+
+class _AddFuelForm extends ConsumerStatefulWidget {
+  const _AddFuelForm({required this.vehicleId, this.existing});
+
+  final int vehicleId;
+  final GasRecord? existing;
+
+  @override
+  ConsumerState<_AddFuelForm> createState() => _AddFuelFormState();
+}
+
+class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _odometer = TextEditingController();
+  final _fuel = TextEditingController();
+  final _cost = TextEditingController();
+  final _tags = TextEditingController();
+  final _notes = TextEditingController();
+
+  late DateTime _date;
+  late bool _fillToFull;
+  late bool _missedFuelUp;
+  bool _submitting = false;
+  String? _error;
+
+  bool get _isEditing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    _date = e?.date ?? DateTime.now();
+    _fillToFull = e?.isFillToFull ?? true;
+    _missedFuelUp = e?.missedFuelUp ?? false;
+    if (e != null) {
+      _odometer.text = _odometerFormat.seed(e.odometer);
+      _fuel.text = _volumeFormat.seed(e.fuelConsumed);
+      _cost.text = _costFormat.seed(e.cost);
+      _tags.text = e.tags;
+      _notes.text = e.notes;
+    }
+  }
+
+  @override
+  void dispose() {
+    _odometer.dispose();
+    _fuel.dispose();
+    _cost.dispose();
+    _tags.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    final units = ref.watch(unitsSettingsProvider);
+    final distanceUnit = units.distance.label;
+    final volumeUnit = units.base.volumeLabel;
+
+    return Padding(
+      // Lift the sheet above the keyboard.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _isEditing ? l10n.formFuelEditTitle : l10n.formFuelTitle,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (_isEditing)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, color: t.danger),
+                      onPressed: _submitting ? null : _confirmDelete,
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed:
+                        _submitting ? null : () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _DateField(
+                text: units.formatDate(_date),
+                onPick: _submitting ? null : _pickDate,
+              ),
+              const SizedBox(height: 14),
+              _numberField(
+                controller: _odometer,
+                label: l10n.formOdometerLabel(distanceUnit),
+                format: _odometerFormat,
+              ),
+              const SizedBox(height: 14),
+              _numberField(
+                controller: _fuel,
+                label: l10n.formFuelLabel(volumeUnit),
+                format: _volumeFormat,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.formFillToFull),
+                value: _fillToFull,
+                // A missed fuel-up has no meaningful "filled to full" state.
+                onChanged: _submitting || _missedFuelUp
+                    ? null
+                    : (v) => setState(() => _fillToFull = v),
+              ),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(l10n.formMissedFuelUp),
+                value: _missedFuelUp,
+                onChanged: _submitting
+                    ? null
+                    : (v) => setState(() => _missedFuelUp = v ?? false),
+              ),
+              const SizedBox(height: 6),
+              _numberField(
+                controller: _cost,
+                label: l10n.colCost,
+                format: _costFormat,
+                allowZero: true,
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _tags,
+                enabled: !_submitting,
+                decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _notes,
+                enabled: !_submitting,
+                minLines: 2,
+                maxLines: 4,
+                decoration:
+                    dashFieldDecoration(t, labelText: l10n.formNotesOptional),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                ),
+              ],
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _submitting ? null : () => Navigator.pop(context),
+                      child: Text(l10n.actionCancel),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _submitting ? null : _submit,
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(_isEditing ? l10n.actionSave : l10n.actionAdd),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _numberField({
+    required TextEditingController controller,
+    required String label,
+    required ShiftDigitsFormatter format,
+    bool allowZero = false,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    return TextFormField(
+      controller: controller,
+      enabled: !_submitting,
+      keyboardType: TextInputType.number,
+      inputFormatters: [format],
+      style: const TextStyle(fontFamily: DashTokens.fontMono),
+      decoration: dashFieldDecoration(t, labelText: label),
+      validator: (raw) {
+        final value = _parseNumber(raw);
+        if (value == null) {
+          return (raw == null || raw.trim().isEmpty)
+              ? l10n.validationRequired
+              : l10n.validationNumber;
+        }
+        if (value < 0 || (!allowZero && value == 0)) return l10n.validationNumber;
+        return null;
+      },
+    );
+  }
+
+  /// Parse a user-entered number, tolerating a comma decimal separator.
+  static num? _parseNumber(String? raw) {
+    if (raw == null) return null;
+    return num.tryParse(raw.trim().replaceAll(',', '.'));
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(_date.year + 1, 12, 31),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final repo = ref.read(vehiclesRepositoryProvider);
+    final existing = widget.existing;
+    try {
+      if (existing == null) {
+        await repo.addGasRecord(
+          vehicleId: widget.vehicleId,
+          date: _date,
+          odometer: _parseNumber(_odometer.text)!,
+          fuelConsumed: _parseNumber(_fuel.text)!,
+          cost: _parseNumber(_cost.text)!,
+          isFillToFull: _fillToFull,
+          missedFuelUp: _missedFuelUp,
+          notes: _notes.text.trim(),
+          tags: _tags.text.trim(),
+        );
+      } else {
+        await repo.updateGasRecord(
+          vehicleId: widget.vehicleId,
+          id: existing.id,
+          date: _date,
+          odometer: _parseNumber(_odometer.text)!,
+          fuelConsumed: _parseNumber(_fuel.text)!,
+          cost: _parseNumber(_cost.text)!,
+          isFillToFull: _fillToFull,
+          missedFuelUp: _missedFuelUp,
+          notes: _notes.text.trim(),
+          tags: _tags.text.trim(),
+        );
+      }
+      _invalidateFuelProviders();
+      if (!mounted) return;
+      Navigator.pop(context, true);
+      messenger.showSnackBar(
+        SnackBar(content: Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+      );
+    } on AppApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.localized(l10n);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+      });
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.actionCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.actionDelete, style: TextStyle(color: t.danger)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref.read(vehiclesRepositoryProvider).deleteGasRecord(widget.existing!.id);
+      _invalidateFuelProviders();
+      if (!mounted) return;
+      Navigator.pop(context, true);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.recordDeleted)));
+    } on AppApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.localized(l10n);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = l10n.recordDeleteError;
+      });
+    }
+  }
+
+  /// Refreshes every view derived from the refuel log after an add/update/delete.
+  void _invalidateFuelProviders() {
+    ref.invalidate(gasRecordsProvider(widget.vehicleId));
+    ref.invalidate(gasStatsProvider(widget.vehicleId));
+    ref.invalidate(vehicleInfoProvider(widget.vehicleId));
+    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
+  }
+}
+
+/// Read-only date display with a gold calendar button (design #3).
+class _DateField extends StatelessWidget {
+  const _DateField({required this.text, required this.onPick});
+
+  final String text;
+  final VoidCallback? onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: InputDecorator(
+            decoration: dashFieldDecoration(t, labelText: l10n.colDate),
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: DashTokens.fontMono,
+                fontSize: 13.5,
+                color: t.textPrimary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: FilledButton(
+            style: dashPrimaryButtonStyle(t).copyWith(
+              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+            ),
+            onPressed: onPick,
+            child: const Icon(Icons.calendar_month, size: 20),
+          ),
+        ),
+      ],
+    );
+  }
+}

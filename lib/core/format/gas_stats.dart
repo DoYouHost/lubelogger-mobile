@@ -146,3 +146,80 @@ class GasStats {
     );
   }
 }
+
+/// One row of the fuel-history table, in raw stored units. [rawDelta] is the
+/// odometer gain since the previous (older) fuel-up — null for the oldest row,
+/// which has no prior reading. [rawRatio] is the fill-to-full economy
+/// (distance ÷ volume) resolved at this record, or null for a partial fill /
+/// missed fuel-up, mirroring how the server's per-record economy column blanks.
+class FuelRow {
+  const FuelRow({
+    required this.record,
+    required this.rawDelta,
+    required this.rawRatio,
+  });
+
+  final GasRecord record;
+  final double? rawDelta;
+  final double? rawRatio;
+}
+
+/// Per-record fuel rows in chronological order (oldest first), reusing the same
+/// fill-to-full accumulation as [GasStats.from] so per-row economy matches the
+/// server: partial fills accumulate their distance/volume into the next full
+/// tank, and a missed fuel-up drops the unattributable span.
+List<FuelRow> fuelRows(List<GasRecord> records) {
+  final sorted = [...records]..sort((a, b) {
+      final da = a.date, db = b.date;
+      final byDate = (da == null || db == null) ? 0 : da.compareTo(db);
+      return byDate != 0 ? byDate : a.odometer.compareTo(b.odometer);
+    });
+
+  double previousOdometer = 0;
+  double unFactoredVolume = 0;
+  double unFactoredDistance = 0;
+  final rows = <FuelRow>[];
+
+  for (var i = 0; i < sorted.length; i++) {
+    final r = sorted[i];
+
+    // The oldest record only seeds `previousOdometer`; with no prior reading it
+    // gets no delta and no economy (matches GasStats' `i == 0` guard).
+    if (i == 0) {
+      if (r.odometer > 0) previousOdometer = r.odometer;
+      rows.add(FuelRow(record: r, rawDelta: null, rawRatio: null));
+      continue;
+    }
+
+    var delta = r.odometer - previousOdometer;
+    if (delta < 0) delta = 0;
+    final volume = r.fuelConsumed;
+    double? ratio;
+
+    if (r.missedFuelUp) {
+      unFactoredVolume = 0;
+      unFactoredDistance = 0;
+    } else if (r.isFillToFull && r.odometer > 0) {
+      final totalVolume = unFactoredVolume + volume;
+      final totalDistance = unFactoredDistance + delta;
+      if (volume > 0 && delta > 0 && totalVolume > 0) {
+        ratio = totalDistance / totalVolume;
+      }
+      unFactoredVolume = 0;
+      unFactoredDistance = 0;
+    } else {
+      unFactoredVolume += volume;
+      unFactoredDistance += delta;
+    }
+
+    rows.add(FuelRow(
+      record: r,
+      rawDelta: r.odometer > 0 ? delta : null,
+      rawRatio: (ratio != null && ratio > 0) ? ratio : null,
+    ));
+
+    if (r.odometer > 0) previousOdometer = r.odometer;
+  }
+
+  return rows;
+}
