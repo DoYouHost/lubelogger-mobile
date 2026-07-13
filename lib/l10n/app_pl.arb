@@ -13,6 +13,11 @@
 
   "connect": "Połącz",
   "connecting": "Łączenie…",
+  "logout": "Wyloguj",
+  "retry": "Ponów",
+  "comingSoon": "Wkrótce",
+  "garageEmpty": "Brak pojazdów. Dodaj pierwszy, aby rozpocząć.",
+  "garageLoadError": "Nie udało się wczytać garażu. Pociągnij, aby ponowić.",
   "signedInAs": "Zalogowano jako {name}",
 
   "errMissingUrl": "Podaj adres serwera.",

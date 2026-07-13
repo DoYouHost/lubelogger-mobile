@@ -19,6 +19,11 @@
 
   "connect": "Connect",
   "connecting": "Connecting…",
+  "logout": "Log out",
+  "retry": "Retry",
+  "comingSoon": "Coming soon",
+  "garageEmpty": "No vehicles yet. Add your first one to get started.",
+  "garageLoadError": "Couldn't load your garage. Pull to retry.",
   "signedInAs": "Signed in as {name}",
   "@signedInAs": {
     "description": "Confirmation after a successful connection.",

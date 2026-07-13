@@ -42,6 +42,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get connecting => 'Łączenie…';
 
   @override
+  String get logout => 'Wyloguj';
+
+  @override
+  String get retry => 'Ponów';
+
+  @override
+  String get comingSoon => 'Wkrótce';
+
+  @override
+  String get garageEmpty => 'Brak pojazdów. Dodaj pierwszy, aby rozpocząć.';
+
+  @override
+  String get garageLoadError =>
+      'Nie udało się wczytać garażu. Pociągnij, aby ponowić.';
+
+  @override
   String signedInAs(String name) {
     return 'Zalogowano jako $name';
   }

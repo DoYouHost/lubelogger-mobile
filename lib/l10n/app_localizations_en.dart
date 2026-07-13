@@ -41,6 +41,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connecting => 'Connecting…';
 
   @override
+  String get logout => 'Log out';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get garageEmpty =>
+      'No vehicles yet. Add your first one to get started.';
+
+  @override
+  String get garageLoadError => 'Couldn\'t load your garage. Pull to retry.';
+
+  @override
   String signedInAs(String name) {
     return 'Signed in as $name';
   }

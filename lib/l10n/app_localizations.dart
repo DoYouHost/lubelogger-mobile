@@ -158,6 +158,36 @@ abstract class AppLocalizations {
   /// **'Connecting…'**
   String get connecting;
 
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logout;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
+
+  /// No description provided for @garageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No vehicles yet. Add your first one to get started.'**
+  String get garageEmpty;
+
+  /// No description provided for @garageLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your garage. Pull to retry.'**
+  String get garageLoadError;
+
   /// Confirmation after a successful connection.
   ///
   /// In en, this message translates to:

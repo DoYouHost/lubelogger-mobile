@@ -6,8 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/api/api_client.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/credentials_store.dart';
+import 'core/models/server_info.dart';
+import 'core/models/vehicle_info.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
+import 'data/vehicles_repository.dart';
 
 /// Overridden in main() after `SharedPreferences.getInstance()`.
 final sharedPreferencesProvider = Provider<SharedPreferences>(
@@ -81,4 +84,30 @@ final apiClientProvider = Provider<ApiClient>((ref) {
     profile: profile,
     credentials: ref.watch(credentialsStoreProvider),
   );
+});
+
+/// The active API key, for authenticating image requests (`Image.network`
+/// headers). Read once per profile.
+final apiKeyProvider = FutureProvider<String?>(
+  (ref) => ref.watch(credentialsStoreProvider).readApiKey(),
+);
+
+final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
+  (ref) => VehiclesRepository(ref.watch(apiClientProvider).dio),
+);
+
+/// Server metadata (currency, locale, date format). Cached per session; drives
+/// number/date formatting across the app.
+final serverInfoProvider = FutureProvider<ServerInfo>(
+  (ref) => ref.watch(vehiclesRepositoryProvider).serverInfo(),
+);
+
+/// Garage contents: every vehicle with its aggregated info. Fetches the vehicle
+/// list, then each vehicle's info in parallel (household lists are small, so the
+/// N+1 is cheap and keeps the cards fully populated).
+final garageProvider = FutureProvider<List<VehicleInfo>>((ref) async {
+  final repo = ref.watch(vehiclesRepositoryProvider);
+  final vehicles = await repo.list();
+  final infos = await Future.wait(vehicles.map((v) => repo.info(v.id)));
+  return infos;
 });

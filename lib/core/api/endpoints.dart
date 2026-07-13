@@ -17,6 +17,11 @@ abstract final class Endpoints {
   /// dateFormat}`. No auth-sensitive data; useful for a version/locale banner.
   static const info = '$apiPrefix/info';
 
-  /// Household vehicles (array of vehicle info).
+  /// Household vehicles (array of [Vehicle]).
   static const vehicles = '$apiPrefix/vehicles';
+
+  /// Aggregated info for one vehicle: `?vehicleId=`. Returns an ARRAY of
+  /// VehicleInfo (odometer, record counts/costs, reminder counts) — one element
+  /// even for a single vehicle.
+  static const vehicleInfo = '$apiPrefix/vehicle/info';
 }
