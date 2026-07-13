@@ -24,4 +24,18 @@ abstract final class Endpoints {
   /// VehicleInfo (odometer, record counts/costs, reminder counts) — one element
   /// even for a single vehicle.
   static const vehicleInfo = '$apiPrefix/vehicle/info';
+
+  /// Refuel log for one vehicle: `?vehicleId=`. Returns an array of gas records.
+  /// The server's per-record `fuelEconomy` is ignored (see [GasRecord]); the
+  /// app recomputes economy locally from odometer + fuel.
+  static const gasRecords = '$apiPrefix/vehicle/gasrecords';
+
+  // Record types with a date + cost, aggregated into the monthly expense chart.
+  static const serviceRecords = '$apiPrefix/vehicle/servicerecords';
+  static const repairRecords = '$apiPrefix/vehicle/repairrecords';
+  static const upgradeRecords = '$apiPrefix/vehicle/upgraderecords';
+  static const taxRecords = '$apiPrefix/vehicle/taxrecords';
+
+  /// Odometer readings: `?vehicleId=`. Source of the monthly distance line.
+  static const odometerRecords = '$apiPrefix/vehicle/odometerrecords';
 }

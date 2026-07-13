@@ -41,6 +41,33 @@
     }
   },
   "settingsUnitsMetricNote": "Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.",
+
+  "dashLoadError": "Couldn't load this vehicle. Pull to retry.",
+  "statLastOdometer": "Last Reported Odometer",
+  "statDistanceTraveled": "Distance Traveled",
+  "statTotalCost": "Total Cost",
+  "statAvgEconomy": "Average Fuel Economy",
+
+  "chartExpensesByType": "Expenses by Type",
+  "chartExpensesDistanceByMonth": "Expenses and Distance by Month",
+  "chartRemindersByUrgency": "Reminders by Urgency",
+  "chartFuelMileageByMonth": "Fuel Mileage by Month",
+  "chartNoData": "No data yet",
+  "chartNoReminders": "No reminders",
+  "legendExpenses": "Expenses",
+  "legendDistance": "Distance",
+
+  "catService": "Service",
+  "catRepairs": "Repairs",
+  "catUpgrades": "Upgrades",
+  "catFuel": "Fuel",
+  "catTax": "Tax",
+
+  "urgencyNotUrgent": "Not Urgent",
+  "urgencyUrgent": "Urgent",
+  "urgencyVeryUrgent": "Very Urgent",
+  "urgencyPastDue": "Past Due",
+
   "signedInAs": "Signed in as {name}",
   "@signedInAs": {
     "description": "Confirmation after a successful connection.",

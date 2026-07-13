@@ -4,8 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
+import 'core/api/endpoints.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/credentials_store.dart';
+import 'core/format/gas_stats.dart';
+import 'core/format/monthly_breakdown.dart';
+import 'core/models/dated_cost.dart';
 import 'core/models/server_info.dart';
 import 'core/models/vehicle_info.dart';
 import 'core/settings/server_profile.dart';
@@ -149,3 +153,51 @@ final garageProvider = FutureProvider<List<VehicleInfo>>((ref) async {
   final infos = await Future.wait(vehicles.map((v) => repo.info(v.id)));
   return infos;
 });
+
+/// Aggregated info for one vehicle (odometer, costs, reminders) — powers the
+/// dashboard header, stat block, and both expense/reminder charts.
+final vehicleInfoProvider = FutureProvider.family<VehicleInfo, int>(
+  (ref, vehicleId) => ref.watch(vehiclesRepositoryProvider).info(vehicleId),
+);
+
+/// Locally-computed fuel statistics for one vehicle (lifetime average, distance
+/// span, per-month economy). Kept in raw stored units; unit conversion happens
+/// at display time, so this doesn't depend on the units settings.
+final gasStatsProvider = FutureProvider.family<GasStats, int>(
+  (ref, vehicleId) async {
+    final records =
+        await ref.watch(vehiclesRepositoryProvider).gasRecords(vehicleId);
+    return GasStats.from(records);
+  },
+);
+
+/// Monthly expense (by category) + distance breakdown for one vehicle. Fetches
+/// every cost-bearing record type plus odometer readings in parallel, then
+/// aggregates them per calendar month for the combo chart.
+final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
+  (ref, vehicleId) async {
+    final repo = ref.watch(vehiclesRepositoryProvider);
+    final results = await Future.wait([
+      repo.datedCosts(Endpoints.serviceRecords, vehicleId),
+      repo.datedCosts(Endpoints.repairRecords, vehicleId),
+      repo.datedCosts(Endpoints.upgradeRecords, vehicleId),
+      repo.datedCosts(Endpoints.taxRecords, vehicleId),
+      repo.gasRecords(vehicleId).then(
+            (records) => [
+              for (final r in records) DatedCost(date: r.date, cost: r.cost),
+            ],
+          ),
+    ]);
+    final odometers = await repo.odometerRecords(vehicleId);
+    return MonthlyBreakdown.from(
+      costsByCategory: {
+        ExpenseCategory.service: results[0],
+        ExpenseCategory.repair: results[1],
+        ExpenseCategory.upgrade: results[2],
+        ExpenseCategory.tax: results[3],
+        ExpenseCategory.fuel: results[4],
+      },
+      odometerRecords: odometers,
+    );
+  },
+);

@@ -30,6 +30,33 @@
   "baseImperial": "Imperialne",
   "currencyAuto": "Automatyczna ({symbol})",
   "settingsUnitsMetricNote": "Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.",
+
+  "dashLoadError": "Nie udało się wczytać pojazdu. Pociągnij, aby ponowić.",
+  "statLastOdometer": "Ostatni przebieg",
+  "statDistanceTraveled": "Przejechany dystans",
+  "statTotalCost": "Koszt całkowity",
+  "statAvgEconomy": "Średnie spalanie",
+
+  "chartExpensesByType": "Wydatki wg typu",
+  "chartExpensesDistanceByMonth": "Wydatki i dystans wg miesiąca",
+  "chartRemindersByUrgency": "Przypomnienia wg pilności",
+  "chartFuelMileageByMonth": "Spalanie wg miesiąca",
+  "chartNoData": "Brak danych",
+  "chartNoReminders": "Brak przypomnień",
+  "legendExpenses": "Wydatki",
+  "legendDistance": "Dystans",
+
+  "catService": "Serwis",
+  "catRepairs": "Naprawy",
+  "catUpgrades": "Ulepszenia",
+  "catFuel": "Paliwo",
+  "catTax": "Podatki",
+
+  "urgencyNotUrgent": "Niepilne",
+  "urgencyUrgent": "Pilne",
+  "urgencyVeryUrgent": "Bardzo pilne",
+  "urgencyPastDue": "Po terminie",
+
   "signedInAs": "Zalogowano jako {name}",
 
   "errMissingUrl": "Podaj adres serwera.",

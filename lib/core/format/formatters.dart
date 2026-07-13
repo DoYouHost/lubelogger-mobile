@@ -25,15 +25,23 @@ class Formatters {
       '$symbol${_money.format(value)}';
 
   /// Raw stored distance [rawValue] (in [base]'s distance unit) converted to the
+  /// numeric display [unit] value (unlabelled) — for charts.
+  static double distanceValue(
+    double rawValue,
+    MeasurementSystem base,
+    DistanceUnit unit,
+  ) =>
+      rawValue * base.kmPerUnit * unit.fromKm;
+
+  /// Raw stored distance [rawValue] (in [base]'s distance unit) converted to the
   /// display [unit] and labelled, e.g. `320,775 km` or `199,316 mi`.
   static String distance(
     double rawValue,
     MeasurementSystem base,
     DistanceUnit unit,
-  ) {
-    final km = rawValue * base.kmPerUnit;
-    return '${_integer.format((km * unit.fromKm).round())} ${unit.label}';
-  }
+  ) =>
+      '${_integer.format(distanceValue(rawValue, base, unit).round())} '
+      '${unit.label}';
 
   /// Fuel-economy value from raw stored distance + volume (each in [base]'s
   /// units), expressed in [unit]. Returns null when inputs can't yield a rate

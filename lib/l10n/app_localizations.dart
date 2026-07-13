@@ -254,6 +254,138 @@ abstract class AppLocalizations {
   /// **'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.'**
   String get settingsUnitsMetricNote;
 
+  /// No description provided for @dashLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this vehicle. Pull to retry.'**
+  String get dashLoadError;
+
+  /// No description provided for @statLastOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Reported Odometer'**
+  String get statLastOdometer;
+
+  /// No description provided for @statDistanceTraveled.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance Traveled'**
+  String get statDistanceTraveled;
+
+  /// No description provided for @statTotalCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Cost'**
+  String get statTotalCost;
+
+  /// No description provided for @statAvgEconomy.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Fuel Economy'**
+  String get statAvgEconomy;
+
+  /// No description provided for @chartExpensesByType.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses by Type'**
+  String get chartExpensesByType;
+
+  /// No description provided for @chartExpensesDistanceByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses and Distance by Month'**
+  String get chartExpensesDistanceByMonth;
+
+  /// No description provided for @chartRemindersByUrgency.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders by Urgency'**
+  String get chartRemindersByUrgency;
+
+  /// No description provided for @chartFuelMileageByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel Mileage by Month'**
+  String get chartFuelMileageByMonth;
+
+  /// No description provided for @chartNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet'**
+  String get chartNoData;
+
+  /// No description provided for @chartNoReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders'**
+  String get chartNoReminders;
+
+  /// No description provided for @legendExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get legendExpenses;
+
+  /// No description provided for @legendDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get legendDistance;
+
+  /// No description provided for @catService.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get catService;
+
+  /// No description provided for @catRepairs.
+  ///
+  /// In en, this message translates to:
+  /// **'Repairs'**
+  String get catRepairs;
+
+  /// No description provided for @catUpgrades.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrades'**
+  String get catUpgrades;
+
+  /// No description provided for @catFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get catFuel;
+
+  /// No description provided for @catTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get catTax;
+
+  /// No description provided for @urgencyNotUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Urgent'**
+  String get urgencyNotUrgent;
+
+  /// No description provided for @urgencyUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get urgencyUrgent;
+
+  /// No description provided for @urgencyVeryUrgent.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Urgent'**
+  String get urgencyVeryUrgent;
+
+  /// No description provided for @urgencyPastDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Past Due'**
+  String get urgencyPastDue;
+
   /// Confirmation after a successful connection.
   ///
   /// In en, this message translates to:

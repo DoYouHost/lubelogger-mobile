@@ -70,7 +70,7 @@ class GarageScreen extends ConsumerWidget {
                     currencySymbol: currency,
                     measurementBase: units.base,
                     distanceUnit: units.distance,
-                    onTap: () => _comingSoon(context, l10n),
+                    onTap: () => context.push('/vehicle/${vehicles[i].vehicle.id}'),
                   );
                 },
               );

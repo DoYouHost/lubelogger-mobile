@@ -93,6 +93,72 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.';
 
   @override
+  String get dashLoadError => 'Couldn\'t load this vehicle. Pull to retry.';
+
+  @override
+  String get statLastOdometer => 'Last Reported Odometer';
+
+  @override
+  String get statDistanceTraveled => 'Distance Traveled';
+
+  @override
+  String get statTotalCost => 'Total Cost';
+
+  @override
+  String get statAvgEconomy => 'Average Fuel Economy';
+
+  @override
+  String get chartExpensesByType => 'Expenses by Type';
+
+  @override
+  String get chartExpensesDistanceByMonth => 'Expenses and Distance by Month';
+
+  @override
+  String get chartRemindersByUrgency => 'Reminders by Urgency';
+
+  @override
+  String get chartFuelMileageByMonth => 'Fuel Mileage by Month';
+
+  @override
+  String get chartNoData => 'No data yet';
+
+  @override
+  String get chartNoReminders => 'No reminders';
+
+  @override
+  String get legendExpenses => 'Expenses';
+
+  @override
+  String get legendDistance => 'Distance';
+
+  @override
+  String get catService => 'Service';
+
+  @override
+  String get catRepairs => 'Repairs';
+
+  @override
+  String get catUpgrades => 'Upgrades';
+
+  @override
+  String get catFuel => 'Fuel';
+
+  @override
+  String get catTax => 'Tax';
+
+  @override
+  String get urgencyNotUrgent => 'Not Urgent';
+
+  @override
+  String get urgencyUrgent => 'Urgent';
+
+  @override
+  String get urgencyVeryUrgent => 'Very Urgent';
+
+  @override
+  String get urgencyPastDue => 'Past Due';
+
+  @override
   String signedInAs(String name) {
     return 'Signed in as $name';
   }

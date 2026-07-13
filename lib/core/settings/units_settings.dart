@@ -59,6 +59,11 @@ enum FuelEconomyUnit {
   const FuelEconomyUnit(this.label);
 
   final String label;
+
+  /// True when a smaller number means better economy (consumption units like
+  /// L/100 km), false for distance-per-fuel units (MPG, km/L). Drives the
+  /// efficiency coloring of the monthly-mileage bars.
+  bool get lowerIsBetter => this == FuelEconomyUnit.l100km;
 }
 
 /// The user's display-unit preferences. Persisted locally (SharedPreferences),

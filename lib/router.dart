@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/dashboard/dashboard_screen.dart';
 import 'features/garage/garage_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/setup/setup_screen.dart';
@@ -30,6 +31,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/setup', builder: (_, _) => const SetupScreen()),
       GoRoute(path: '/', builder: (_, _) => const GarageScreen()),
+      GoRoute(
+        path: '/vehicle/:id',
+        builder: (_, state) => DashboardScreen(
+          vehicleId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0,
+        ),
+      ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
     ],
   );

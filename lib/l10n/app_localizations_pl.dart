@@ -94,6 +94,73 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.';
 
   @override
+  String get dashLoadError =>
+      'Nie udało się wczytać pojazdu. Pociągnij, aby ponowić.';
+
+  @override
+  String get statLastOdometer => 'Ostatni przebieg';
+
+  @override
+  String get statDistanceTraveled => 'Przejechany dystans';
+
+  @override
+  String get statTotalCost => 'Koszt całkowity';
+
+  @override
+  String get statAvgEconomy => 'Średnie spalanie';
+
+  @override
+  String get chartExpensesByType => 'Wydatki wg typu';
+
+  @override
+  String get chartExpensesDistanceByMonth => 'Wydatki i dystans wg miesiąca';
+
+  @override
+  String get chartRemindersByUrgency => 'Przypomnienia wg pilności';
+
+  @override
+  String get chartFuelMileageByMonth => 'Spalanie wg miesiąca';
+
+  @override
+  String get chartNoData => 'Brak danych';
+
+  @override
+  String get chartNoReminders => 'Brak przypomnień';
+
+  @override
+  String get legendExpenses => 'Wydatki';
+
+  @override
+  String get legendDistance => 'Dystans';
+
+  @override
+  String get catService => 'Serwis';
+
+  @override
+  String get catRepairs => 'Naprawy';
+
+  @override
+  String get catUpgrades => 'Ulepszenia';
+
+  @override
+  String get catFuel => 'Paliwo';
+
+  @override
+  String get catTax => 'Podatki';
+
+  @override
+  String get urgencyNotUrgent => 'Niepilne';
+
+  @override
+  String get urgencyUrgent => 'Pilne';
+
+  @override
+  String get urgencyVeryUrgent => 'Bardzo pilne';
+
+  @override
+  String get urgencyPastDue => 'Po terminie';
+
+  @override
   String signedInAs(String name) {
     return 'Zalogowano jako $name';
   }
