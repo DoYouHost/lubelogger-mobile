@@ -58,6 +58,42 @@ class AppLocalizationsPl extends AppLocalizations {
       'Nie udało się wczytać garażu. Pociągnij, aby ponowić.';
 
   @override
+  String get settingsTitle => 'Ustawienia';
+
+  @override
+  String get settingsUnits => 'Jednostki';
+
+  @override
+  String get settingsCurrency => 'Waluta';
+
+  @override
+  String get settingsDistance => 'Dystans';
+
+  @override
+  String get settingsFuelEconomy => 'Zużycie paliwa';
+
+  @override
+  String get settingsServer => 'Serwer';
+
+  @override
+  String get settingsStorageBase => 'Dane serwera';
+
+  @override
+  String get baseMetric => 'Metryczne';
+
+  @override
+  String get baseImperial => 'Imperialne';
+
+  @override
+  String currencyAuto(String symbol) {
+    return 'Automatyczna ($symbol)';
+  }
+
+  @override
+  String get settingsUnitsMetricNote =>
+      'Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.';
+
+  @override
   String signedInAs(String name) {
     return 'Zalogowano jako $name';
   }

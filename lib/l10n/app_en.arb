@@ -24,6 +24,23 @@
   "comingSoon": "Coming soon",
   "garageEmpty": "No vehicles yet. Add your first one to get started.",
   "garageLoadError": "Couldn't load your garage. Pull to retry.",
+
+  "settingsTitle": "Settings",
+  "settingsUnits": "Units",
+  "settingsCurrency": "Currency",
+  "settingsDistance": "Distance",
+  "settingsFuelEconomy": "Fuel economy",
+  "settingsServer": "Server",
+  "settingsStorageBase": "Server data",
+  "baseMetric": "Metric",
+  "baseImperial": "Imperial",
+  "currencyAuto": "Automatic ({symbol})",
+  "@currencyAuto": {
+    "placeholders": {
+      "symbol": { "type": "String" }
+    }
+  },
+  "settingsUnitsMetricNote": "Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.",
   "signedInAs": "Signed in as {name}",
   "@signedInAs": {
     "description": "Confirmation after a successful connection.",

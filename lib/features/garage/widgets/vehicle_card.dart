@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/format/formatters.dart';
 import '../../../core/models/vehicle_info.dart';
+import '../../../core/settings/units_settings.dart';
 import '../../../core/theme/dash_theme.dart';
 
 /// A single vehicle in the garage list (design screen #2): a photo with floating
@@ -13,6 +14,8 @@ class VehicleCard extends StatelessWidget {
     required this.baseUrl,
     required this.apiKey,
     required this.currencySymbol,
+    required this.measurementBase,
+    required this.distanceUnit,
     this.onTap,
   });
 
@@ -20,6 +23,8 @@ class VehicleCard extends StatelessWidget {
   final String baseUrl;
   final String? apiKey;
   final String currencySymbol;
+  final MeasurementSystem measurementBase;
+  final DistanceUnit distanceUnit;
   final VoidCallback? onTap;
 
   static const double _photoHeight = 210;
@@ -94,8 +99,15 @@ class VehicleCard extends StatelessWidget {
               children: [
                 _Badge(
                   icon: Icons.speed,
-                  label: '${Formatters.odometer(info.lastReportedOdometer)} '
-                      '${info.vehicle.useHours ? 'h' : 'km'}',
+                  // Hour-metered vehicles store engine hours, not distance — no
+                  // unit conversion applies, so show the raw value with "h".
+                  label: info.vehicle.useHours
+                      ? '${Formatters.odometer(info.lastReportedOdometer)} h'
+                      : Formatters.distance(
+                          info.lastReportedOdometer,
+                          measurementBase,
+                          distanceUnit,
+                        ),
                 ),
                 const SizedBox(height: 8),
                 _Badge(

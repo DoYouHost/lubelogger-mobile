@@ -18,6 +18,18 @@
   "comingSoon": "Wkrótce",
   "garageEmpty": "Brak pojazdów. Dodaj pierwszy, aby rozpocząć.",
   "garageLoadError": "Nie udało się wczytać garażu. Pociągnij, aby ponowić.",
+
+  "settingsTitle": "Ustawienia",
+  "settingsUnits": "Jednostki",
+  "settingsCurrency": "Waluta",
+  "settingsDistance": "Dystans",
+  "settingsFuelEconomy": "Zużycie paliwa",
+  "settingsServer": "Serwer",
+  "settingsStorageBase": "Dane serwera",
+  "baseMetric": "Metryczne",
+  "baseImperial": "Imperialne",
+  "currencyAuto": "Automatyczna ({symbol})",
+  "settingsUnitsMetricNote": "Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.",
   "signedInAs": "Zalogowano jako {name}",
 
   "errMissingUrl": "Podaj adres serwera.",

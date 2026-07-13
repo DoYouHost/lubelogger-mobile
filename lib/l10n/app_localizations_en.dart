@@ -57,6 +57,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get garageLoadError => 'Couldn\'t load your garage. Pull to retry.';
 
   @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsUnits => 'Units';
+
+  @override
+  String get settingsCurrency => 'Currency';
+
+  @override
+  String get settingsDistance => 'Distance';
+
+  @override
+  String get settingsFuelEconomy => 'Fuel economy';
+
+  @override
+  String get settingsServer => 'Server';
+
+  @override
+  String get settingsStorageBase => 'Server data';
+
+  @override
+  String get baseMetric => 'Metric';
+
+  @override
+  String get baseImperial => 'Imperial';
+
+  @override
+  String currencyAuto(String symbol) {
+    return 'Automatic ($symbol)';
+  }
+
+  @override
+  String get settingsUnitsMetricNote =>
+      'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.';
+
+  @override
   String signedInAs(String name) {
     return 'Signed in as $name';
   }

@@ -10,6 +10,7 @@ import 'core/models/server_info.dart';
 import 'core/models/vehicle_info.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
+import 'core/settings/units_settings.dart';
 import 'data/vehicles_repository.dart';
 
 /// Overridden in main() after `SharedPreferences.getInstance()`.
@@ -23,6 +24,43 @@ final credentialsStoreProvider =
 final settingsRepositoryProvider = Provider<SettingsRepository>(
   (ref) => SettingsRepository(ref.watch(sharedPreferencesProvider)),
 );
+
+/// Display-unit preferences (currency symbol, distance, fuel economy). Persisted
+/// locally; independent of the server's own locale.
+final unitsSettingsProvider =
+    NotifierProvider<UnitsSettingsNotifier, UnitsSettings>(
+  UnitsSettingsNotifier.new,
+);
+
+class UnitsSettingsNotifier extends Notifier<UnitsSettings> {
+  @override
+  UnitsSettings build() => ref.watch(settingsRepositoryProvider).loadUnits();
+
+  Future<void> _save(UnitsSettings units) async {
+    await ref.read(settingsRepositoryProvider).saveUnits(units);
+    state = units;
+  }
+
+  Future<void> setBase(MeasurementSystem base) =>
+      _save(state.copyWith(base: base));
+
+  Future<void> setCurrency(CurrencyOption currency) =>
+      _save(state.copyWith(currency: currency));
+
+  Future<void> setDistance(DistanceUnit distance) =>
+      _save(state.copyWith(distance: distance));
+
+  Future<void> setEconomy(FuelEconomyUnit economy) =>
+      _save(state.copyWith(economy: economy));
+}
+
+/// The currency symbol to display: the user's forced choice, or the server's
+/// symbol when set to [CurrencyOption.auto].
+final currencySymbolProvider = Provider<String>((ref) {
+  final forced = ref.watch(unitsSettingsProvider).currency.fixedSymbol;
+  if (forced != null) return forced;
+  return ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
+});
 
 /// Bare Dio (no auth) used for the login probe.
 final bareDioProvider = Provider<Dio>((ref) => createBareDio());

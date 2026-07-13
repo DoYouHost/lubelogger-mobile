@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
@@ -18,8 +19,8 @@ class GarageScreen extends ConsumerWidget {
     final garage = ref.watch(garageProvider);
     final baseUrl = ref.watch(serverProfileProvider)?.baseUrl ?? '';
     final apiKey = ref.watch(apiKeyProvider).valueOrNull;
-    final currency =
-        ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
+    final currency = ref.watch(currencySymbolProvider);
+    final units = ref.watch(unitsSettingsProvider);
 
     Future<void> refresh() async {
       ref.invalidate(garageProvider);
@@ -35,10 +36,9 @@ class GarageScreen extends ConsumerWidget {
           titleWidget: const LubeLoggerWordmark(),
           actions: [
             IconButton(
-              tooltip: l10n.logout,
-              icon: const Icon(Icons.logout),
-              onPressed: () =>
-                  ref.read(serverProfileProvider.notifier).clear(),
+              tooltip: l10n.settingsTitle,
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => context.push('/settings'),
             ),
           ],
         ),
@@ -68,6 +68,8 @@ class GarageScreen extends ConsumerWidget {
                     baseUrl: baseUrl,
                     apiKey: apiKey,
                     currencySymbol: currency,
+                    measurementBase: units.base,
+                    distanceUnit: units.distance,
                     onTap: () => _comingSoon(context, l10n),
                   );
                 },

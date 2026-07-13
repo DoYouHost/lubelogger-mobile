@@ -188,6 +188,72 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load your garage. Pull to retry.'**
   String get garageLoadError;
 
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get settingsUnits;
+
+  /// No description provided for @settingsCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get settingsCurrency;
+
+  /// No description provided for @settingsDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get settingsDistance;
+
+  /// No description provided for @settingsFuelEconomy.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel economy'**
+  String get settingsFuelEconomy;
+
+  /// No description provided for @settingsServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get settingsServer;
+
+  /// No description provided for @settingsStorageBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Server data'**
+  String get settingsStorageBase;
+
+  /// No description provided for @baseMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get baseMetric;
+
+  /// No description provided for @baseImperial.
+  ///
+  /// In en, this message translates to:
+  /// **'Imperial'**
+  String get baseImperial;
+
+  /// No description provided for @currencyAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic ({symbol})'**
+  String currencyAuto(String symbol);
+
+  /// No description provided for @settingsUnitsMetricNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.'**
+  String get settingsUnitsMetricNote;
+
   /// Confirmation after a successful connection.
   ///
   /// In en, this message translates to:

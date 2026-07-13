@@ -3,13 +3,15 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'server_profile.dart';
+import 'units_settings.dart';
 
-/// Persists the server profile in SharedPreferences. The URL, auth mode and
-/// username are not secrets — [CredentialsStore] holds the key/password.
+/// Persists the server profile and display preferences in SharedPreferences.
+/// The URL is not a secret — [CredentialsStore] holds the API key.
 class SettingsRepository {
   SettingsRepository(this._prefs);
 
   static const _profileKey = 'server_profile';
+  static const _unitsKey = 'units_settings';
 
   final SharedPreferences _prefs;
 
@@ -29,4 +31,17 @@ class SettingsRepository {
       _prefs.setString(_profileKey, jsonEncode(profile.toJson()));
 
   Future<void> clearProfile() => _prefs.remove(_profileKey);
+
+  UnitsSettings loadUnits() {
+    final raw = _prefs.getString(_unitsKey);
+    if (raw == null) return const UnitsSettings();
+    try {
+      return UnitsSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } on Object {
+      return const UnitsSettings();
+    }
+  }
+
+  Future<void> saveUnits(UnitsSettings units) =>
+      _prefs.setString(_unitsKey, jsonEncode(units.toJson()));
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/garage/garage_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/setup/setup_screen.dart';
 import 'providers.dart';
 
@@ -29,6 +30,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/setup', builder: (_, _) => const SetupScreen()),
       GoRoute(path: '/', builder: (_, _) => const GarageScreen()),
+      GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
     ],
   );
   // "Change server" (profile set→null→set) rebuilds a new GoRouter — dispose
