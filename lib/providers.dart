@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
@@ -142,6 +143,10 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 final apiKeyProvider = FutureProvider<String?>(
   (ref) => ref.watch(credentialsStoreProvider).readApiKey(),
 );
+
+/// App name/version/build number, for the Settings "About" section.
+final packageInfoProvider =
+    FutureProvider<PackageInfo>((ref) => PackageInfo.fromPlatform());
 
 final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
   (ref) => VehiclesRepository(ref.watch(apiClientProvider).dio),

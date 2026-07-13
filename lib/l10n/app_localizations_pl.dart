@@ -82,6 +82,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsServer => 'Serwer';
 
   @override
+  String get settingsAbout => 'O aplikacji';
+
+  @override
   String get settingsStorageBase => 'Dane serwera';
 
   @override
@@ -349,4 +352,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get errApiKeyRejected => 'Klucz API został odrzucony przez serwer.';
+
+  @override
+  String appVersion(String version, String build) {
+    return 'Wersja $version ($build)';
+  }
+
+  @override
+  String get openSourceLicenses => 'Licencje open source';
 }

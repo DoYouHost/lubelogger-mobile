@@ -14,68 +14,141 @@ import 'widgets/record_tabs.dart';
 /// One vehicle, with the dashboard and each record type as a tab. The vehicle
 /// header + scrollable tab bar are shared chrome; each tab manages its own data
 /// and pull-to-refresh. Reached at `/vehicle/:id`.
-class VehicleScreen extends ConsumerWidget {
+class VehicleScreen extends ConsumerStatefulWidget {
   const VehicleScreen({super.key, required this.vehicleId});
 
   final int vehicleId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<VehicleScreen> createState() => _VehicleScreenState();
+}
+
+class _VehicleScreenState extends ConsumerState<VehicleScreen>
+    with SingleTickerProviderStateMixin {
+  static const _tabCount = 7;
+
+  late final TabController _tabController;
+  List<_VehicleTab> _tabs = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabCount, vsync: this)
+      ..addListener(_onTabChanged);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  /// Quietly re-fetches the newly-selected tab's data in the background.
+  /// Invalidating alone is enough to trigger the refetch: the provider keeps
+  /// serving its last value while it's in flight (Riverpod's default
+  /// `skipLoadingOnRefresh`), so the tab repaints in place once fresh data
+  /// arrives instead of flashing a full-screen spinner.
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    _tabs[_tabController.index].refresh(ref);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final vehicle = ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
+    final vehicleId = widget.vehicleId;
+    final vehicle =
+        ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
     final useHours = vehicle?.useHours ?? false;
 
-    final tabs = <_VehicleTab>[
-      _VehicleTab(l10n.tabDashboard, Icons.dashboard_rounded,
-          DashboardTab(vehicleId: vehicleId)),
-      _VehicleTab(l10n.tabOdometer, Icons.speed,
-          OdometerTab(vehicleId: vehicleId, useHours: useHours)),
-      _VehicleTab(l10n.catService, Icons.build_circle_outlined,
-          GenericRecordsTab(
-              vehicleId: vehicleId,
-              kind: RecordKind.service,
-              useHours: useHours)),
-      _VehicleTab(l10n.catRepairs, Icons.report_outlined,
-          GenericRecordsTab(
-              vehicleId: vehicleId,
-              kind: RecordKind.repair,
-              useHours: useHours)),
-      _VehicleTab(l10n.catUpgrades, Icons.upgrade,
-          GenericRecordsTab(
-              vehicleId: vehicleId,
-              kind: RecordKind.upgrade,
-              useHours: useHours)),
-      _VehicleTab(l10n.catFuel, Icons.local_gas_station,
-          FuelTab(vehicleId: vehicleId, useHours: useHours)),
-      _VehicleTab(l10n.catTax, Icons.request_quote_outlined,
-          GenericRecordsTab(
-              vehicleId: vehicleId, kind: RecordKind.tax, useHours: useHours)),
+    _tabs = <_VehicleTab>[
+      _VehicleTab(
+        l10n.tabDashboard,
+        Icons.dashboard_rounded,
+        DashboardTab(vehicleId: vehicleId),
+        (ref) {
+          ref.invalidate(vehicleInfoProvider(vehicleId));
+          ref.invalidate(gasStatsProvider(vehicleId));
+          ref.invalidate(monthlyBreakdownProvider(vehicleId));
+        },
+      ),
+      _VehicleTab(
+        l10n.tabOdometer,
+        Icons.speed,
+        OdometerTab(vehicleId: vehicleId, useHours: useHours),
+        (ref) => ref.invalidate(odometerRecordsProvider(vehicleId)),
+      ),
+      _VehicleTab(
+        l10n.catService,
+        Icons.build_circle_outlined,
+        GenericRecordsTab(
+            vehicleId: vehicleId,
+            kind: RecordKind.service,
+            useHours: useHours),
+        (ref) => ref.invalidate(vehicleRecordsProvider(
+            (vehicleId: vehicleId, kind: RecordKind.service))),
+      ),
+      _VehicleTab(
+        l10n.catRepairs,
+        Icons.report_outlined,
+        GenericRecordsTab(
+            vehicleId: vehicleId,
+            kind: RecordKind.repair,
+            useHours: useHours),
+        (ref) => ref.invalidate(vehicleRecordsProvider(
+            (vehicleId: vehicleId, kind: RecordKind.repair))),
+      ),
+      _VehicleTab(
+        l10n.catUpgrades,
+        Icons.upgrade,
+        GenericRecordsTab(
+            vehicleId: vehicleId,
+            kind: RecordKind.upgrade,
+            useHours: useHours),
+        (ref) => ref.invalidate(vehicleRecordsProvider(
+            (vehicleId: vehicleId, kind: RecordKind.upgrade))),
+      ),
+      _VehicleTab(
+        l10n.catFuel,
+        Icons.local_gas_station,
+        FuelTab(vehicleId: vehicleId, useHours: useHours),
+        (ref) {
+          ref.invalidate(gasRecordsProvider(vehicleId));
+          ref.invalidate(gasStatsProvider(vehicleId));
+        },
+      ),
+      _VehicleTab(
+        l10n.catTax,
+        Icons.request_quote_outlined,
+        GenericRecordsTab(
+            vehicleId: vehicleId, kind: RecordKind.tax, useHours: useHours),
+        (ref) => ref.invalidate(vehicleRecordsProvider(
+            (vehicleId: vehicleId, kind: RecordKind.tax))),
+      ),
     ];
 
     return DashBackground(
-      child: DefaultTabController(
-        length: tabs.length,
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: DashTokens.of(context).accentGold,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onPressed: () => showAddRecordSheet(context, vehicleId),
-            child: const Icon(Icons.add),
-          ),
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                _VehicleHeader(vehicle: vehicle),
-                _VehicleTabBar(tabs: tabs),
-                Expanded(
-                  child: TabBarView(
-                    children: [for (final t in tabs) t.content],
-                  ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: DashTokens.of(context).accentGold,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          onPressed: () => showAddRecordSheet(context, vehicleId),
+          child: const Icon(Icons.add),
+        ),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _VehicleHeader(vehicle: vehicle),
+              _VehicleTabBar(tabs: _tabs, controller: _tabController),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [for (final t in _tabs) t.content],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -83,13 +156,15 @@ class VehicleScreen extends ConsumerWidget {
   }
 }
 
-/// A tab's label, icon, and content pane.
+/// A tab's label, icon, content pane, and the quiet background-refresh it
+/// triggers when the user switches to it.
 class _VehicleTab {
-  const _VehicleTab(this.label, this.icon, this.content);
+  const _VehicleTab(this.label, this.icon, this.content, this.refresh);
 
   final String label;
   final IconData icon;
   final Widget content;
+  final void Function(WidgetRef ref) refresh;
 }
 
 /// Back button + circular photo + name/plate row, with a hairline underline
@@ -200,9 +275,10 @@ class _Avatar extends StatelessWidget {
 /// Scrollable tab strip: each tab is an icon + label; the selected tab gets a
 /// rounded gold pill (design's active-accent language).
 class _VehicleTabBar extends StatelessWidget {
-  const _VehicleTabBar({required this.tabs});
+  const _VehicleTabBar({required this.tabs, required this.controller});
 
   final List<_VehicleTab> tabs;
+  final TabController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +288,7 @@ class _VehicleTabBar extends StatelessWidget {
         border: Border(bottom: BorderSide(color: t.hairline)),
       ),
       child: TabBar(
+        controller: controller,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         dividerColor: Colors.transparent,

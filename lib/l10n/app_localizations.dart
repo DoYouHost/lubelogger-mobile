@@ -236,6 +236,12 @@ abstract class AppLocalizations {
   /// **'Server'**
   String get settingsServer;
 
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
   /// No description provided for @settingsStorageBase.
   ///
   /// In en, this message translates to:
@@ -691,6 +697,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The API key was rejected by the server.'**
   String get errApiKeyRejected;
+
+  /// App version + build number, shown in Settings > About.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({build})'**
+  String appVersion(String version, String build);
+
+  /// No description provided for @openSourceLicenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Open source licenses'**
+  String get openSourceLicenses;
 }
 
 class _AppLocalizationsDelegate

@@ -20,6 +20,7 @@ class SettingsScreen extends ConsumerWidget {
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
     final profile = ref.watch(serverProfileProvider);
+    final packageInfo = ref.watch(packageInfoProvider).valueOrNull;
 
     return DashBackground(
       child: Scaffold(
@@ -145,6 +146,43 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 18),
+            _Section(
+              title: l10n.settingsAbout,
+              children: [
+                Text(
+                  packageInfo?.appName ?? l10n.appTitle,
+                  style: TextStyle(
+                    fontFamily: DashTokens.fontUi,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: t.textPrimary,
+                  ),
+                ),
+                if (packageInfo != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      l10n.appVersion(
+                          packageInfo.version, packageInfo.buildNumber),
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontMono,
+                        fontSize: 12,
+                        color: t.textTertiary,
+                      ),
+                    ),
+                  ),
+                _divider(t),
+                _LinkRow(
+                  label: l10n.openSourceLicenses,
+                  onTap: () => showLicensePage(
+                    context: context,
+                    applicationName: packageInfo?.appName ?? l10n.appTitle,
+                    applicationVersion: packageInfo?.version,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -205,6 +243,43 @@ class _Section extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// A tappable row that navigates elsewhere (e.g. the licenses page): label on
+/// the left, chevron on the right.
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: t.textPrimary,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right, color: t.textTertiary),
+          ],
+        ),
       ),
     );
   }

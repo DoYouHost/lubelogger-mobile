@@ -33,6 +33,7 @@
   "settingsDateFormat": "Date format",
   "settingsDateSeparator": "Date separator",
   "settingsServer": "Server",
+  "settingsAbout": "About",
   "settingsStorageBase": "Server data",
   "baseMetric": "Metric",
   "baseImperial": "Imperial",
@@ -181,5 +182,15 @@
   "errConnection": "Connection error. Please try again.",
   "errMalformedResponse": "The server response could not be understood.",
   "errInvalidCredentials": "Invalid username or password.",
-  "errApiKeyRejected": "The API key was rejected by the server."
+  "errApiKeyRejected": "The API key was rejected by the server.",
+
+  "appVersion": "Version {version} ({build})",
+  "@appVersion": {
+    "description": "App version + build number, shown in Settings > About.",
+    "placeholders": {
+      "version": { "type": "String" },
+      "build": { "type": "String" }
+    }
+  },
+  "openSourceLicenses": "Open source licenses"
 }

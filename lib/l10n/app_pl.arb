@@ -27,6 +27,7 @@
   "settingsDateFormat": "Format daty",
   "settingsDateSeparator": "Separator daty",
   "settingsServer": "Serwer",
+  "settingsAbout": "O aplikacji",
   "settingsStorageBase": "Dane serwera",
   "baseMetric": "Metryczne",
   "baseImperial": "Imperialne",
@@ -159,5 +160,8 @@
   "errConnection": "Błąd połączenia. Spróbuj ponownie.",
   "errMalformedResponse": "Nie udało się odczytać odpowiedzi serwera.",
   "errInvalidCredentials": "Nieprawidłowa nazwa użytkownika lub hasło.",
-  "errApiKeyRejected": "Klucz API został odrzucony przez serwer."
+  "errApiKeyRejected": "Klucz API został odrzucony przez serwer.",
+
+  "appVersion": "Wersja {version} ({build})",
+  "openSourceLicenses": "Licencje open source"
 }
