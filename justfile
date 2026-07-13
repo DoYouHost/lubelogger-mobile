@@ -1,0 +1,131 @@
+# Release artifact lives in build/dist (survives _clean-artifacts, which only
+# wipes build/app) so a later `just clean`/rebuild doesn't take it out from
+# under `release`.
+apk := "build/dist/app-release.apk"
+# Shared headless GPU Android 14 emulator (TofuSadurki: lxc-docker-android).
+emu := "192.168.2.208:5555"
+
+# show available commands
+default:
+    @just --list
+
+# run tests
+test:
+    flutter test
+
+# wipe build outputs + the Dart kernel snapshot so a release build can't pack a
+# stale snapshot (incremental release builds have been known to repeatably reuse
+# an outdated one — same code shipped, wrong bytes). Cheap insurance before any
+# release build.
+_clean-artifacts:
+    rm -rf build/app .dart_tool/flutter_build
+
+# build release APK
+build: _clean-artifacts
+    flutter build apk --release
+    mkdir -p build/dist
+    cp build/app/outputs/flutter-apk/app-release.apk {{apk}}
+
+# build Play Store bundle (AAB) — Play accepts only AAB
+build-aab: _clean-artifacts
+    flutter build appbundle --release
+    mkdir -p build/dist
+    cp build/app/outputs/bundle/release/app-release.aab build/dist/
+
+# clean build artifacts
+clean:
+    flutter clean
+
+# connect to the remote GPU emulator on the nuc LXC (idempotent, needs LAN)
+emu-connect:
+    adb connect {{emu}}
+
+# run the app on the remote GPU emulator (screen view at http://192.168.2.208:8000)
+dev: emu-connect
+    flutter run -d {{emu}}
+
+# one-time setup: open the device list in emu-view's dedicated Chrome profile so
+# "Fit to screen" + Save settings persists there (localStorage, per player=mse).
+# Then `just emu-view` picks it up. Configure -> keep Fit to screen ON -> Save.
+emu-config:
+    flatpak run com.google.Chrome \
+      --user-data-dir="$HOME/.config/chrome-emu" --no-first-run --no-default-browser-check \
+      --app='http://192.168.2.208:8000' >/dev/null 2>&1 &
+
+# ws-scrcpy deep-link skips the device list (MSE player, fixed scrcpy port 8886,
+# stable across restarts). URL is single-quoted so the shell keeps the &/#/%.
+# A dedicated --user-data-dir forces a separate Chrome instance so --window-size
+# is actually honored (a window in an already-running Chrome ignores size flags).
+# open the emulator screen straight into a dedicated phone-sized browser window
+emu-view:
+    flatpak run com.google.Chrome \
+      --user-data-dir="$HOME/.config/chrome-emu" --no-first-run --no-default-browser-check \
+      --window-size=500,1000 \
+      --app='http://192.168.2.208:8000/#!action=stream&udid=android-emulator%3A5555&player=mse&ws=ws%3A%2F%2F192.168.2.208%3A8000%2F%3Faction%3Dproxy-adb%26remote%3Dtcp%253A8886%26udid%3Dandroid-emulator%253A5555' \
+      >/dev/null 2>&1 &
+
+# bump version in pubspec.yaml and commit
+# versionCode = major*10000 + minor*100 + patch (e.g. 1.2.3 → 10203)
+# Idempotent: safe to re-run after a partially-completed `ship` — it skips the
+# edit/commit when the version is already bumped, so the pipeline can resume.
+_bump ver:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    git pull --rebase --autostash origin main
+    major=$(echo "{{ver}}" | cut -d. -f1)
+    minor=$(echo "{{ver}}" | cut -d. -f2)
+    patch=$(echo "{{ver}}" | cut -d. -f3)
+    code=$((major * 10000 + minor * 100 + patch))
+    target="version: {{ver}}+${code}"
+    if [ "$(grep '^version: ' pubspec.yaml)" = "$target" ]; then
+        echo "pubspec.yaml already at {{ver}}+${code}, skipping bump"
+    else
+        sed -i "s/^version: .*/${target}/" pubspec.yaml
+    fi
+    git add pubspec.yaml
+    if git diff --cached --quiet; then
+        echo "Nothing to commit — version {{ver}} already committed, resuming"
+    else
+        git commit -m "chore: bump version to {{ver}}"
+    fi
+
+# create Codeberg release and upload the APK (assumes build ran)
+# usage: just release 1.0.0
+release ver:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Push the bump commit first; let Codeberg create the tag together with the
+    # release in one server-side call. This avoids the race where we push a tag
+    # and immediately reference it before Codeberg has indexed it.
+    git push origin HEAD:main
+    # Skip creating the release if it already exists (e.g. a previous run got
+    # this far before failing), so the pipeline can be resumed safely.
+    # Capture the list first: piping straight into `grep -q` deadlocks against
+    # `set -o pipefail` — grep closes the pipe on the first match, tea dies with
+    # SIGPIPE (141), the pipeline returns non-zero, and the `if` wrongly takes
+    # the "not found" branch → a bogus re-create that aborts the run.
+    existing=$(tea releases list --remote origin --output tsv 2>/dev/null | awk -F'\t' 'NR>1 {print $1}')
+    if grep -qxF "v{{ver}}" <<<"$existing"; then
+        echo "Release v{{ver}} already exists, skipping create"
+    else
+        tea releases create --remote origin --target main --tag v{{ver}} --title "v{{ver}}"
+    fi
+    # Upload the APK. Skip if it's already there so a resumed run doesn't
+    # duplicate it.
+    name=$(basename "{{apk}}")
+    assets=$(tea releases assets list --remote origin v{{ver}} --output tsv 2>/dev/null | awk -F'\t' 'NR>1 {print $1}')
+    if grep -qxF "$name" <<<"$assets"; then
+        echo "Asset $name already uploaded, skipping"
+    else
+        tea releases assets create --remote origin v{{ver}} "{{apk}}"
+    fi
+    # Sync the server-created tag back to the local repo.
+    git fetch --tags origin
+
+# bump version, test, build and release — full pipeline
+# usage: just ship 1.0.0
+ship ver:
+    just _bump {{ver}}
+    just test
+    just build
+    just release {{ver}}
