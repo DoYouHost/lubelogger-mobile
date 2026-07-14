@@ -232,7 +232,7 @@ class _DashboardBody extends ConsumerWidget {
 }
 
 /// The four stacked headline stats: odometer, distance, total cost, avg economy.
-class _StatBlock extends StatelessWidget {
+class _StatBlock extends ConsumerWidget {
   const _StatBlock({
     required this.info,
     required this.stats,
@@ -246,7 +246,7 @@ class _StatBlock extends StatelessWidget {
   final String symbol;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final useHours = info.vehicle.useHours;
 
@@ -254,6 +254,11 @@ class _StatBlock extends StatelessWidget {
         ? '${Formatters.odometer(info.lastReportedOdometer)} h'
         : Formatters.distance(
             info.lastReportedOdometer, units.base, units.distance);
+
+    final lastOdometerDate =
+        ref.watch(lastOdometerDateProvider(info.vehicle.id)).valueOrNull;
+    final lastOdometerDateLabel =
+        lastOdometerDate == null ? null : units.formatDate(lastOdometerDate);
 
     final distance = stats == null
         ? '—'
@@ -268,7 +273,7 @@ class _StatBlock extends StatelessWidget {
 
     return Column(
       children: [
-        _StatRow(value: odometer, label: l10n.statLastOdometer),
+        _StatRow(value: odometer, secondary: lastOdometerDateLabel),
         _StatRow(value: distance, label: l10n.statDistanceTraveled),
         _StatRow(value: Formatters.currency(info.totalCost, symbol), label: l10n.statTotalCost),
         _StatRow(value: economy, label: l10n.statAvgEconomy),
@@ -278,10 +283,16 @@ class _StatBlock extends StatelessWidget {
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.value, required this.label});
+  const _StatRow({required this.value, this.label, this.secondary});
 
   final String value;
-  final String label;
+
+  /// Caption under the value. Omitted for rows that carry only a [secondary]
+  /// chip (the odometer date).
+  final String? label;
+
+  /// Optional small chip under the value (e.g. the date of the reading).
+  final String? secondary;
 
   @override
   Widget build(BuildContext context) {
@@ -299,16 +310,38 @@ class _StatRow extends StatelessWidget {
               color: t.textPrimary,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: DashTokens.fontUi,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: t.textTertiary,
+          if (secondary != null) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: t.subCard,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: t.subCardBorder),
+              ),
+              child: Text(
+                secondary!,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontMono,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: t.textTertiary,
+                ),
+              ),
             ),
-          ),
+          ],
+          if (label != null) ...[
+            SizedBox(height: secondary != null ? 6 : 2),
+            Text(
+              label!,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: t.textTertiary,
+              ),
+            ),
+          ],
         ],
       ),
     );

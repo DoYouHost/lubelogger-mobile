@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/models/vehicle_tab.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
+import '../common/vehicle_tab_ui.dart';
 
 /// Basic settings: display units (currency / distance / fuel economy) and the
 /// server connection (with log out).
@@ -17,6 +19,8 @@ class SettingsScreen extends ConsumerWidget {
     final t = DashTokens.of(context);
     final units = ref.watch(unitsSettingsProvider);
     final unitsCtl = ref.read(unitsSettingsProvider.notifier);
+    final visibleTabs = ref.watch(visibleTabsProvider);
+    final visibleTabsCtl = ref.read(visibleTabsProvider.notifier);
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
     final profile = ref.watch(serverProfileProvider);
@@ -106,6 +110,20 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: unitsCtl.setDateSeparator,
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _Section(
+              title: l10n.settingsVisibleTabs,
+              footnote: l10n.settingsVisibleTabsNote,
+              children: [
+                for (final tab in VehicleTab.values)
+                  _ToggleRow(
+                    icon: tab.icon,
+                    label: tab.label(l10n),
+                    value: visibleTabs.contains(tab),
+                    onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
+                  ),
               ],
             ),
             const SizedBox(height: 18),
@@ -311,6 +329,57 @@ class _SettingRow extends StatelessWidget {
         const SizedBox(width: 12),
         control,
       ],
+    );
+  }
+}
+
+/// An icon + label with a trailing switch; the whole row is tappable. Used for
+/// the visible-tabs toggles.
+class _ToggleRow extends StatelessWidget {
+  const _ToggleRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: t.textTertiary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: t.textPrimary,
+                ),
+              ),
+            ),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+              activeThumbColor: Colors.white,
+              activeTrackColor: t.accentGold,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

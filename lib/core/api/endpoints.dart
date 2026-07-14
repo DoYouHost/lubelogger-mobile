@@ -48,4 +48,19 @@ abstract final class Endpoints {
 
   /// Odometer readings: `?vehicleId=`. Source of the monthly distance line.
   static const odometerRecords = '$apiPrefix/vehicle/odometerrecords';
+
+  // Additional record types with their own shapes (read-only tabs). Each is a
+  // uniform-CRUD list endpoint under `/api/vehicle/`; see LUBELOGGER-API.md §6.
+  static const supplyRecords = '$apiPrefix/vehicle/supplyrecords';
+  static const planRecords = '$apiPrefix/vehicle/planrecords';
+
+  /// Reminders: `?vehicleId=&tags=&urgencies=` (no date range, unlike the
+  /// cost records). The read model adds computed `dueDays`/`dueDistance`.
+  static const reminders = '$apiPrefix/vehicle/reminders';
+
+  /// Notes: `?vehicleId=&tags=` only. No date/cost; carry a title + body.
+  static const notes = '$apiPrefix/vehicle/notes';
+
+  /// Equipment: `?vehicleId=&tags=` only. Read model adds `distanceTraveled`.
+  static const equipmentRecords = '$apiPrefix/vehicle/equipmentrecords';
 }

@@ -272,17 +272,23 @@ abstract class AppLocalizations {
   /// **'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.'**
   String get settingsUnitsMetricNote;
 
+  /// No description provided for @settingsVisibleTabs.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible tabs'**
+  String get settingsVisibleTabs;
+
+  /// No description provided for @settingsVisibleTabsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which record tabs appear on the vehicle screen and in the add menu.'**
+  String get settingsVisibleTabsNote;
+
   /// No description provided for @dashLoadError.
   ///
   /// In en, this message translates to:
   /// **'Couldn\'t load this vehicle. Pull to retry.'**
   String get dashLoadError;
-
-  /// No description provided for @statLastOdometer.
-  ///
-  /// In en, this message translates to:
-  /// **'Last Reported Odometer'**
-  String get statLastOdometer;
 
   /// No description provided for @statDistanceTraveled.
   ///
@@ -379,6 +385,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tax'**
   String get catTax;
+
+  /// No description provided for @catSupply.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplies'**
+  String get catSupply;
+
+  /// No description provided for @catPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Planner'**
+  String get catPlan;
+
+  /// No description provided for @catReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get catReminder;
+
+  /// No description provided for @catNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get catNote;
+
+  /// No description provided for @catEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment'**
+  String get catEquipment;
+
+  /// No description provided for @planPriorityCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get planPriorityCritical;
+
+  /// No description provided for @planPriorityNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get planPriorityNormal;
+
+  /// No description provided for @planPriorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get planPriorityLow;
+
+  /// No description provided for @planProgressBacklog.
+  ///
+  /// In en, this message translates to:
+  /// **'Backlog'**
+  String get planProgressBacklog;
+
+  /// No description provided for @planProgressInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get planProgressInProgress;
+
+  /// No description provided for @planProgressTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing'**
+  String get planProgressTesting;
+
+  /// No description provided for @planProgressDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get planProgressDone;
+
+  /// No description provided for @equipmentEquipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipped'**
+  String get equipmentEquipped;
+
+  /// No description provided for @equipmentRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get equipmentRemoved;
+
+  /// No description provided for @notePinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get notePinned;
 
   /// No description provided for @tabDashboard.
   ///

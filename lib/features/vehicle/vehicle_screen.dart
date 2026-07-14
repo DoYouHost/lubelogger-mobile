@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/models/vehicle.dart';
 import '../../core/models/vehicle_record.dart';
+import '../../core/models/vehicle_tab.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../common/vehicle_tab_ui.dart';
 import 'add_record_sheet.dart';
 import 'widgets/record_tabs.dart';
 
@@ -24,22 +26,15 @@ class VehicleScreen extends ConsumerStatefulWidget {
 }
 
 class _VehicleScreenState extends ConsumerState<VehicleScreen>
-    with SingleTickerProviderStateMixin {
-  static const _tabCount = 7;
-
-  late final TabController _tabController;
+    with TickerProviderStateMixin {
+  // Recreated whenever the visible-tab count changes (settings toggles), so
+  // TickerProviderStateMixin (not Single-) — we may hold successive controllers.
+  TabController? _tabController;
   List<_VehicleTab> _tabs = const [];
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: _tabCount, vsync: this)
-      ..addListener(_onTabChanged);
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     super.dispose();
   }
 
@@ -49,8 +44,25 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   /// `skipLoadingOnRefresh`), so the tab repaints in place once fresh data
   /// arrives instead of flashing a full-screen spinner.
   void _onTabChanged() {
-    if (_tabController.indexIsChanging) return;
-    _tabs[_tabController.index].refresh(ref);
+    final controller = _tabController;
+    if (controller == null || controller.indexIsChanging) return;
+    _tabs[controller.index].refresh(ref);
+  }
+
+  /// Returns a controller of the given [length], reusing the current one when
+  /// the count is unchanged and otherwise rebuilding it (preserving the
+  /// selected index where possible). Called from [build] because the visible
+  /// tab set — and thus the length — can change while the screen is alive.
+  TabController _controllerFor(int length) {
+    final existing = _tabController;
+    if (existing != null && existing.length == length) return existing;
+    final initialIndex =
+        existing == null ? 0 : existing.index.clamp(0, length - 1);
+    existing?.removeListener(_onTabChanged);
+    existing?.dispose();
+    return _tabController =
+        TabController(length: length, initialIndex: initialIndex, vsync: this)
+          ..addListener(_onTabChanged);
   }
 
   @override
@@ -60,7 +72,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
     final vehicle =
         ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
     final useHours = vehicle?.useHours ?? false;
+    final visible = ref.watch(visibleTabsProvider);
 
+    // Dashboard always leads; the record tabs follow in enum order, filtered to
+    // the user's visible set.
     _tabs = <_VehicleTab>[
       _VehicleTab(
         l10n.tabDashboard,
@@ -72,60 +87,12 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
           ref.invalidate(monthlyBreakdownProvider(vehicleId));
         },
       ),
-      _VehicleTab(
-        l10n.tabOdometer,
-        Icons.speed,
-        OdometerTab(vehicleId: vehicleId, useHours: useHours),
-        (ref) => ref.invalidate(odometerRecordsProvider(vehicleId)),
-      ),
-      _VehicleTab(
-        l10n.catService,
-        Icons.build_circle_outlined,
-        GenericRecordsTab(
-            vehicleId: vehicleId,
-            kind: RecordKind.service,
-            useHours: useHours),
-        (ref) => ref.invalidate(vehicleRecordsProvider(
-            (vehicleId: vehicleId, kind: RecordKind.service))),
-      ),
-      _VehicleTab(
-        l10n.catRepairs,
-        Icons.report_outlined,
-        GenericRecordsTab(
-            vehicleId: vehicleId,
-            kind: RecordKind.repair,
-            useHours: useHours),
-        (ref) => ref.invalidate(vehicleRecordsProvider(
-            (vehicleId: vehicleId, kind: RecordKind.repair))),
-      ),
-      _VehicleTab(
-        l10n.catUpgrades,
-        Icons.upgrade,
-        GenericRecordsTab(
-            vehicleId: vehicleId,
-            kind: RecordKind.upgrade,
-            useHours: useHours),
-        (ref) => ref.invalidate(vehicleRecordsProvider(
-            (vehicleId: vehicleId, kind: RecordKind.upgrade))),
-      ),
-      _VehicleTab(
-        l10n.catFuel,
-        Icons.local_gas_station,
-        FuelTab(vehicleId: vehicleId, useHours: useHours),
-        (ref) {
-          ref.invalidate(gasRecordsProvider(vehicleId));
-          ref.invalidate(gasStatsProvider(vehicleId));
-        },
-      ),
-      _VehicleTab(
-        l10n.catTax,
-        Icons.request_quote_outlined,
-        GenericRecordsTab(
-            vehicleId: vehicleId, kind: RecordKind.tax, useHours: useHours),
-        (ref) => ref.invalidate(vehicleRecordsProvider(
-            (vehicleId: vehicleId, kind: RecordKind.tax))),
-      ),
+      for (final tab in VehicleTab.values)
+        if (visible.contains(tab))
+          _recordTab(tab, l10n, vehicleId, useHours: useHours),
     ];
+
+    final controller = _controllerFor(_tabs.length);
 
     return DashBackground(
       child: Scaffold(
@@ -133,7 +100,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         floatingActionButton: FloatingActionButton(
           backgroundColor: DashTokens.of(context).accentGold,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          onPressed: () => showAddRecordSheet(context, vehicleId),
+          onPressed: () => showAddRecordSheet(context, vehicleId, visible),
           child: const Icon(Icons.add),
         ),
         body: SafeArea(
@@ -141,10 +108,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
           child: Column(
             children: [
               _VehicleHeader(vehicle: vehicle),
-              _VehicleTabBar(tabs: _tabs, controller: _tabController),
+              _VehicleTabBar(tabs: _tabs, controller: controller),
               Expanded(
                 child: TabBarView(
-                  controller: _tabController,
+                  controller: controller,
                   children: [for (final t in _tabs) t.content],
                 ),
               ),
@@ -154,6 +121,64 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
       ),
     );
   }
+
+  /// Builds the [_VehicleTab] (label, icon, content, background-refresh) for a
+  /// single record [tab].
+  _VehicleTab _recordTab(
+    VehicleTab tab,
+    AppLocalizations l10n,
+    int vehicleId, {
+    required bool useHours,
+  }) {
+    final (Widget content, void Function(WidgetRef) refresh) = switch (tab) {
+      VehicleTab.odometer => (
+          OdometerTab(vehicleId: vehicleId, useHours: useHours),
+          (ref) => ref.invalidate(odometerRecordsProvider(vehicleId)),
+        ),
+      VehicleTab.service => _genericTab(vehicleId, RecordKind.service, useHours),
+      VehicleTab.repair => _genericTab(vehicleId, RecordKind.repair, useHours),
+      VehicleTab.upgrade => _genericTab(vehicleId, RecordKind.upgrade, useHours),
+      VehicleTab.fuel => (
+          FuelTab(vehicleId: vehicleId, useHours: useHours),
+          (ref) {
+            ref.invalidate(gasRecordsProvider(vehicleId));
+            ref.invalidate(gasStatsProvider(vehicleId));
+          },
+        ),
+      VehicleTab.tax => _genericTab(vehicleId, RecordKind.tax, useHours),
+      VehicleTab.supply => (
+          SupplyTab(vehicleId: vehicleId),
+          (ref) => ref.invalidate(supplyRecordsProvider(vehicleId)),
+        ),
+      VehicleTab.plan => (
+          PlanTab(vehicleId: vehicleId),
+          (ref) => ref.invalidate(planRecordsProvider(vehicleId)),
+        ),
+      VehicleTab.reminder => (
+          ReminderTab(vehicleId: vehicleId, useHours: useHours),
+          (ref) => ref.invalidate(remindersProvider(vehicleId)),
+        ),
+      VehicleTab.note => (
+          NoteTab(vehicleId: vehicleId),
+          (ref) => ref.invalidate(notesProvider(vehicleId)),
+        ),
+      VehicleTab.equipment => (
+          EquipmentTab(vehicleId: vehicleId, useHours: useHours),
+          (ref) => ref.invalidate(equipmentRecordsProvider(vehicleId)),
+        ),
+    };
+    return _VehicleTab(tab.label(l10n), tab.icon, content, refresh);
+  }
+
+  /// The generic (date + cost) record tab + its refresh, shared by
+  /// service / repair / upgrade / tax.
+  (Widget, void Function(WidgetRef)) _genericTab(
+          int vehicleId, RecordKind kind, bool useHours) =>
+      (
+        GenericRecordsTab(vehicleId: vehicleId, kind: kind, useHours: useHours),
+        (ref) => ref.invalidate(
+            vehicleRecordsProvider((vehicleId: vehicleId, kind: kind))),
+      );
 }
 
 /// A tab's label, icon, content pane, and the quiet background-refresh it

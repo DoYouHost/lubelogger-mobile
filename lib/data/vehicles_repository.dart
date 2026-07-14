@@ -3,9 +3,14 @@ import 'package:dio/dio.dart';
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
 import '../core/models/dated_cost.dart';
+import '../core/models/equipment_record.dart';
 import '../core/models/gas_record.dart';
+import '../core/models/note_record.dart';
 import '../core/models/odometer_record.dart';
+import '../core/models/plan_record.dart';
+import '../core/models/reminder_record.dart';
 import '../core/models/server_info.dart';
+import '../core/models/supply_record.dart';
 import '../core/models/vehicle.dart';
 import '../core/models/vehicle_info.dart';
 import '../core/models/vehicle_record.dart';
@@ -170,6 +175,44 @@ class VehiclesRepository {
         return [
           for (final e in res.data ?? const [])
             if (e is Map<String, dynamic>) OdometerRecord.fromJson(e),
+        ];
+      });
+
+  /// `GET /api/vehicle/supplyrecords?vehicleId=` → supply / part records.
+  Future<List<SupplyRecord>> supplyRecords(int vehicleId) =>
+      _list(Endpoints.supplyRecords, vehicleId, SupplyRecord.fromJson);
+
+  /// `GET /api/vehicle/planrecords?vehicleId=` → planner items.
+  Future<List<PlanRecord>> planRecords(int vehicleId) =>
+      _list(Endpoints.planRecords, vehicleId, PlanRecord.fromJson);
+
+  /// `GET /api/vehicle/reminders?vehicleId=` → reminders (with computed urgency).
+  Future<List<ReminderRecord>> reminders(int vehicleId) =>
+      _list(Endpoints.reminders, vehicleId, ReminderRecord.fromJson);
+
+  /// `GET /api/vehicle/notes?vehicleId=` → free-text notes.
+  Future<List<NoteRecord>> notes(int vehicleId) =>
+      _list(Endpoints.notes, vehicleId, NoteRecord.fromJson);
+
+  /// `GET /api/vehicle/equipmentrecords?vehicleId=` → equipment items.
+  Future<List<EquipmentRecord>> equipmentRecords(int vehicleId) =>
+      _list(Endpoints.equipmentRecords, vehicleId, EquipmentRecord.fromJson);
+
+  /// Fetch and parse a `?vehicleId=` list endpoint into typed records, skipping
+  /// any element that isn't a JSON object.
+  Future<List<T>> _list<T>(
+    String endpoint,
+    int vehicleId,
+    T Function(Map<String, dynamic>) fromJson,
+  ) =>
+      guard(() async {
+        final res = await _dio.get<List<dynamic>>(
+          endpoint,
+          queryParameters: {'vehicleId': vehicleId},
+        );
+        return [
+          for (final e in res.data ?? const [])
+            if (e is Map<String, dynamic>) fromJson(e),
         ];
       });
 

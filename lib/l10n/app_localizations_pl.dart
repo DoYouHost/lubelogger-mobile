@@ -103,11 +103,15 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.';
 
   @override
-  String get dashLoadError =>
-      'Nie udało się wczytać pojazdu. Pociągnij, aby ponowić.';
+  String get settingsVisibleTabs => 'Widoczne zakładki';
 
   @override
-  String get statLastOdometer => 'Ostatni przebieg';
+  String get settingsVisibleTabsNote =>
+      'Wybierz, które zakładki mają się pojawiać na ekranie pojazdu i w menu dodawania.';
+
+  @override
+  String get dashLoadError =>
+      'Nie udało się wczytać pojazdu. Pociągnij, aby ponowić.';
 
   @override
   String get statDistanceTraveled => 'Przejechany dystans';
@@ -156,6 +160,51 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get catTax => 'Podatki';
+
+  @override
+  String get catSupply => 'Zaopatrzenie';
+
+  @override
+  String get catPlan => 'Planer';
+
+  @override
+  String get catReminder => 'Przypomnienia';
+
+  @override
+  String get catNote => 'Notatki';
+
+  @override
+  String get catEquipment => 'Wyposażenie';
+
+  @override
+  String get planPriorityCritical => 'Krytyczny';
+
+  @override
+  String get planPriorityNormal => 'Normalny';
+
+  @override
+  String get planPriorityLow => 'Niski';
+
+  @override
+  String get planProgressBacklog => 'Zaległe';
+
+  @override
+  String get planProgressInProgress => 'W toku';
+
+  @override
+  String get planProgressTesting => 'Testowanie';
+
+  @override
+  String get planProgressDone => 'Gotowe';
+
+  @override
+  String get equipmentEquipped => 'Zamontowane';
+
+  @override
+  String get equipmentRemoved => 'Zdjęte';
+
+  @override
+  String get notePinned => 'Przypięta';
 
   @override
   String get tabDashboard => 'Pulpit';

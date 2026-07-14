@@ -11,11 +11,17 @@ import 'core/auth/credentials_store.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
+import 'core/models/equipment_record.dart';
 import 'core/models/gas_record.dart';
+import 'core/models/note_record.dart';
 import 'core/models/odometer_record.dart';
+import 'core/models/plan_record.dart';
+import 'core/models/reminder_record.dart';
 import 'core/models/server_info.dart';
+import 'core/models/supply_record.dart';
 import 'core/models/vehicle_info.dart';
 import 'core/models/vehicle_record.dart';
+import 'core/models/vehicle_tab.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
 import 'core/settings/units_settings.dart';
@@ -66,6 +72,32 @@ class UnitsSettingsNotifier extends Notifier<UnitsSettings> {
 
   Future<void> setDateSeparator(DateSeparator dateSeparator) =>
       _save(state.copyWith(dateSeparator: dateSeparator));
+}
+
+/// Which record tabs are visible on the vehicle screen (and offered by the FAB
+/// add sheet). Persisted locally; defaults to all tabs. Iterate
+/// [VehicleTab.values] and filter by membership to keep a stable tab order.
+final visibleTabsProvider =
+    NotifierProvider<VisibleTabsNotifier, Set<VehicleTab>>(
+  VisibleTabsNotifier.new,
+);
+
+class VisibleTabsNotifier extends Notifier<Set<VehicleTab>> {
+  @override
+  Set<VehicleTab> build() =>
+      ref.watch(settingsRepositoryProvider).loadVisibleTabs();
+
+  /// Show or hide a single tab, persisting the new set.
+  Future<void> setVisible(VehicleTab tab, bool visible) async {
+    final next = {...state};
+    if (visible) {
+      next.add(tab);
+    } else {
+      next.remove(tab);
+    }
+    await ref.read(settingsRepositoryProvider).saveVisibleTabs(next);
+    state = next;
+  }
 }
 
 /// The currency symbol to display: the user's forced choice, or the server's
@@ -200,6 +232,37 @@ final odometerRecordsProvider =
       ref.watch(vehiclesRepositoryProvider).odometerRecords(vehicleId),
 );
 
+/// Date of the vehicle's highest-odometer reading among fuel-ups and dedicated
+/// odometer records — the "as of" date shown under the dashboard's "Last
+/// Reported Odometer" stat. Mirrors [MonthlyBreakdown]'s odometer timeline
+/// (gas + odometer records only; see its doc comment), not the server's
+/// `lastReportedOdometer`, which also considers service/repair/upgrade
+/// mileage — a rare enough source for the current max that this stays a close
+/// approximation without fetching those record types just for a date label.
+final lastOdometerDateProvider = FutureProvider.family<DateTime?, int>(
+  (ref, vehicleId) async {
+    final gas = await ref.watch(gasRecordsProvider(vehicleId).future);
+    final odometers = await ref.watch(odometerRecordsProvider(vehicleId).future);
+
+    DateTime? bestDate;
+    var bestOdometer = 0.0;
+    void consider(DateTime? date, double odometer) {
+      if (date != null && odometer > bestOdometer) {
+        bestOdometer = odometer;
+        bestDate = date;
+      }
+    }
+
+    for (final r in gas) {
+      consider(r.date, r.odometer);
+    }
+    for (final r in odometers) {
+      consider(r.date, r.odometer);
+    }
+    return bestDate;
+  },
+);
+
 /// Full records for one vehicle's generic (date + cost) record tab, keyed by
 /// vehicle + [RecordKind] (service / repair / upgrade / tax).
 final vehicleRecordsProvider = FutureProvider.family<List<VehicleRecord>,
@@ -207,6 +270,37 @@ final vehicleRecordsProvider = FutureProvider.family<List<VehicleRecord>,
   (ref, key) => ref
       .watch(vehiclesRepositoryProvider)
       .records(key.kind, key.vehicleId),
+);
+
+/// Supply / part records for one vehicle, powering the Supplies tab.
+final supplyRecordsProvider =
+    FutureProvider.family<List<SupplyRecord>, int>(
+  (ref, vehicleId) =>
+      ref.watch(vehiclesRepositoryProvider).supplyRecords(vehicleId),
+);
+
+/// Planner items for one vehicle, powering the Planner tab.
+final planRecordsProvider = FutureProvider.family<List<PlanRecord>, int>(
+  (ref, vehicleId) =>
+      ref.watch(vehiclesRepositoryProvider).planRecords(vehicleId),
+);
+
+/// Reminders for one vehicle, powering the Reminders tab.
+final remindersProvider = FutureProvider.family<List<ReminderRecord>, int>(
+  (ref, vehicleId) =>
+      ref.watch(vehiclesRepositoryProvider).reminders(vehicleId),
+);
+
+/// Free-text notes for one vehicle, powering the Notes tab.
+final notesProvider = FutureProvider.family<List<NoteRecord>, int>(
+  (ref, vehicleId) => ref.watch(vehiclesRepositoryProvider).notes(vehicleId),
+);
+
+/// Equipment items for one vehicle, powering the Equipment tab.
+final equipmentRecordsProvider =
+    FutureProvider.family<List<EquipmentRecord>, int>(
+  (ref, vehicleId) =>
+      ref.watch(vehiclesRepositoryProvider).equipmentRecords(vehicleId),
 );
 
 /// Monthly expense (by category) + distance breakdown for one vehicle. Fetches

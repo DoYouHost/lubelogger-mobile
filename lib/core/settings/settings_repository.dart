@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/vehicle_tab.dart';
 import 'server_profile.dart';
 import 'units_settings.dart';
 
@@ -12,6 +13,7 @@ class SettingsRepository {
 
   static const _profileKey = 'server_profile';
   static const _unitsKey = 'units_settings';
+  static const _visibleTabsKey = 'visible_tabs';
 
   final SharedPreferences _prefs;
 
@@ -44,4 +46,20 @@ class SettingsRepository {
 
   Future<void> saveUnits(UnitsSettings units) =>
       _prefs.setString(_unitsKey, jsonEncode(units.toJson()));
+
+  /// The record tabs the user wants visible. Absent (never set) defaults to all
+  /// tabs; unknown persisted ids are dropped so removing a tab type can't break
+  /// loading.
+  Set<VehicleTab> loadVisibleTabs() {
+    final names = _prefs.getStringList(_visibleTabsKey);
+    if (names == null) return VehicleTab.values.toSet();
+    return {
+      for (final n in names) ?VehicleTab.byName(n),
+    };
+  }
+
+  Future<void> saveVisibleTabs(Set<VehicleTab> tabs) => _prefs.setStringList(
+        _visibleTabsKey,
+        [for (final t in tabs) t.name],
+      );
 }

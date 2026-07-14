@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
 
+import '../../core/models/vehicle_tab.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
+import '../common/vehicle_tab_ui.dart';
 import 'forms/add_fuel_form.dart';
 
-/// Selectable record types in the add sheet. Only [fuel] has a form so far; the
-/// rest are listed but report "coming soon" until their forms land.
-enum _AddType { odometer, service, repair, upgrade, fuel, tax }
+/// FAB action: pick a record type to add, then open its form. The choices mirror
+/// the vehicle's [visible] tabs (in enum order). Fuel opens the working form;
+/// the others show a "coming soon" notice until their forms land.
+Future<void> showAddRecordSheet(
+  BuildContext context,
+  int vehicleId,
+  Set<VehicleTab> visible,
+) async {
+  final options = [
+    for (final tab in VehicleTab.values)
+      if (visible.contains(tab)) tab,
+  ];
+  if (options.isEmpty) return;
 
-/// FAB action: pick a record type to add, then open its form. Fuel opens the
-/// working form; the others show a "coming soon" notice for now.
-Future<void> showAddRecordSheet(BuildContext context, int vehicleId) async {
-  final picked = await showModalBottomSheet<_AddType>(
+  final picked = await showModalBottomSheet<VehicleTab>(
     context: context,
     showDragHandle: true,
-    builder: (_) => const _AddRecordList(),
+    builder: (_) => _AddRecordGrid(options: options),
   );
   if (picked == null || !context.mounted) return;
 
-  if (picked == _AddType.fuel) {
+  if (picked == VehicleTab.fuel) {
     await showAddFuelForm(context, vehicleId);
     return;
   }
@@ -26,22 +35,16 @@ Future<void> showAddRecordSheet(BuildContext context, int vehicleId) async {
       .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).comingSoon)));
 }
 
-class _AddRecordList extends StatelessWidget {
-  const _AddRecordList();
+/// The record types as a scrollable two-column grid of tiles.
+class _AddRecordGrid extends StatelessWidget {
+  const _AddRecordGrid({required this.options});
+
+  final List<VehicleTab> options;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-
-    final items = <(_AddType, IconData, String)>[
-      (_AddType.odometer, Icons.speed, l10n.tabOdometer),
-      (_AddType.service, Icons.build_circle_outlined, l10n.catService),
-      (_AddType.repair, Icons.report_outlined, l10n.catRepairs),
-      (_AddType.upgrade, Icons.upgrade, l10n.catUpgrades),
-      (_AddType.fuel, Icons.local_gas_station, l10n.catFuel),
-      (_AddType.tax, Icons.request_quote_outlined, l10n.catTax),
-    ];
 
     return SafeArea(
       child: Column(
@@ -49,7 +52,7 @@ class _AddRecordList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(
               l10n.addRecordTitle,
               style: TextStyle(
@@ -60,18 +63,80 @@ class _AddRecordList extends StatelessWidget {
               ),
             ),
           ),
-          for (final (type, icon, label) in items)
-            ListTile(
-              leading: CircleAvatar(
+          // Scrolls when the grid is taller than the sheet's max height.
+          Flexible(
+            child: GridView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                mainAxisExtent: 60,
+              ),
+              children: [
+                for (final tab in options)
+                  _RecordTypeTile(
+                    tab: tab,
+                    onTap: () => Navigator.pop(context, tab),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One record-type cell: gold icon chip + label, styled like a subcard.
+class _RecordTypeTile extends StatelessWidget {
+  const _RecordTypeTile({required this.tab, required this.onTap});
+
+  final VehicleTab tab;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    final radius = BorderRadius.circular(14);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: t.subCard,
+        borderRadius: radius,
+        border: Border.all(color: t.subCardBorder),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
                 backgroundColor: t.accentGold.withValues(alpha: 0.16),
                 foregroundColor: t.accentGoldInk,
-                child: Icon(icon, size: 20),
+                child: Icon(tab.icon, size: 18),
               ),
-              title: Text(label),
-              onTap: () => Navigator.pop(context, type),
-            ),
-          const SizedBox(height: 8),
-        ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  tab.label(l10n),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: DashTokens.fontUi,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: t.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

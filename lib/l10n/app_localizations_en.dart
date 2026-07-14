@@ -102,10 +102,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.';
 
   @override
-  String get dashLoadError => 'Couldn\'t load this vehicle. Pull to retry.';
+  String get settingsVisibleTabs => 'Visible tabs';
 
   @override
-  String get statLastOdometer => 'Last Reported Odometer';
+  String get settingsVisibleTabsNote =>
+      'Choose which record tabs appear on the vehicle screen and in the add menu.';
+
+  @override
+  String get dashLoadError => 'Couldn\'t load this vehicle. Pull to retry.';
 
   @override
   String get statDistanceTraveled => 'Distance Traveled';
@@ -154,6 +158,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catTax => 'Tax';
+
+  @override
+  String get catSupply => 'Supplies';
+
+  @override
+  String get catPlan => 'Planner';
+
+  @override
+  String get catReminder => 'Reminders';
+
+  @override
+  String get catNote => 'Notes';
+
+  @override
+  String get catEquipment => 'Equipment';
+
+  @override
+  String get planPriorityCritical => 'Critical';
+
+  @override
+  String get planPriorityNormal => 'Normal';
+
+  @override
+  String get planPriorityLow => 'Low';
+
+  @override
+  String get planProgressBacklog => 'Backlog';
+
+  @override
+  String get planProgressInProgress => 'In progress';
+
+  @override
+  String get planProgressTesting => 'Testing';
+
+  @override
+  String get planProgressDone => 'Done';
+
+  @override
+  String get equipmentEquipped => 'Equipped';
+
+  @override
+  String get equipmentRemoved => 'Removed';
+
+  @override
+  String get notePinned => 'Pinned';
 
   @override
   String get tabDashboard => 'Dashboard';
