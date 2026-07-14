@@ -178,6 +178,68 @@ class VehiclesRepository {
         ];
       });
 
+  /// `POST /api/vehicle/odometerrecords/add?vehicleId=` → add an odometer
+  /// reading. `initialOdometer` is omitted so the server defaults it to the
+  /// previous reading. Values go out as integer strings (the server
+  /// `int.Parse`s them).
+  Future<void> addOdometerRecord({
+    required int vehicleId,
+    required DateTime date,
+    required num odometer,
+    String notes = '',
+    String tags = '',
+  }) =>
+      guard(() async {
+        final res = await _dio.post<Map<String, dynamic>>(
+          Endpoints.odometerRecordsAdd,
+          queryParameters: {'vehicleId': vehicleId},
+          options: Options(contentType: Headers.jsonContentType),
+          data: {
+            'date': _isoDate(date),
+            'odometer': _intString(odometer),
+            'notes': notes,
+            'tags': tags,
+          },
+        );
+        _ensureSuccess(res.data);
+      });
+
+  /// `PUT /api/vehicle/odometerrecords/update` → update a reading by [id]. The
+  /// endpoint requires [initialOdometer], so callers pass the value read back
+  /// from the record to preserve it.
+  Future<void> updateOdometerRecord({
+    required int id,
+    required DateTime date,
+    required num odometer,
+    required num initialOdometer,
+    String notes = '',
+    String tags = '',
+  }) =>
+      guard(() async {
+        final res = await _dio.put<Map<String, dynamic>>(
+          Endpoints.odometerRecordsUpdate,
+          options: Options(contentType: Headers.jsonContentType),
+          data: {
+            'id': id.toString(),
+            'date': _isoDate(date),
+            'odometer': _intString(odometer),
+            'initialOdometer': _intString(initialOdometer),
+            'notes': notes,
+            'tags': tags,
+          },
+        );
+        _ensureSuccess(res.data);
+      });
+
+  /// `DELETE /api/vehicle/odometerrecords/delete?id=` → delete a reading.
+  Future<void> deleteOdometerRecord(int id) => guard(() async {
+        final res = await _dio.delete<Map<String, dynamic>>(
+          Endpoints.odometerRecordsDelete,
+          queryParameters: {'id': id},
+        );
+        _ensureSuccess(res.data);
+      });
+
   /// `GET /api/vehicle/supplyrecords?vehicleId=` → supply / part records.
   Future<List<SupplyRecord>> supplyRecords(int vehicleId) =>
       _list(Endpoints.supplyRecords, vehicleId, SupplyRecord.fromJson);
@@ -256,6 +318,10 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
       };
+
+  /// Odometer values are stored as integers server-side (`int.Parse`); emit a
+  /// whole-number string so a `317240.0`-style double never reaches the parser.
+  static String _intString(num value) => value.round().toString();
 
   /// `yyyy-MM-dd` — unambiguous for the server's invariant `DateTime.Parse`.
   static String _isoDate(DateTime d) =>

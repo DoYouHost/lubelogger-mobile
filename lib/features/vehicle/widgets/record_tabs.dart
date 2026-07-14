@@ -16,6 +16,7 @@ import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';
 import '../forms/add_fuel_form.dart';
+import '../forms/add_odometer_form.dart';
 import 'record_list.dart';
 
 const _placeholder = '—';
@@ -91,6 +92,8 @@ class OdometerTab extends ConsumerWidget {
                   RecordMetaItem(Icons.trending_up,
                       _odoUnit(deltas[i], units, unit, useHours: useHours)),
                 ],
+                onTap: () => showAddOdometerForm(context, vehicleId,
+                    existing: ascending[i]),
               ),
           ],
         );

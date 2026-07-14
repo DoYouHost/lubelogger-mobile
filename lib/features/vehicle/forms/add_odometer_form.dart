@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/format/shift_digits_formatter.dart';
-import '../../../core/models/gas_record.dart';
+import '../../../core/models/odometer_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
@@ -11,47 +11,41 @@ import '../../../providers.dart';
 import 'form_fields.dart';
 
 const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
-const _volumeFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
-const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
-/// Opens the "Add fuel record" form as a modal bottom sheet. Pass [existing] to
-/// edit that record instead (prefilled, with a delete option). Resolves to
-/// `true` once a record was added/updated/deleted (so the caller can refresh
-/// or confirm), or `null` if cancelled.
-Future<bool?> showAddFuelForm(
+/// Opens the "Add odometer reading" form as a modal bottom sheet. Pass
+/// [existing] to edit that reading instead (prefilled, with a delete option).
+/// Resolves to `true` once a reading was added/updated/deleted, or `null` if
+/// cancelled.
+Future<bool?> showAddOdometerForm(
   BuildContext context,
   int vehicleId, {
-  GasRecord? existing,
+  OdometerRecord? existing,
 }) {
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _AddFuelForm(vehicleId: vehicleId, existing: existing),
+    builder: (_) => _AddOdometerForm(vehicleId: vehicleId, existing: existing),
   );
 }
 
-class _AddFuelForm extends ConsumerStatefulWidget {
-  const _AddFuelForm({required this.vehicleId, this.existing});
+class _AddOdometerForm extends ConsumerStatefulWidget {
+  const _AddOdometerForm({required this.vehicleId, this.existing});
 
   final int vehicleId;
-  final GasRecord? existing;
+  final OdometerRecord? existing;
 
   @override
-  ConsumerState<_AddFuelForm> createState() => _AddFuelFormState();
+  ConsumerState<_AddOdometerForm> createState() => _AddOdometerFormState();
 }
 
-class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
+class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   final _formKey = GlobalKey<FormState>();
   final _odometer = TextEditingController();
-  final _fuel = TextEditingController();
-  final _cost = TextEditingController();
   final _tags = TextEditingController();
   final _notes = TextEditingController();
 
   late DateTime _date;
-  late bool _fillToFull;
-  late bool _missedFuelUp;
   bool _submitting = false;
   String? _error;
 
@@ -62,12 +56,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     super.initState();
     final e = widget.existing;
     _date = e?.date ?? DateTime.now();
-    _fillToFull = e?.isFillToFull ?? true;
-    _missedFuelUp = e?.missedFuelUp ?? false;
     if (e != null) {
       _odometer.text = _odometerFormat.seed(e.odometer);
-      _fuel.text = _volumeFormat.seed(e.fuelConsumed);
-      _cost.text = _costFormat.seed(e.cost);
       _tags.text = e.tags;
       _notes.text = e.notes;
     }
@@ -76,8 +66,6 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   @override
   void dispose() {
     _odometer.dispose();
-    _fuel.dispose();
-    _cost.dispose();
     _tags.dispose();
     _notes.dispose();
     super.dispose();
@@ -89,7 +77,6 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     final t = DashTokens.of(context);
     final units = ref.watch(unitsSettingsProvider);
     final distanceUnit = units.distance.label;
-    final volumeUnit = units.base.volumeLabel;
 
     return Padding(
       // Lift the sheet above the keyboard.
@@ -106,7 +93,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 children: [
                   Expanded(
                     child: Text(
-                      _isEditing ? l10n.formFuelEditTitle : l10n.formFuelTitle,
+                      _isEditing
+                          ? l10n.formOdometerEditTitle
+                          : l10n.formOdometerTitle,
                       style: TextStyle(
                         fontFamily: DashTokens.fontUi,
                         fontSize: 18,
@@ -133,48 +122,31 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 onPick: _submitting ? null : _pickDate,
               ),
               const SizedBox(height: 14),
-              _numberField(
+              TextFormField(
                 controller: _odometer,
-                label: l10n.formOdometerLabel(distanceUnit),
-                format: _odometerFormat,
-              ),
-              const SizedBox(height: 14),
-              _numberField(
-                controller: _fuel,
-                label: l10n.formFuelLabel(volumeUnit),
-                format: _volumeFormat,
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.formFillToFull),
-                value: _fillToFull,
-                // A missed fuel-up has no meaningful "filled to full" state.
-                onChanged: _submitting || _missedFuelUp
-                    ? null
-                    : (v) => setState(() => _fillToFull = v),
-              ),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Text(l10n.formMissedFuelUp),
-                value: _missedFuelUp,
-                onChanged: _submitting
-                    ? null
-                    : (v) => setState(() => _missedFuelUp = v ?? false),
-              ),
-              const SizedBox(height: 6),
-              _numberField(
-                controller: _cost,
-                label: l10n.colCost,
-                format: _costFormat,
-                allowZero: true,
+                enabled: !_submitting,
+                keyboardType: TextInputType.number,
+                inputFormatters: const [_odometerFormat],
+                style: const TextStyle(fontFamily: DashTokens.fontMono),
+                decoration: dashFieldDecoration(t,
+                    labelText: l10n.formOdometerLabel(distanceUnit)),
+                validator: (raw) {
+                  final value = parseFormNumber(raw);
+                  if (value == null) {
+                    return (raw == null || raw.trim().isEmpty)
+                        ? l10n.validationRequired
+                        : l10n.validationNumber;
+                  }
+                  if (value <= 0) return l10n.validationNumber;
+                  return null;
+                },
               ),
               const SizedBox(height: 14),
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
-                decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+                decoration:
+                    dashFieldDecoration(t, labelText: l10n.formTagsOptional),
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -189,7 +161,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                  style:
+                      TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
                 ),
               ],
               const SizedBox(height: 20),
@@ -224,34 +197,6 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     );
   }
 
-  Widget _numberField({
-    required TextEditingController controller,
-    required String label,
-    required ShiftDigitsFormatter format,
-    bool allowZero = false,
-  }) {
-    final l10n = AppLocalizations.of(context);
-    final t = DashTokens.of(context);
-    return TextFormField(
-      controller: controller,
-      enabled: !_submitting,
-      keyboardType: TextInputType.number,
-      inputFormatters: [format],
-      style: const TextStyle(fontFamily: DashTokens.fontMono),
-      decoration: dashFieldDecoration(t, labelText: label),
-      validator: (raw) {
-        final value = parseFormNumber(raw);
-        if (value == null) {
-          return (raw == null || raw.trim().isEmpty)
-              ? l10n.validationRequired
-              : l10n.validationNumber;
-        }
-        if (value < 0 || (!allowZero && value == 0)) return l10n.validationNumber;
-        return null;
-      },
-    );
-  }
-
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -274,36 +219,31 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     final existing = widget.existing;
     try {
       if (existing == null) {
-        await repo.addGasRecord(
+        await repo.addOdometerRecord(
           vehicleId: widget.vehicleId,
           date: _date,
           odometer: parseFormNumber(_odometer.text)!,
-          fuelConsumed: parseFormNumber(_fuel.text)!,
-          cost: parseFormNumber(_cost.text)!,
-          isFillToFull: _fillToFull,
-          missedFuelUp: _missedFuelUp,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
         );
       } else {
-        await repo.updateGasRecord(
-          vehicleId: widget.vehicleId,
+        await repo.updateOdometerRecord(
           id: existing.id,
           date: _date,
           odometer: parseFormNumber(_odometer.text)!,
-          fuelConsumed: parseFormNumber(_fuel.text)!,
-          cost: parseFormNumber(_cost.text)!,
-          isFillToFull: _fillToFull,
-          missedFuelUp: _missedFuelUp,
+          // The update endpoint requires initialOdometer; preserve the record's.
+          initialOdometer: existing.initialOdometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
         );
       }
-      _invalidateFuelProviders();
+      _invalidateOdometerProviders();
       if (!mounted) return;
       Navigator.pop(context, true);
       messenger.showSnackBar(
-        SnackBar(content: Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+        SnackBar(
+            content:
+                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -315,7 +255,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error =
+            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
       });
     }
   }
@@ -348,8 +289,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       _error = null;
     });
     try {
-      await ref.read(vehiclesRepositoryProvider).deleteGasRecord(widget.existing!.id);
-      _invalidateFuelProviders();
+      await ref
+          .read(vehiclesRepositoryProvider)
+          .deleteOdometerRecord(widget.existing!.id);
+      _invalidateOdometerProviders();
       if (!mounted) return;
       Navigator.pop(context, true);
       messenger.showSnackBar(SnackBar(content: Text(l10n.recordDeleted)));
@@ -368,10 +311,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     }
   }
 
-  /// Refreshes every view derived from the refuel log after an add/update/delete.
-  void _invalidateFuelProviders() {
-    ref.invalidate(gasRecordsProvider(widget.vehicleId));
-    ref.invalidate(gasStatsProvider(widget.vehicleId));
+  /// Refreshes every view derived from odometer readings after a write.
+  /// [lastOdometerDateProvider] recomputes via its watch on the records list.
+  void _invalidateOdometerProviders() {
+    ref.invalidate(odometerRecordsProvider(widget.vehicleId));
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
     ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }

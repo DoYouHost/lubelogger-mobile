@@ -5,6 +5,7 @@ import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../common/vehicle_tab_ui.dart';
 import 'forms/add_fuel_form.dart';
+import 'forms/add_odometer_form.dart';
 
 /// FAB action: pick a record type to add, then open its form. The choices mirror
 /// the vehicle's [visible] tabs (in enum order). Fuel opens the working form;
@@ -29,6 +30,10 @@ Future<void> showAddRecordSheet(
 
   if (picked == VehicleTab.fuel) {
     await showAddFuelForm(context, vehicleId);
+    return;
+  }
+  if (picked == VehicleTab.odometer) {
+    await showAddOdometerForm(context, vehicleId);
     return;
   }
   ScaffoldMessenger.of(context)

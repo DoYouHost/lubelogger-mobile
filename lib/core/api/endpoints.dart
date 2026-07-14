@@ -49,6 +49,18 @@ abstract final class Endpoints {
   /// Odometer readings: `?vehicleId=`. Source of the monthly distance line.
   static const odometerRecords = '$apiPrefix/vehicle/odometerrecords';
 
+  /// Add an odometer reading: `POST ?vehicleId=` + JSON body. Requires
+  /// `date` + `odometer`; omitting `initialOdometer` lets the server default it
+  /// to the previous reading.
+  static const odometerRecordsAdd = '$odometerRecords/add';
+
+  /// Update an odometer reading: `PUT` + JSON body including `id`. Requires
+  /// `id, date, initialOdometer, odometer` (all non-empty).
+  static const odometerRecordsUpdate = '$odometerRecords/update';
+
+  /// Delete an odometer reading: `DELETE ?id=`.
+  static const odometerRecordsDelete = '$odometerRecords/delete';
+
   // Additional record types with their own shapes (read-only tabs). Each is a
   // uniform-CRUD list endpoint under `/api/vehicle/`; see LUBELOGGER-API.md §6.
   static const supplyRecords = '$apiPrefix/vehicle/supplyrecords';

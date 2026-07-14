@@ -139,6 +139,8 @@
   "addRecordTitle": "Add record",
   "formFuelTitle": "Add Fuel Record",
   "formFuelEditTitle": "Edit Fuel Record",
+  "formOdometerTitle": "Add Odometer Reading",
+  "formOdometerEditTitle": "Edit Odometer Reading",
   "formOdometerLabel": "Odometer reading ({unit})",
   "@formOdometerLabel": {
     "placeholders": {

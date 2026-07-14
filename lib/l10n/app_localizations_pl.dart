@@ -280,6 +280,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get formFuelEditTitle => 'Edytuj tankowanie';
 
   @override
+  String get formOdometerTitle => 'Dodaj odczyt licznika';
+
+  @override
+  String get formOdometerEditTitle => 'Edytuj odczyt licznika';
+
+  @override
   String formOdometerLabel(String unit) {
     return 'Stan licznika ($unit)';
   }

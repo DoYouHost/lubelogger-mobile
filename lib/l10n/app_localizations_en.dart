@@ -276,6 +276,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formFuelEditTitle => 'Edit Fuel Record';
 
   @override
+  String get formOdometerTitle => 'Add Odometer Reading';
+
+  @override
+  String get formOdometerEditTitle => 'Edit Odometer Reading';
+
+  @override
   String formOdometerLabel(String unit) {
     return 'Odometer reading ($unit)';
   }

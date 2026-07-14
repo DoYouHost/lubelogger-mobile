@@ -578,6 +578,18 @@ abstract class AppLocalizations {
   /// **'Edit Fuel Record'**
   String get formFuelEditTitle;
 
+  /// No description provided for @formOdometerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Odometer Reading'**
+  String get formOdometerTitle;
+
+  /// No description provided for @formOdometerEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Odometer Reading'**
+  String get formOdometerEditTitle;
+
   /// No description provided for @formOdometerLabel.
   ///
   /// In en, this message translates to:
