@@ -902,6 +902,66 @@ abstract class AppLocalizations {
   /// **'Couldn\'t save the vehicle. Try again.'**
   String get vehicleUpdateError;
 
+  /// No description provided for @vehicleDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle deleted'**
+  String get vehicleDeleted;
+
+  /// No description provided for @vehicleDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the vehicle. Try again.'**
+  String get vehicleDeleteError;
+
+  /// No description provided for @confirmDeleteVehicleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this vehicle?'**
+  String get confirmDeleteVehicleTitle;
+
+  /// No description provided for @confirmDeleteVehicleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes the vehicle and all of its records. This can\'t be undone.'**
+  String get confirmDeleteVehicleMessage;
+
+  /// No description provided for @confirmDeleteVehicleFinalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete {vehicle}?'**
+  String confirmDeleteVehicleFinalTitle(String vehicle);
+
+  /// No description provided for @confirmDeleteVehicleFinalMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your last chance to cancel. The vehicle and every record for it will be gone for good.'**
+  String get confirmDeleteVehicleFinalMessage;
+
+  /// No description provided for @actionDeletePermanently.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get actionDeletePermanently;
+
+  /// No description provided for @vehicleDeleteUnsupportedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server update required'**
+  String get vehicleDeleteUnsupportedTitle;
+
+  /// No description provided for @vehicleDeleteUnsupportedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.'**
+  String vehicleDeleteUnsupportedMessage(String required, String current);
+
+  /// No description provided for @actionOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get actionOk;
+
   /// No description provided for @actionEdit.
   ///
   /// In en, this message translates to:

@@ -109,6 +109,33 @@ void main() {
     expect(after.any((v) => v.id == id && v.makeModel == 'Honda Civic'), isTrue);
   });
 
+  test('deleting a vehicle removes it and its records from the garage',
+      () async {
+    final r = repo();
+    final id = await r.addVehicle(
+      year: 2018,
+      make: 'Mazda',
+      model: '3',
+      licensePlate: 'DEMO-909',
+      fuelType: 'Gasoline',
+    );
+    expect(id, isNotNull);
+    await r.addRecord(
+      kind: RecordKind.service,
+      vehicleId: id!,
+      date: DateTime(2026, 2, 1),
+      description: 'Demo service before delete',
+      cost: 10,
+      odometer: 100,
+    );
+
+    await r.deleteVehicle(id);
+
+    final after = await r.list();
+    expect(after.any((v) => v.id == id), isFalse);
+    expect(await r.records(RecordKind.service, id), isEmpty);
+  });
+
   test('server metadata endpoints answer', () async {
     final r = repo();
     expect((await r.whoAmI()).isRoot, isTrue);

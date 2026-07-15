@@ -13,24 +13,59 @@ import 'widgets/vehicle_card.dart';
 
 /// The garage: the household's vehicles as photo cards, with an add-vehicle tile
 /// at the end (design screen #2).
-class GarageScreen extends ConsumerWidget {
+class GarageScreen extends ConsumerStatefulWidget {
   const GarageScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GarageScreen> createState() => _GarageScreenState();
+}
+
+class _GarageScreenState extends ConsumerState<GarageScreen>
+    with TickerProviderStateMixin {
+  // One swipe controller per vehicle (keyed by id) so we can force-close an open
+  // Edit action when a control *outside* the list is tapped — the settings gear
+  // and the add-vehicle tile sit beyond the per-card auto-close barrier.
+  final Map<int, SlidableController> _slidableControllers = {};
+
+  @override
+  void dispose() {
+    for (final controller in _slidableControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  SlidableController _controllerFor(int vehicleId) => _slidableControllers
+      .putIfAbsent(vehicleId, () => SlidableController(this));
+
+  /// Closes any open swipe action. Returns true when one was open, so a tap on
+  /// an outside control just dismisses it (as tapping a card does) rather than
+  /// also firing that control's own action.
+  bool _closeOpenActions() {
+    var closedAny = false;
+    for (final controller in _slidableControllers.values) {
+      if (controller.ratio != 0) {
+        controller.close();
+        closedAny = true;
+      }
+    }
+    return closedAny;
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(garageProvider);
+    ref.invalidate(serverInfoProvider);
+    await ref.read(garageProvider.future);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final t = DashTokens.of(context);
     final garage = ref.watch(garageProvider);
     final baseUrl = ref.watch(serverProfileProvider)?.baseUrl ?? '';
     final apiKey = ref.watch(apiKeyProvider).valueOrNull;
     final currency = ref.watch(currencySymbolProvider);
     final units = ref.watch(unitsSettingsProvider);
-
-    Future<void> refresh() async {
-      ref.invalidate(garageProvider);
-      ref.invalidate(serverInfoProvider);
-      await ref.read(garageProvider.future);
-    }
 
     return DashBackground(
       child: Scaffold(
@@ -42,67 +77,60 @@ class GarageScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.settingsTitle,
               icon: const Icon(Icons.settings_outlined),
-              onPressed: () => context.push('/settings'),
+              onPressed: _openSettings,
             ),
           ],
         ),
         body: RefreshIndicator(
-          onRefresh: refresh,
+          onRefresh: _refresh,
           child: garage.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => AsyncErrorView(
               message: l10n.garageLoadError,
-              onRetry: refresh,
+              onRetry: _refresh,
               retryLabel: l10n.retry,
             ),
             data: (vehicles) {
               if (vehicles.isEmpty) {
-                return _EmptyGarage(
-                  l10n: l10n,
-                  onAdd: () => _openAddVehicle(context, ref),
-                );
+                return _EmptyGarage(l10n: l10n, onAdd: _openAddVehicle);
               }
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                itemCount: vehicles.length + 1,
-                separatorBuilder: (_, _) => const SizedBox(height: 18),
-                itemBuilder: (context, i) {
-                  if (i == vehicles.length) {
-                    return AddVehicleTile(
-                      onTap: () => _openAddVehicle(context, ref),
+              // Auto-close any open swipe action when another card is tapped or
+              // the list scrolls, so the Edit button doesn't linger open.
+              return SlidableAutoCloseBehavior(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  itemCount: vehicles.length + 1,
+                  separatorBuilder: (_, _) => const SizedBox(height: 18),
+                  itemBuilder: (context, i) {
+                    if (i == vehicles.length) {
+                      return AddVehicleTile(onTap: _openAddVehicle);
+                    }
+                    final info = vehicles[i];
+                    return Slidable(
+                      key: ValueKey(info.vehicle.id),
+                      controller: _controllerFor(info.vehicle.id),
+                      endActionPane: ActionPane(
+                        motion: const DrawerMotion(),
+                        extentRatio: 0.3,
+                        children: [
+                          _EditVehicleAction(
+                            onPressed: () => _editVehicle(info.vehicle),
+                          ),
+                        ],
+                      ),
+                      child: VehicleCard(
+                        info: info,
+                        baseUrl: baseUrl,
+                        apiKey: apiKey,
+                        currencySymbol: currency,
+                        measurementBase: units.base,
+                        distanceUnit: units.distance,
+                        onTap: () =>
+                            context.push('/vehicle/${info.vehicle.id}'),
+                      ),
                     );
-                  }
-                  final info = vehicles[i];
-                  return Slidable(
-                    key: ValueKey(info.vehicle.id),
-                    endActionPane: ActionPane(
-                      motion: const DrawerMotion(),
-                      extentRatio: 0.28,
-                      children: [
-                        SlidableAction(
-                          onPressed: (_) =>
-                              _editVehicle(context, ref, info.vehicle),
-                          icon: Icons.edit_outlined,
-                          label: l10n.actionEdit,
-                          backgroundColor: t.accentGold,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onPrimary,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ],
-                    ),
-                    child: VehicleCard(
-                      info: info,
-                      baseUrl: baseUrl,
-                      apiKey: apiKey,
-                      currencySymbol: currency,
-                      measurementBase: units.base,
-                      distanceUnit: units.distance,
-                      onTap: () =>
-                          context.push('/vehicle/${info.vehicle.id}'),
-                    ),
-                  );
-                },
+                  },
+                ),
               );
             },
           ),
@@ -111,23 +139,93 @@ class GarageScreen extends ConsumerWidget {
     );
   }
 
-  /// Opens the add-vehicle form and, on success, jumps to the new vehicle. The
-  /// form invalidates [garageProvider] itself, so the list refreshes regardless.
-  Future<void> _openAddVehicle(BuildContext context, WidgetRef ref) async {
+  /// Opens Settings — unless a swipe action is open, in which case the tap just
+  /// closes it (consistent with tapping a card while one is open).
+  void _openSettings() {
+    if (_closeOpenActions()) return;
+    context.push('/settings');
+  }
+
+  /// Opens the add-vehicle form and, on success, jumps to the new vehicle. A tap
+  /// with a swipe action open just closes it first. The form invalidates
+  /// [garageProvider] itself, so the list refreshes regardless.
+  Future<void> _openAddVehicle() async {
+    if (_closeOpenActions()) return;
     final newId = await showVehicleForm(context);
-    if (newId != null && context.mounted) {
+    if (newId != null && mounted) {
       context.push('/vehicle/$newId');
     }
   }
 
   /// Opens the edit form for [vehicle] (slide action). The form invalidates the
   /// garage + vehicle-info providers itself, so no navigation is needed.
-  Future<void> _editVehicle(
-    BuildContext context,
-    WidgetRef ref,
-    Vehicle vehicle,
-  ) =>
+  Future<void> _editVehicle(Vehicle vehicle) =>
       showVehicleForm(context, existing: vehicle);
+}
+
+/// The slide-out "Edit" action for a vehicle card: a floating gold→orange pill
+/// with an icon chip, bold label and a soft gold glow, so it reads as a real
+/// button rather than a flat colour block. Wraps [CustomSlidableAction] (same
+/// pane nesting as the stock [SlidableAction]) to host the custom child.
+class _EditVehicleAction extends StatelessWidget {
+  const _EditVehicleAction({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    final l10n = AppLocalizations.of(context);
+    final ink = Theme.of(context).colorScheme.onPrimary;
+    return CustomSlidableAction(
+      onPressed: (_) => onPressed(),
+      backgroundColor: Colors.transparent,
+      padding: EdgeInsets.zero,
+      child: SizedBox.expand(
+        child: Container(
+          margin: const EdgeInsets.only(left: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [t.accentGold, t.accentOrange],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: t.accentGold.withValues(alpha: 0.45),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.24),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.edit_rounded, size: 22, color: ink),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.actionEdit,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Empty state that still offers the add-vehicle tile.

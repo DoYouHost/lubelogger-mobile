@@ -440,6 +440,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vehicleUpdateError => 'Couldn\'t save the vehicle. Try again.';
 
   @override
+  String get vehicleDeleted => 'Vehicle deleted';
+
+  @override
+  String get vehicleDeleteError => 'Couldn\'t delete the vehicle. Try again.';
+
+  @override
+  String get confirmDeleteVehicleTitle => 'Delete this vehicle?';
+
+  @override
+  String get confirmDeleteVehicleMessage =>
+      'This permanently deletes the vehicle and all of its records. This can\'t be undone.';
+
+  @override
+  String confirmDeleteVehicleFinalTitle(String vehicle) {
+    return 'Permanently delete $vehicle?';
+  }
+
+  @override
+  String get confirmDeleteVehicleFinalMessage =>
+      'This is your last chance to cancel. The vehicle and every record for it will be gone for good.';
+
+  @override
+  String get actionDeletePermanently => 'Delete permanently';
+
+  @override
+  String get vehicleDeleteUnsupportedTitle => 'Server update required';
+
+  @override
+  String vehicleDeleteUnsupportedMessage(String required, String current) {
+    return 'Deleting a vehicle requires LubeLogger $required or newer, but your server is running $current. Update the server to use this.';
+  }
+
+  @override
+  String get actionOk => 'OK';
+
+  @override
   String get actionEdit => 'Edit';
 
   @override

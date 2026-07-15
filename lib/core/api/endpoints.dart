@@ -44,9 +44,14 @@ abstract final class Endpoints {
   /// Update a vehicle: `PUT /api/vehicles/update` + JSON `VehicleImportModel`
   /// including `id`. Same required fields as add; the server **replaces** the
   /// vehicle's identifier and extra fields with whatever is sent, so callers
-  /// resend the existing values to avoid clobbering them. (There is no
-  /// vehicle-delete endpoint in the API.)
+  /// resend the existing values to avoid clobbering them.
   static const vehiclesUpdate = '$vehicles/update';
+
+  /// Delete a vehicle: `DELETE /api/vehicles/delete?id=` (LubeLogger 1.7.0+).
+  /// Cascades — the server deletes every record type for the vehicle before
+  /// removing it, so this is irreversible. Requires the api key's household to
+  /// hold the `Delete` permission; a key without it gets a 401.
+  static const vehiclesDelete = '$vehicles/delete';
 
   /// Aggregated info for one vehicle: `?vehicleId=`. Returns an ARRAY of
   /// VehicleInfo (odometer, record counts/costs, reminder counts) — one element

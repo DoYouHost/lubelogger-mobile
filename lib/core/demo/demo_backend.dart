@@ -111,6 +111,9 @@ class DemoBackend {
         if (s.length == 1 && m == 'GET') return _ok(_vehicles);
         if (at(1, 'add') && m == 'POST') return _addVehicle(body);
         if (at(1, 'update') && m == 'PUT') return _updateVehicle(body);
+        if (at(1, 'delete') && m == 'DELETE') {
+          return _deleteVehicle(_int(q['id']));
+        }
         return null;
       case 'vehicle':
         if (s.length < 2) return _notFound();
@@ -214,6 +217,28 @@ class DemoBackend {
       'message': '',
       'additionalData': {'vehicleId': id},
     });
+  }
+
+  /// Mirrors the server's cascading delete: drop the vehicle and every record
+  /// collection keyed by its id.
+  DemoResult _deleteVehicle(int id) {
+    _vehicles.removeWhere((v) => _int(v['id']) == id);
+    for (final coll in [
+      _gas,
+      _odometer,
+      _service,
+      _repair,
+      _upgrade,
+      _tax,
+      _supply,
+      _plan,
+      _reminders,
+      _notes,
+      _equipment,
+    ]) {
+      coll.remove(id);
+    }
+    return _ok({'success': true, 'message': ''});
   }
 
   DemoResult _updateVehicle(Map<String, dynamic> body) {
@@ -369,8 +394,10 @@ class DemoBackend {
         'isRoot': true,
       };
 
+  // 1.7.0: the fake backend implements the 1.7.0 vehicle-delete endpoint, so it
+  // reports that version to keep the delete action enabled in the demo.
   Map<String, dynamic> get _info => {
-        'currentVersion': '1.6.9',
+        'currentVersion': '1.7.0',
         'locale': 'en-US',
         'currencySymbol': r'$',
         'decimalSeparator': '.',
@@ -378,8 +405,8 @@ class DemoBackend {
       };
 
   Map<String, dynamic> get _version => {
-        'currentVersion': '1.6.9',
-        'latestVersion': '1.6.9',
+        'currentVersion': '1.7.0',
+        'latestVersion': '1.7.0',
       };
 
   // ── Seed dataset ───────────────────────────────────────────────────────────

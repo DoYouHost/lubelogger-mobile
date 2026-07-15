@@ -201,6 +201,27 @@
   "vehicleAddError": "Couldn't add the vehicle. Try again.",
   "vehicleUpdated": "Vehicle updated",
   "vehicleUpdateError": "Couldn't save the vehicle. Try again.",
+  "vehicleDeleted": "Vehicle deleted",
+  "vehicleDeleteError": "Couldn't delete the vehicle. Try again.",
+  "confirmDeleteVehicleTitle": "Delete this vehicle?",
+  "confirmDeleteVehicleMessage": "This permanently deletes the vehicle and all of its records. This can't be undone.",
+  "confirmDeleteVehicleFinalTitle": "Permanently delete {vehicle}?",
+  "@confirmDeleteVehicleFinalTitle": {
+    "placeholders": {
+      "vehicle": { "type": "String" }
+    }
+  },
+  "confirmDeleteVehicleFinalMessage": "This is your last chance to cancel. The vehicle and every record for it will be gone for good.",
+  "actionDeletePermanently": "Delete permanently",
+  "vehicleDeleteUnsupportedTitle": "Server update required",
+  "vehicleDeleteUnsupportedMessage": "Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.",
+  "@vehicleDeleteUnsupportedMessage": {
+    "placeholders": {
+      "required": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "actionOk": "OK",
   "actionEdit": "Edit",
   "formOdometerLabel": "Odometer reading ({unit})",
   "@formOdometerLabel": {

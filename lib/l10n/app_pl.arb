@@ -187,6 +187,27 @@
   "vehicleAddError": "Nie udało się dodać pojazdu. Spróbuj ponownie.",
   "vehicleUpdated": "Zapisano zmiany pojazdu",
   "vehicleUpdateError": "Nie udało się zapisać pojazdu. Spróbuj ponownie.",
+  "vehicleDeleted": "Usunięto pojazd",
+  "vehicleDeleteError": "Nie udało się usunąć pojazdu. Spróbuj ponownie.",
+  "confirmDeleteVehicleTitle": "Usunąć ten pojazd?",
+  "confirmDeleteVehicleMessage": "Spowoduje to trwałe usunięcie pojazdu i wszystkich jego wpisów. Tej operacji nie można cofnąć.",
+  "confirmDeleteVehicleFinalTitle": "Trwale usunąć {vehicle}?",
+  "@confirmDeleteVehicleFinalTitle": {
+    "placeholders": {
+      "vehicle": { "type": "String" }
+    }
+  },
+  "confirmDeleteVehicleFinalMessage": "To ostatnia szansa, aby anulować. Pojazd i wszystkie jego wpisy zostaną bezpowrotnie usunięte.",
+  "actionDeletePermanently": "Usuń trwale",
+  "vehicleDeleteUnsupportedTitle": "Wymagana aktualizacja serwera",
+  "vehicleDeleteUnsupportedMessage": "Usuwanie pojazdu wymaga LubeLogger {required} lub nowszego, a Twój serwer działa w wersji {current}. Zaktualizuj serwer, aby z tego korzystać.",
+  "@vehicleDeleteUnsupportedMessage": {
+    "placeholders": {
+      "required": { "type": "String" },
+      "current": { "type": "String" }
+    }
+  },
+  "actionOk": "OK",
   "actionEdit": "Edytuj",
   "formOdometerLabel": "Stan licznika ({unit})",
   "@formOdometerLabel": {

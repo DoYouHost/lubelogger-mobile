@@ -446,6 +446,43 @@ class AppLocalizationsPl extends AppLocalizations {
       'Nie udało się zapisać pojazdu. Spróbuj ponownie.';
 
   @override
+  String get vehicleDeleted => 'Usunięto pojazd';
+
+  @override
+  String get vehicleDeleteError =>
+      'Nie udało się usunąć pojazdu. Spróbuj ponownie.';
+
+  @override
+  String get confirmDeleteVehicleTitle => 'Usunąć ten pojazd?';
+
+  @override
+  String get confirmDeleteVehicleMessage =>
+      'Spowoduje to trwałe usunięcie pojazdu i wszystkich jego wpisów. Tej operacji nie można cofnąć.';
+
+  @override
+  String confirmDeleteVehicleFinalTitle(String vehicle) {
+    return 'Trwale usunąć $vehicle?';
+  }
+
+  @override
+  String get confirmDeleteVehicleFinalMessage =>
+      'To ostatnia szansa, aby anulować. Pojazd i wszystkie jego wpisy zostaną bezpowrotnie usunięte.';
+
+  @override
+  String get actionDeletePermanently => 'Usuń trwale';
+
+  @override
+  String get vehicleDeleteUnsupportedTitle => 'Wymagana aktualizacja serwera';
+
+  @override
+  String vehicleDeleteUnsupportedMessage(String required, String current) {
+    return 'Usuwanie pojazdu wymaga LubeLogger $required lub nowszego, a Twój serwer działa w wersji $current. Zaktualizuj serwer, aby z tego korzystać.';
+  }
+
+  @override
+  String get actionOk => 'OK';
+
+  @override
   String get actionEdit => 'Edytuj';
 
   @override

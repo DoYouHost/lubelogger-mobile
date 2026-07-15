@@ -106,6 +106,12 @@ class VehiclesRepository {
         ),
       });
 
+  /// `DELETE /api/vehicles/delete?id=` → delete a vehicle (LubeLogger 1.7.0+).
+  /// The server cascades, wiping all of the vehicle's records first, so this is
+  /// irreversible. Surfaces [AppErrorCode.unauthorized] when the key's household
+  /// lacks the `Delete` permission (the server answers 401, not a logout signal).
+  Future<void> deleteVehicle(int id) => _delete(Endpoints.vehiclesDelete, id);
+
   /// `GET /api/vehicle/info?vehicleId=` → aggregated info for one vehicle. The
   /// endpoint returns an array; we take the first (and only) element.
   Future<VehicleInfo> info(int vehicleId) => guard(() async {
@@ -707,10 +713,11 @@ class VehiclesRepository {
   /// Shared field set for a gas record write (add or update); all values go out
   /// as strings, per the server's string-parsed export model.
   ///
-  /// `startingSoc`/`endingSoc` (EV state-of-charge, unused by this app) are
-  /// unconditionally `int.Parse`d server-side with no null/empty guard — an
-  /// absent field throws a 500 ("input string '' was not in a correct
-  /// format"). Send `"0"` so a non-EV write never trips that.
+  /// `startingSoc`/`endingSoc` (EV state-of-charge, unused by this app) were
+  /// unconditionally `int.Parse`d server-side with no null/empty guard before
+  /// LubeLogger 1.7.0 — an absent field threw a 500 ("input string '' was not in
+  /// a correct format"). 1.7.0 defaults empty to 20/80, but we still send `"0"`
+  /// so a non-EV write never trips the bug on older servers.
   static Map<String, dynamic> _gasRecordBody({
     required DateTime date,
     required num odometer,
