@@ -106,7 +106,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsVisibleTabsNote =>
-      'Choose which record tabs appear on the vehicle screen and in the add menu.';
+      'Choose which record tabs appear on the vehicle screen and in the add menu, and drag to reorder them. The Dashboard is always shown first.';
 
   @override
   String get dashLoadError => 'Couldn\'t load this vehicle. Pull to retry.';
@@ -389,6 +389,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formEquipmentEquipped => 'Equipped';
 
   @override
+  String get formVehicleTitle => 'Add Vehicle';
+
+  @override
+  String get formVehicleEditTitle => 'Edit Vehicle';
+
+  @override
+  String get formVehicleYear => 'Year';
+
+  @override
+  String get formVehicleMake => 'Make';
+
+  @override
+  String get formVehicleModel => 'Model';
+
+  @override
+  String get formVehicleLicensePlate => 'License plate';
+
+  @override
+  String get formVehicleFuelType => 'Fuel type';
+
+  @override
+  String get formVehicleUseHours => 'Track engine hours instead of odometer';
+
+  @override
+  String get formVehicleOdometerOptional => 'Odometer optional';
+
+  @override
+  String get fuelTypeGasoline => 'Gasoline';
+
+  @override
+  String get fuelTypeDiesel => 'Diesel';
+
+  @override
+  String get fuelTypeElectric => 'Electric';
+
+  @override
+  String get vehicleAdded => 'Vehicle added';
+
+  @override
+  String get vehicleAddError => 'Couldn\'t add the vehicle. Try again.';
+
+  @override
+  String get vehicleUpdated => 'Vehicle updated';
+
+  @override
+  String get vehicleUpdateError => 'Couldn\'t save the vehicle. Try again.';
+
+  @override
+  String get actionEdit => 'Edit';
+
+  @override
   String formOdometerLabel(String unit) {
     return 'Odometer reading ($unit)';
   }
@@ -421,6 +472,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentOpenError => 'Couldn\'t open the file.';
+
+  @override
+  String get quickActionAddFuel => 'Add fuel';
+
+  @override
+  String get quickActionAddOdometer => 'Add odometer';
+
+  @override
+  String get quickActionSelectVehicle => 'Select vehicle';
 
   @override
   String get actionCancel => 'Cancel';
@@ -527,6 +587,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'Open source licenses';
+
+  @override
+  String serverVersionLabel(String version) {
+    return 'Server version $version';
+  }
+
+  @override
+  String updateAvailable(String version) {
+    return 'Update available: $version';
+  }
+
+  @override
+  String get settingsBackup => 'Create backup';
+
+  @override
+  String get backupCreated => 'Backup created on the server.';
+
+  @override
+  String get backupError => 'Couldn\'t create the backup. Try again.';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleRoot => 'Root';
 
   @override
   String get settingsNotifications => 'Notifications';

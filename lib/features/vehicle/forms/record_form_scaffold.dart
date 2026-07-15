@@ -63,7 +63,7 @@ class RecordFormScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (isEditing)
+                  if (isEditing && onDelete != null)
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: t.danger),
                       onPressed: submitting ? null : onDelete,

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
+import '../core/auth/whoami.dart';
 import '../core/models/attachment.dart';
 import '../core/models/dated_cost.dart';
 import '../core/models/equipment_record.dart';
@@ -11,6 +12,7 @@ import '../core/models/odometer_record.dart';
 import '../core/models/plan_record.dart';
 import '../core/models/reminder_record.dart';
 import '../core/models/server_info.dart';
+import '../core/models/server_version.dart';
 import '../core/models/supply_record.dart';
 import '../core/models/vehicle.dart';
 import '../core/models/vehicle_info.dart';
@@ -27,6 +29,81 @@ class VehiclesRepository {
   Future<List<Vehicle>> list() => guard(() async {
         final res = await _dio.get<List<dynamic>>(Endpoints.vehicles);
         return _parseVehicles(res.data);
+      });
+
+  /// `POST /api/vehicles/add` → create a vehicle, returning its new id (or null
+  /// if the server omitted it). The app always uses the `LicensePlate`
+  /// identifier, so [licensePlate] is required; [fuelType] must be one of
+  /// `Gasoline`, `Diesel`, `Electric`. Values go out as strings, matching the
+  /// server's string-parsed import model.
+  Future<int?> addVehicle({
+    required int year,
+    required String make,
+    required String model,
+    required String licensePlate,
+    required String fuelType,
+    bool useHours = false,
+    bool odometerOptional = false,
+    String tags = '',
+  }) =>
+      guard(() async {
+        final res = await _dio.post<Map<String, dynamic>>(
+          Endpoints.vehiclesAdd,
+          options: Options(contentType: Headers.jsonContentType),
+          data: _vehicleBody(
+            year: year,
+            make: make,
+            model: model,
+            licensePlate: licensePlate,
+            fuelType: fuelType,
+            useHours: useHours,
+            odometerOptional: odometerOptional,
+            tags: tags,
+            identifier: 'LicensePlate',
+            extraFields: const [],
+          ),
+        );
+        _ensureSuccess(res.data);
+        final extra = res.data?['additionalData'];
+        if (extra is Map) return (extra['vehicleId'] as num?)?.toInt();
+        return null;
+      });
+
+  /// `PUT /api/vehicles/update` → update an existing vehicle by [id]. The server
+  /// replaces the identifier and extra fields with what's sent, so pass the
+  /// vehicle's existing [identifier]/[extraFields] to preserve them. [fuelType]
+  /// must be one of `Gasoline`, `Diesel`, `Electric`.
+  ///
+  /// Server caveat: it only *sets* the diesel/electric flag and never clears it,
+  /// so switching a vehicle back to Gasoline (or Diesel↔Electric) won't take
+  /// effect server-side — nothing the client can do about it.
+  Future<void> updateVehicle({
+    required int id,
+    required int year,
+    required String make,
+    required String model,
+    required String licensePlate,
+    required String fuelType,
+    required String identifier,
+    required List<Map<String, dynamic>> extraFields,
+    bool useHours = false,
+    bool odometerOptional = false,
+    String tags = '',
+  }) =>
+      _update(Endpoints.vehiclesUpdate, {
+        'id': id.toString(),
+        ..._vehicleBody(
+          year: year,
+          make: make,
+          model: model,
+          licensePlate: licensePlate,
+          fuelType: fuelType,
+          useHours: useHours,
+          odometerOptional: odometerOptional,
+          tags: tags,
+          identifier: identifier,
+          extraFields: extraFields,
+        ),
       });
 
   /// `GET /api/vehicle/info?vehicleId=` → aggregated info for one vehicle. The
@@ -600,6 +677,28 @@ class VehiclesRepository {
         return ServerInfo.fromJson(res.data ?? const {});
       });
 
+  /// `GET /api/whoami` → the authenticated account (username, email, roles).
+  Future<WhoAmI> whoAmI() => guard(() async {
+        final res = await _dio.get<Map<String, dynamic>>(Endpoints.whoami);
+        return WhoAmI.fromJson(res.data ?? const {});
+      });
+
+  /// `GET /api/version?checkForUpdate=1` → running vs. latest release version.
+  Future<ServerVersion> serverVersion() => guard(() async {
+        final res = await _dio.get<Map<String, dynamic>>(
+          Endpoints.version,
+          queryParameters: {'checkForUpdate': true},
+        );
+        return ServerVersion.fromJson(res.data ?? const {});
+      });
+
+  /// `GET /api/makebackup` → trigger a server-side backup (root only), returning
+  /// the created file's path. Throws (403) for non-root callers.
+  Future<String> makeBackup() => guard(() async {
+        final res = await _dio.get<String>(Endpoints.makeBackup);
+        return res.data ?? '';
+      });
+
   List<Vehicle> _parseVehicles(List<dynamic>? data) => [
         for (final e in data ?? const [])
           if (e is Map<String, dynamic>) Vehicle.fromJson(e),
@@ -755,6 +854,34 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+      };
+
+  /// Shared field set for a vehicle write (add or update). All values go out as
+  /// strings (bools as "true"/"false", which the server's `bool.Parse` accepts),
+  /// matching the string-parsed `VehicleImportModel`.
+  static Map<String, dynamic> _vehicleBody({
+    required int year,
+    required String make,
+    required String model,
+    required String licensePlate,
+    required String fuelType,
+    required bool useHours,
+    required bool odometerOptional,
+    required String tags,
+    required String identifier,
+    required List<Map<String, dynamic>> extraFields,
+  }) =>
+      {
+        'year': year.toString(),
+        'make': make,
+        'model': model,
+        'licensePlate': licensePlate,
+        'identifier': identifier,
+        'fuelType': fuelType,
+        'useEngineHours': useHours.toString(),
+        'odometerOptional': odometerOptional.toString(),
+        'tags': tags,
+        'extraFields': extraFields,
       };
 
   /// Serialize a record's attachments for a write body's `files` field.

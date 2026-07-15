@@ -281,7 +281,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsVisibleTabsNote.
   ///
   /// In en, this message translates to:
-  /// **'Choose which record tabs appear on the vehicle screen and in the add menu.'**
+  /// **'Choose which record tabs appear on the vehicle screen and in the add menu, and drag to reorder them. The Dashboard is always shown first.'**
   String get settingsVisibleTabsNote;
 
   /// No description provided for @dashLoadError.
@@ -800,6 +800,108 @@ abstract class AppLocalizations {
   /// **'Equipped'**
   String get formEquipmentEquipped;
 
+  /// No description provided for @formVehicleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Vehicle'**
+  String get formVehicleTitle;
+
+  /// No description provided for @formVehicleEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Vehicle'**
+  String get formVehicleEditTitle;
+
+  /// No description provided for @formVehicleYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get formVehicleYear;
+
+  /// No description provided for @formVehicleMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get formVehicleMake;
+
+  /// No description provided for @formVehicleModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get formVehicleModel;
+
+  /// No description provided for @formVehicleLicensePlate.
+  ///
+  /// In en, this message translates to:
+  /// **'License plate'**
+  String get formVehicleLicensePlate;
+
+  /// No description provided for @formVehicleFuelType.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel type'**
+  String get formVehicleFuelType;
+
+  /// No description provided for @formVehicleUseHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Track engine hours instead of odometer'**
+  String get formVehicleUseHours;
+
+  /// No description provided for @formVehicleOdometerOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer optional'**
+  String get formVehicleOdometerOptional;
+
+  /// No description provided for @fuelTypeGasoline.
+  ///
+  /// In en, this message translates to:
+  /// **'Gasoline'**
+  String get fuelTypeGasoline;
+
+  /// No description provided for @fuelTypeDiesel.
+  ///
+  /// In en, this message translates to:
+  /// **'Diesel'**
+  String get fuelTypeDiesel;
+
+  /// No description provided for @fuelTypeElectric.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get fuelTypeElectric;
+
+  /// No description provided for @vehicleAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle added'**
+  String get vehicleAdded;
+
+  /// No description provided for @vehicleAddError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t add the vehicle. Try again.'**
+  String get vehicleAddError;
+
+  /// No description provided for @vehicleUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle updated'**
+  String get vehicleUpdated;
+
+  /// No description provided for @vehicleUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the vehicle. Try again.'**
+  String get vehicleUpdateError;
+
+  /// No description provided for @actionEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get actionEdit;
+
   /// No description provided for @formOdometerLabel.
   ///
   /// In en, this message translates to:
@@ -859,6 +961,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open the file.'**
   String get attachmentOpenError;
+
+  /// No description provided for @quickActionAddFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add fuel'**
+  String get quickActionAddFuel;
+
+  /// No description provided for @quickActionAddOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Add odometer'**
+  String get quickActionAddOdometer;
+
+  /// No description provided for @quickActionSelectVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select vehicle'**
+  String get quickActionSelectVehicle;
 
   /// No description provided for @actionCancel.
   ///
@@ -1051,6 +1171,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open source licenses'**
   String get openSourceLicenses;
+
+  /// No description provided for @serverVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server version {version}'**
+  String serverVersionLabel(String version);
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available: {version}'**
+  String updateAvailable(String version);
+
+  /// No description provided for @settingsBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup'**
+  String get settingsBackup;
+
+  /// No description provided for @backupCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup created on the server.'**
+  String get backupCreated;
+
+  /// No description provided for @backupError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the backup. Try again.'**
+  String get backupError;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get roleAdmin;
+
+  /// No description provided for @roleRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Root'**
+  String get roleRoot;
 
   /// No description provided for @settingsNotifications.
   ///

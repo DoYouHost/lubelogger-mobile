@@ -14,6 +14,7 @@ class SettingsRepository {
   static const _profileKey = 'server_profile';
   static const _unitsKey = 'units_settings';
   static const _visibleTabsKey = 'visible_tabs';
+  static const _tabOrderKey = 'tab_order';
   static const _remindersEnabledKey = 'reminder_notifications_enabled';
 
   final SharedPreferences _prefs;
@@ -62,6 +63,31 @@ class SettingsRepository {
   Future<void> saveVisibleTabs(Set<VehicleTab> tabs) => _prefs.setStringList(
         _visibleTabsKey,
         [for (final t in tabs) t.name],
+      );
+
+  /// The order record tabs appear in — on the vehicle screen (after the always-
+  /// first Dashboard) and in the FAB add sheet. A full permutation of
+  /// [VehicleTab.values]; visibility is tracked separately by [loadVisibleTabs].
+  /// Absent (never set) defaults to enum order; unknown persisted ids are
+  /// dropped, and any tab missing from the stored order (e.g. one added in a
+  /// newer app version) is appended so it can never disappear.
+  List<VehicleTab> loadTabOrder() {
+    final names = _prefs.getStringList(_tabOrderKey);
+    if (names == null) return VehicleTab.values.toList();
+    final ordered = [
+      for (final n in names) ?VehicleTab.byName(n),
+    ];
+    final seen = ordered.toSet();
+    return [
+      ...ordered,
+      for (final t in VehicleTab.values)
+        if (!seen.contains(t)) t,
+    ];
+  }
+
+  Future<void> saveTabOrder(List<VehicleTab> order) => _prefs.setStringList(
+        _tabOrderKey,
+        [for (final t in order) t.name],
       );
 
   /// Whether the background check may post past-due reminder notifications.

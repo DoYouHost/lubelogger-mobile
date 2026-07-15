@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../common/state_views.dart';
+import 'add_vehicle_form.dart';
 import 'widgets/vehicle_card.dart';
 
 /// The garage: the household's vehicles as photo cards, with an add-vehicle tile
@@ -16,6 +19,7 @@ class GarageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
     final garage = ref.watch(garageProvider);
     final baseUrl = ref.watch(serverProfileProvider)?.baseUrl ?? '';
     final apiKey = ref.watch(apiKeyProvider).valueOrNull;
@@ -53,7 +57,10 @@ class GarageScreen extends ConsumerWidget {
             ),
             data: (vehicles) {
               if (vehicles.isEmpty) {
-                return _EmptyGarage(l10n: l10n, onAdd: () => _comingSoon(context, l10n));
+                return _EmptyGarage(
+                  l10n: l10n,
+                  onAdd: () => _openAddVehicle(context, ref),
+                );
               }
               return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -61,16 +68,39 @@ class GarageScreen extends ConsumerWidget {
                 separatorBuilder: (_, _) => const SizedBox(height: 18),
                 itemBuilder: (context, i) {
                   if (i == vehicles.length) {
-                    return AddVehicleTile(onTap: () => _comingSoon(context, l10n));
+                    return AddVehicleTile(
+                      onTap: () => _openAddVehicle(context, ref),
+                    );
                   }
-                  return VehicleCard(
-                    info: vehicles[i],
-                    baseUrl: baseUrl,
-                    apiKey: apiKey,
-                    currencySymbol: currency,
-                    measurementBase: units.base,
-                    distanceUnit: units.distance,
-                    onTap: () => context.push('/vehicle/${vehicles[i].vehicle.id}'),
+                  final info = vehicles[i];
+                  return Slidable(
+                    key: ValueKey(info.vehicle.id),
+                    endActionPane: ActionPane(
+                      motion: const DrawerMotion(),
+                      extentRatio: 0.28,
+                      children: [
+                        SlidableAction(
+                          onPressed: (_) =>
+                              _editVehicle(context, ref, info.vehicle),
+                          icon: Icons.edit_outlined,
+                          label: l10n.actionEdit,
+                          backgroundColor: t.accentGold,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ],
+                    ),
+                    child: VehicleCard(
+                      info: info,
+                      baseUrl: baseUrl,
+                      apiKey: apiKey,
+                      currencySymbol: currency,
+                      measurementBase: units.base,
+                      distanceUnit: units.distance,
+                      onTap: () =>
+                          context.push('/vehicle/${info.vehicle.id}'),
+                    ),
                   );
                 },
               );
@@ -81,11 +111,23 @@ class GarageScreen extends ConsumerWidget {
     );
   }
 
-  void _comingSoon(BuildContext context, AppLocalizations l10n) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(l10n.comingSoon)));
+  /// Opens the add-vehicle form and, on success, jumps to the new vehicle. The
+  /// form invalidates [garageProvider] itself, so the list refreshes regardless.
+  Future<void> _openAddVehicle(BuildContext context, WidgetRef ref) async {
+    final newId = await showVehicleForm(context);
+    if (newId != null && context.mounted) {
+      context.push('/vehicle/$newId');
+    }
   }
+
+  /// Opens the edit form for [vehicle] (slide action). The form invalidates the
+  /// garage + vehicle-info providers itself, so no navigation is needed.
+  Future<void> _editVehicle(
+    BuildContext context,
+    WidgetRef ref,
+    Vehicle vehicle,
+  ) =>
+      showVehicleForm(context, existing: vehicle);
 }
 
 /// Empty state that still offers the add-vehicle tile.

@@ -73,9 +73,14 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
     final useHours = vehicle?.useHours ?? false;
     final visible = ref.watch(visibleTabsProvider);
+    final order = ref.watch(tabOrderProvider);
 
-    // Dashboard always leads; the record tabs follow in enum order, filtered to
-    // the user's visible set.
+    // Dashboard always leads; the record tabs follow in the user's chosen order,
+    // filtered to the visible set. The same list drives the FAB add sheet.
+    final orderedVisible = [
+      for (final tab in order)
+        if (visible.contains(tab)) tab,
+    ];
     _tabs = <_VehicleTab>[
       _VehicleTab(
         l10n.tabDashboard,
@@ -87,9 +92,8 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
           ref.invalidate(monthlyBreakdownProvider(vehicleId));
         },
       ),
-      for (final tab in VehicleTab.values)
-        if (visible.contains(tab))
-          _recordTab(tab, l10n, vehicleId, useHours: useHours),
+      for (final tab in orderedVisible)
+        _recordTab(tab, l10n, vehicleId, useHours: useHours),
     ];
 
     final controller = _controllerFor(_tabs.length);
@@ -100,7 +104,8 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         floatingActionButton: FloatingActionButton(
           backgroundColor: DashTokens.of(context).accentGold,
           foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          onPressed: () => showAddRecordSheet(context, vehicleId, visible),
+          onPressed: () =>
+              showAddRecordSheet(context, vehicleId, orderedVisible),
           child: const Icon(Icons.add),
         ),
         body: SafeArea(

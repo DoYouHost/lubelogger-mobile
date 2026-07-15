@@ -10,7 +10,9 @@ import 'app.dart';
 import 'core/app_localizations_loader.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/reminder_worker.dart';
+import 'core/quick_actions_service.dart';
 import 'core/settings/settings_repository.dart';
+import 'features/quick_actions/quick_action_handler.dart';
 import 'providers.dart';
 import 'router.dart';
 
@@ -59,9 +61,22 @@ Future<void> main() async {
   );
   await initReminderWorker();
   final settings = SettingsRepository(prefs);
-  if (settings.loadProfile() != null && settings.loadRemindersEnabled()) {
+  final signedIn = settings.loadProfile() != null;
+  if (signedIn && settings.loadRemindersEnabled()) {
     await registerReminderWorker();
   }
+
+  // Launcher quick actions: register the tap handler (it fires now if the app
+  // was cold-launched from a shortcut) and publish the add-record shortcuts
+  // while signed in.
+  await quickActionsService.init((type) => pendingQuickAction.value = type);
+  if (signedIn) {
+    await quickActionsService.setRecordShortcuts(
+      fuelLabel: l10n.quickActionAddFuel,
+      odometerLabel: l10n.quickActionAddOdometer,
+    );
+  }
+
   final launchPayload = await notificationService.launchPayload();
 
   runApp(

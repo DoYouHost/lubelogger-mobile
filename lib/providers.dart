@@ -6,7 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
 import 'core/api/endpoints.dart';
+import 'core/app_localizations_loader.dart';
 import 'core/auth/auth_service.dart';
+import 'core/auth/whoami.dart';
 import 'core/auth/credentials_store.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/monthly_breakdown.dart';
@@ -18,12 +20,14 @@ import 'core/models/odometer_record.dart';
 import 'core/models/plan_record.dart';
 import 'core/models/reminder_record.dart';
 import 'core/models/server_info.dart';
+import 'core/models/server_version.dart';
 import 'core/models/supply_record.dart';
 import 'core/models/vehicle_info.dart';
 import 'core/models/vehicle_record.dart';
 import 'core/models/vehicle_tab.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/reminder_worker.dart';
+import 'core/quick_actions_service.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
 import 'core/settings/units_settings.dart';
@@ -102,6 +106,32 @@ class VisibleTabsNotifier extends Notifier<Set<VehicleTab>> {
   }
 }
 
+/// The order record tabs appear in — on the vehicle screen (after the always-
+/// first Dashboard) and in the FAB add sheet. A full permutation of
+/// [VehicleTab.values]; visibility is tracked separately by
+/// [visibleTabsProvider]. Persisted locally; defaults to enum order.
+final tabOrderProvider =
+    NotifierProvider<TabOrderNotifier, List<VehicleTab>>(
+  TabOrderNotifier.new,
+);
+
+class TabOrderNotifier extends Notifier<List<VehicleTab>> {
+  @override
+  List<VehicleTab> build() =>
+      ref.watch(settingsRepositoryProvider).loadTabOrder();
+
+  /// Move the tab at [oldIndex] to [newIndex], persisting the new order. Indices
+  /// use `ReorderableListView.onReorderItem` semantics: [newIndex] is already
+  /// adjusted for the removal, so it's the final insertion slot in the list
+  /// after the dragged item is taken out.
+  Future<void> move(int oldIndex, int newIndex) async {
+    final next = [...state];
+    next.insert(newIndex, next.removeAt(oldIndex));
+    await ref.read(settingsRepositoryProvider).saveTabOrder(next);
+    state = next;
+  }
+}
+
 /// The currency symbol to display: the user's forced choice, or the server's
 /// symbol when set to [CurrencyOption.auto].
 final currencySymbolProvider = Provider<String>((ref) {
@@ -139,14 +169,22 @@ class ServerProfileNotifier extends Notifier<ServerProfile?> {
     if (settings.loadRemindersEnabled()) {
       await registerReminderWorker();
     }
+    // Publish the launcher add-record shortcuts for the new session.
+    final l10n = await loadAppLocalizations();
+    await quickActionsService.setRecordShortcuts(
+      fuelLabel: l10n.quickActionAddFuel,
+      odometerLabel: l10n.quickActionAddOdometer,
+    );
   }
 
-  /// "Log out / change server": clear the profile and every stored secret, and
-  /// stop the background reminder check (it can't run without credentials).
+  /// "Log out / change server": clear the profile and every stored secret, stop
+  /// the background reminder check, and remove the launcher shortcuts (none of
+  /// them can work without credentials).
   Future<void> clear() async {
     await ref.read(settingsRepositoryProvider).clearProfile();
     await ref.read(credentialsStoreProvider).clearAll();
     await cancelReminderWorker();
+    await quickActionsService.clear();
     state = null;
   }
 }
@@ -228,6 +266,17 @@ final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
 /// number/date formatting across the app.
 final serverInfoProvider = FutureProvider<ServerInfo>(
   (ref) => ref.watch(vehiclesRepositoryProvider).serverInfo(),
+);
+
+/// The authenticated account (username, email, admin/root). Powers the Settings
+/// "signed in as" line and gates the root-only backup action.
+final whoAmIProvider = FutureProvider<WhoAmI>(
+  (ref) => ref.watch(vehiclesRepositoryProvider).whoAmI(),
+);
+
+/// Running vs. latest server version, for the Settings "update available" hint.
+final serverVersionProvider = FutureProvider<ServerVersion>(
+  (ref) => ref.watch(vehiclesRepositoryProvider).serverVersion(),
 );
 
 /// Garage contents: every vehicle with its aggregated info. Fetches the vehicle

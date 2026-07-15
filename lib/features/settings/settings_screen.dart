@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/models/vehicle_tab.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
@@ -21,12 +20,16 @@ class SettingsScreen extends ConsumerWidget {
     final unitsCtl = ref.read(unitsSettingsProvider.notifier);
     final visibleTabs = ref.watch(visibleTabsProvider);
     final visibleTabsCtl = ref.read(visibleTabsProvider.notifier);
+    final tabOrder = ref.watch(tabOrderProvider);
+    final tabOrderCtl = ref.read(tabOrderProvider.notifier);
     final remindersOn = ref.watch(reminderNotificationsProvider);
     final remindersCtl = ref.read(reminderNotificationsProvider.notifier);
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
     final profile = ref.watch(serverProfileProvider);
     final packageInfo = ref.watch(packageInfoProvider).valueOrNull;
+    final who = ref.watch(whoAmIProvider).valueOrNull;
+    final serverVersion = ref.watch(serverVersionProvider).valueOrNull;
 
     return DashBackground(
       child: Scaffold(
@@ -119,13 +122,26 @@ class SettingsScreen extends ConsumerWidget {
               title: l10n.settingsVisibleTabs,
               footnote: l10n.settingsVisibleTabsNote,
               children: [
-                for (final tab in VehicleTab.values)
-                  _ToggleRow(
-                    icon: tab.icon,
-                    label: tab.label(l10n),
-                    value: visibleTabs.contains(tab),
-                    onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
-                  ),
+                ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  // Drag only from the explicit handle so the row's switch and
+                  // tap-to-toggle keep working.
+                  buildDefaultDragHandles: false,
+                  itemCount: tabOrder.length,
+                  onReorderItem: tabOrderCtl.move,
+                  itemBuilder: (context, i) {
+                    final tab = tabOrder[i];
+                    return _TabOrderRow(
+                      key: ValueKey(tab),
+                      index: i,
+                      icon: tab.icon,
+                      label: tab.label(l10n),
+                      value: visibleTabs.contains(tab),
+                      onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
+                    );
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 18),
@@ -152,17 +168,40 @@ class SettingsScreen extends ConsumerWidget {
             _Section(
               title: l10n.settingsServer,
               children: [
-                if (profile?.label != null)
+                if (who?.displayName.isNotEmpty ?? profile?.label != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      l10n.signedInAs(profile!.label!),
+                      l10n.signedInAs(who?.displayName ?? profile!.label!),
                       style: TextStyle(
                         fontFamily: DashTokens.fontUi,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: t.textPrimary,
                       ),
+                    ),
+                  ),
+                if (who != null && who.emailAddress.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      who.emailAddress,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 12.5,
+                        color: t.textSecondary,
+                      ),
+                    ),
+                  ),
+                if (who != null && (who.isRoot || who.isAdmin))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Wrap(
+                      spacing: 6,
+                      children: [
+                        if (who.isRoot) _roleChip(t, l10n.roleRoot),
+                        if (who.isAdmin) _roleChip(t, l10n.roleAdmin),
+                      ],
                     ),
                   ),
                 Text(
@@ -173,6 +212,10 @@ class SettingsScreen extends ConsumerWidget {
                     color: t.textTertiary,
                   ),
                 ),
+                if (who?.isRoot ?? false) ...[
+                  const SizedBox(height: 16),
+                  const _BackupButton(),
+                ],
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
@@ -212,6 +255,41 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                if (serverVersion != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      l10n.serverVersionLabel(serverVersion.currentVersion),
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontMono,
+                        fontSize: 12,
+                        color: t.textTertiary,
+                      ),
+                    ),
+                  ),
+                  if (serverVersion.updateAvailable)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Row(
+                        children: [
+                          Icon(Icons.system_update_alt,
+                              size: 15, color: t.accentGold),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              l10n.updateAvailable(serverVersion.latestVersion),
+                              style: TextStyle(
+                                fontFamily: DashTokens.fontUi,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: t.accentGold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
                 _divider(t),
                 _LinkRow(
                   label: l10n.openSourceLicenses,
@@ -231,6 +309,68 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _divider(DashTokens t) =>
       Divider(height: 20, thickness: 1, color: t.hairline);
+
+  /// A small pill labelling an account role (Admin / Root).
+  Widget _roleChip(DashTokens t, String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: t.accentGold.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: t.accentGold.withValues(alpha: 0.5)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: DashTokens.fontUi,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: t.accentGoldInk,
+          ),
+        ),
+      );
+}
+
+/// Root-only "create backup" button that triggers a server-side backup and
+/// reports the result, showing a spinner while the request is in flight.
+class _BackupButton extends ConsumerStatefulWidget {
+  const _BackupButton();
+
+  @override
+  ConsumerState<_BackupButton> createState() => _BackupButtonState();
+}
+
+class _BackupButtonState extends ConsumerState<_BackupButton> {
+  bool _busy = false;
+
+  Future<void> _run() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    try {
+      await ref.read(vehiclesRepositoryProvider).makeBackup();
+      messenger.showSnackBar(SnackBar(content: Text(l10n.backupCreated)));
+    } on Object {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.backupError)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return OutlinedButton.icon(
+      onPressed: _busy ? null : _run,
+      icon: _busy
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.backup_outlined, size: 18),
+      label: Text(l10n.settingsBackup),
+    );
+  }
 }
 
 /// A titled card grouping related settings, with an optional footnote caption.
@@ -401,6 +541,74 @@ class _ToggleRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A visible-tabs row that is both reorderable and toggleable: a drag handle
+/// (starts the reorder), the tab icon + label (tap toggles), and a trailing
+/// switch. [index] is the row's position for [ReorderableDragStartListener].
+class _TabOrderRow extends StatelessWidget {
+  const _TabOrderRow({
+    super.key,
+    required this.index,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final int index;
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Icon(Icons.drag_indicator, size: 20, color: t.textTertiary),
+            ),
+          ),
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => onChanged(!value),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18, color: t.textTertiary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: Colors.white,
+            activeTrackColor: t.accentGold,
+          ),
+        ],
       ),
     );
   }

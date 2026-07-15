@@ -22,8 +22,31 @@ abstract final class Endpoints {
   /// dateFormat}`. No auth-sensitive data; useful for a version/locale banner.
   static const info = '$apiPrefix/info';
 
+  /// Server version: `{currentVersion, latestVersion}`. Pass `?checkForUpdate=1`
+  /// to have the server fetch the latest release tag from GitHub (otherwise
+  /// latest == current). Works with the api key.
+  static const version = '$apiPrefix/version';
+
+  /// Create a server-side backup: `GET` (root only). Without params returns the
+  /// backup file path as a JSON string; `?output=download` streams the zip.
+  static const makeBackup = '$apiPrefix/makebackup';
+
   /// Household vehicles (array of [Vehicle]).
   static const vehicles = '$apiPrefix/vehicles';
+
+  /// Add a vehicle: `POST /api/vehicles/add` + JSON `VehicleImportModel`. The
+  /// server requires year, make, model, an identifier and a fuel type
+  /// (`Gasoline`/`Diesel`/`Electric`); the app always uses the `LicensePlate`
+  /// identifier, so a license plate is required too. Returns an
+  /// `OperationResponse` with `additionalData:{vehicleId}`.
+  static const vehiclesAdd = '$vehicles/add';
+
+  /// Update a vehicle: `PUT /api/vehicles/update` + JSON `VehicleImportModel`
+  /// including `id`. Same required fields as add; the server **replaces** the
+  /// vehicle's identifier and extra fields with whatever is sent, so callers
+  /// resend the existing values to avoid clobbering them. (There is no
+  /// vehicle-delete endpoint in the API.)
+  static const vehiclesUpdate = '$vehicles/update';
 
   /// Aggregated info for one vehicle: `?vehicleId=`. Returns an ARRAY of
   /// VehicleInfo (odometer, record counts/costs, reminder counts) — one element

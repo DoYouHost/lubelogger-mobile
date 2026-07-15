@@ -14,24 +14,21 @@ import 'forms/add_plan_form.dart';
 import 'forms/add_reminder_form.dart';
 import 'forms/add_supply_form.dart';
 
-/// FAB action: pick a record type to add, then open its form. The choices mirror
-/// the vehicle's [visible] tabs (in enum order). Every record type has its own
-/// add form; a tab with no form falls back to a "coming soon" notice.
+/// FAB action: pick a record type to add, then open its form. [tabs] is the
+/// vehicle's visible record tabs in the user's chosen order (see
+/// [tabOrderProvider]). Every record type has its own add form; a tab with no
+/// form falls back to a "coming soon" notice.
 Future<void> showAddRecordSheet(
   BuildContext context,
   int vehicleId,
-  Set<VehicleTab> visible,
+  List<VehicleTab> tabs,
 ) async {
-  final options = [
-    for (final tab in VehicleTab.values)
-      if (visible.contains(tab)) tab,
-  ];
-  if (options.isEmpty) return;
+  if (tabs.isEmpty) return;
 
   final picked = await showModalBottomSheet<VehicleTab>(
     context: context,
     showDragHandle: true,
-    builder: (_) => _AddRecordGrid(options: options),
+    builder: (_) => _AddRecordGrid(options: tabs),
   );
   if (picked == null || !context.mounted) return;
 

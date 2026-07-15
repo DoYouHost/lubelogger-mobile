@@ -107,7 +107,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsVisibleTabsNote =>
-      'Wybierz, które zakładki mają się pojawiać na ekranie pojazdu i w menu dodawania.';
+      'Wybierz, które zakładki mają się pojawiać na ekranie pojazdu i w menu dodawania, oraz przeciągnij, aby zmienić ich kolejność. Pulpit jest zawsze pokazywany jako pierwszy.';
 
   @override
   String get dashLoadError =>
@@ -393,6 +393,59 @@ class AppLocalizationsPl extends AppLocalizations {
   String get formEquipmentEquipped => 'Zamontowane';
 
   @override
+  String get formVehicleTitle => 'Dodaj pojazd';
+
+  @override
+  String get formVehicleEditTitle => 'Edytuj pojazd';
+
+  @override
+  String get formVehicleYear => 'Rok';
+
+  @override
+  String get formVehicleMake => 'Marka';
+
+  @override
+  String get formVehicleModel => 'Model';
+
+  @override
+  String get formVehicleLicensePlate => 'Numer rejestracyjny';
+
+  @override
+  String get formVehicleFuelType => 'Rodzaj paliwa';
+
+  @override
+  String get formVehicleUseHours => 'Śledź motogodziny zamiast licznika';
+
+  @override
+  String get formVehicleOdometerOptional => 'Licznik opcjonalny';
+
+  @override
+  String get fuelTypeGasoline => 'Benzyna';
+
+  @override
+  String get fuelTypeDiesel => 'Diesel';
+
+  @override
+  String get fuelTypeElectric => 'Elektryczny';
+
+  @override
+  String get vehicleAdded => 'Dodano pojazd';
+
+  @override
+  String get vehicleAddError =>
+      'Nie udało się dodać pojazdu. Spróbuj ponownie.';
+
+  @override
+  String get vehicleUpdated => 'Zapisano zmiany pojazdu';
+
+  @override
+  String get vehicleUpdateError =>
+      'Nie udało się zapisać pojazdu. Spróbuj ponownie.';
+
+  @override
+  String get actionEdit => 'Edytuj';
+
+  @override
   String formOdometerLabel(String unit) {
     return 'Stan licznika ($unit)';
   }
@@ -426,6 +479,15 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get attachmentOpenError => 'Nie udało się otworzyć pliku.';
+
+  @override
+  String get quickActionAddFuel => 'Dodaj tankowanie';
+
+  @override
+  String get quickActionAddOdometer => 'Dodaj licznik';
+
+  @override
+  String get quickActionSelectVehicle => 'Wybierz pojazd';
 
   @override
   String get actionCancel => 'Anuluj';
@@ -535,6 +597,32 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'Licencje open source';
+
+  @override
+  String serverVersionLabel(String version) {
+    return 'Wersja serwera $version';
+  }
+
+  @override
+  String updateAvailable(String version) {
+    return 'Dostępna aktualizacja: $version';
+  }
+
+  @override
+  String get settingsBackup => 'Utwórz kopię zapasową';
+
+  @override
+  String get backupCreated => 'Kopia zapasowa utworzona na serwerze.';
+
+  @override
+  String get backupError =>
+      'Nie udało się utworzyć kopii zapasowej. Spróbuj ponownie.';
+
+  @override
+  String get roleAdmin => 'Administrator';
+
+  @override
+  String get roleRoot => 'Root';
 
   @override
   String get settingsNotifications => 'Powiadomienia';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/dash_theme.dart';
+import 'features/quick_actions/quick_action_handler.dart';
 import 'l10n/app_localizations.dart';
 import 'router.dart';
 
@@ -20,6 +21,9 @@ class LubeLoggerApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
+      // Always-mounted host for launcher quick actions (see QuickActionHandler).
+      builder: (context, child) =>
+          QuickActionHandler(child: child ?? const SizedBox.shrink()),
     );
   }
 }

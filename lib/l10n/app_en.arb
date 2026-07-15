@@ -45,7 +45,7 @@
   },
   "settingsUnitsMetricNote": "Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.",
   "settingsVisibleTabs": "Visible tabs",
-  "settingsVisibleTabsNote": "Choose which record tabs appear on the vehicle screen and in the add menu.",
+  "settingsVisibleTabsNote": "Choose which record tabs appear on the vehicle screen and in the add menu, and drag to reorder them. The Dashboard is always shown first.",
 
   "dashLoadError": "Couldn't load this vehicle. Pull to retry.",
   "statDistanceTraveled": "Distance Traveled",
@@ -181,6 +181,23 @@
   "formEquipmentEditTitle": "Edit Equipment",
   "formEquipmentNameLabel": "Name",
   "formEquipmentEquipped": "Equipped",
+  "formVehicleTitle": "Add Vehicle",
+  "formVehicleEditTitle": "Edit Vehicle",
+  "formVehicleYear": "Year",
+  "formVehicleMake": "Make",
+  "formVehicleModel": "Model",
+  "formVehicleLicensePlate": "License plate",
+  "formVehicleFuelType": "Fuel type",
+  "formVehicleUseHours": "Track engine hours instead of odometer",
+  "formVehicleOdometerOptional": "Odometer optional",
+  "fuelTypeGasoline": "Gasoline",
+  "fuelTypeDiesel": "Diesel",
+  "fuelTypeElectric": "Electric",
+  "vehicleAdded": "Vehicle added",
+  "vehicleAddError": "Couldn't add the vehicle. Try again.",
+  "vehicleUpdated": "Vehicle updated",
+  "vehicleUpdateError": "Couldn't save the vehicle. Try again.",
+  "actionEdit": "Edit",
   "formOdometerLabel": "Odometer reading ({unit})",
   "@formOdometerLabel": {
     "placeholders": {
@@ -201,6 +218,11 @@
   "attachmentAddButton": "Add file",
   "attachmentUploadError": "Couldn't upload the file. Try again.",
   "attachmentOpenError": "Couldn't open the file.",
+
+  "quickActionAddFuel": "Add fuel",
+  "quickActionAddOdometer": "Add odometer",
+  "quickActionSelectVehicle": "Select vehicle",
+
   "actionCancel": "Cancel",
   "actionAdd": "Add",
   "actionSave": "Save",
@@ -256,6 +278,23 @@
     }
   },
   "openSourceLicenses": "Open source licenses",
+  "serverVersionLabel": "Server version {version}",
+  "@serverVersionLabel": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "updateAvailable": "Update available: {version}",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "settingsBackup": "Create backup",
+  "backupCreated": "Backup created on the server.",
+  "backupError": "Couldn't create the backup. Try again.",
+  "roleAdmin": "Admin",
+  "roleRoot": "Root",
 
   "settingsNotifications": "Notifications",
   "settingsNotificationsNote": "Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it's resolved.",
