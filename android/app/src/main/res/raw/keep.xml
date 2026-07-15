@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- These drawables are referenced only by runtime name strings (the notification
+     small icon and launcher shortcut icons), never from XML or code the resource
+     shrinker can see. Release builds enable resource shrinking, so without this
+     the shrinker strips them and the app fails at runtime with
+     "resource ... could not be found". Force-keep them. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_reminder,@drawable/ic_shortcut_fuel,@drawable/ic_shortcut_odometer" />

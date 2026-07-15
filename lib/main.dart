@@ -51,33 +51,41 @@ Future<void> main() async {
   _registerFontLicenses();
   final prefs = await SharedPreferences.getInstance();
 
-  // Reminder notifications: set up the plugin + background worker, and arm the
-  // periodic check when the user is signed in and has opted in.
-  final l10n = await loadAppLocalizations();
-  await notificationService.init(
-    channelName: l10n.notifReminderChannelName,
-    channelDescription: l10n.notifReminderChannelDescription,
-    onTap: _openVehicleFromNotification,
-  );
-  await initReminderWorker();
-  final settings = SettingsRepository(prefs);
-  final signedIn = settings.loadProfile() != null;
-  if (signedIn && settings.loadRemindersEnabled()) {
-    await registerReminderWorker();
-  }
-
-  // Launcher quick actions: register the tap handler (it fires now if the app
-  // was cold-launched from a shortcut) and publish the add-record shortcuts
-  // while signed in.
-  await quickActionsService.init((type) => pendingQuickAction.value = type);
-  if (signedIn) {
-    await quickActionsService.setRecordShortcuts(
-      fuelLabel: l10n.quickActionAddFuel,
-      odometerLabel: l10n.quickActionAddOdometer,
+  // Notification + quick-action setup is non-essential to the app running, so a
+  // failure here (e.g. a missing/stripped resource) must never keep runApp()
+  // below from executing — swallow and log instead of taking the whole app down.
+  String? launchPayload;
+  try {
+    // Reminder notifications: set up the plugin + background worker, and arm the
+    // periodic check when the user is signed in and has opted in.
+    final l10n = await loadAppLocalizations();
+    await notificationService.init(
+      channelName: l10n.notifReminderChannelName,
+      channelDescription: l10n.notifReminderChannelDescription,
+      onTap: _openVehicleFromNotification,
     );
-  }
+    await initReminderWorker();
+    final settings = SettingsRepository(prefs);
+    final signedIn = settings.loadProfile() != null;
+    if (signedIn && settings.loadRemindersEnabled()) {
+      await registerReminderWorker();
+    }
 
-  final launchPayload = await notificationService.launchPayload();
+    // Launcher quick actions: register the tap handler (it fires now if the app
+    // was cold-launched from a shortcut) and publish the add-record shortcuts
+    // while signed in.
+    await quickActionsService.init((type) => pendingQuickAction.value = type);
+    if (signedIn) {
+      await quickActionsService.setRecordShortcuts(
+        fuelLabel: l10n.quickActionAddFuel,
+        odometerLabel: l10n.quickActionAddOdometer,
+      );
+    }
+
+    launchPayload = await notificationService.launchPayload();
+  } catch (error, stack) {
+    debugPrint('Non-essential startup init failed (continuing): $error\n$stack');
+  }
 
   runApp(
     ProviderScope(
