@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
+import '../core/models/attachment.dart';
 import '../core/models/dated_cost.dart';
 import '../core/models/equipment_record.dart';
 import '../core/models/gas_record.dart';
@@ -68,6 +69,7 @@ class VehiclesRepository {
     required bool missedFuelUp,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -83,6 +85,7 @@ class VehiclesRepository {
             missedFuelUp: missedFuelUp,
             notes: notes,
             tags: tags,
+            files: files,
           ),
         );
         _ensureSuccess(res.data);
@@ -103,6 +106,7 @@ class VehiclesRepository {
     required bool missedFuelUp,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -120,6 +124,7 @@ class VehiclesRepository {
               missedFuelUp: missedFuelUp,
               notes: notes,
               tags: tags,
+              files: files,
             ),
           },
         );
@@ -178,6 +183,7 @@ class VehiclesRepository {
     num? odometer,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -191,6 +197,7 @@ class VehiclesRepository {
             odometer: odometer,
             notes: notes,
             tags: tags,
+            files: files,
           ),
         );
         _ensureSuccess(res.data);
@@ -207,6 +214,7 @@ class VehiclesRepository {
     num? odometer,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -221,6 +229,7 @@ class VehiclesRepository {
               odometer: odometer,
               notes: notes,
               tags: tags,
+              files: files,
             ),
           },
         );
@@ -249,10 +258,11 @@ class VehiclesRepository {
     String partSupplier = '',
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       _add(Endpoints.supplyRecordsAdd, vehicleId,
           _supplyBody(date, description, partQuantity, cost, partNumber,
-              partSupplier, notes, tags));
+              partSupplier, notes, tags, files));
 
   Future<void> updateSupplyRecord({
     required int id,
@@ -264,11 +274,12 @@ class VehiclesRepository {
     String partSupplier = '',
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       _update(Endpoints.supplyRecordsUpdate, {
         'id': id.toString(),
         ..._supplyBody(date, description, partQuantity, cost, partNumber,
-            partSupplier, notes, tags),
+            partSupplier, notes, tags, files),
       });
 
   Future<void> deleteSupplyRecord(int id) =>
@@ -285,9 +296,10 @@ class VehiclesRepository {
     required PlanPriority priority,
     required PlanProgress progress,
     String notes = '',
+    List<Attachment> files = const [],
   }) =>
       _add(Endpoints.planRecordsAdd, vehicleId,
-          _planBody(description, cost, type, priority, progress, notes));
+          _planBody(description, cost, type, priority, progress, notes, files));
 
   Future<void> updatePlanRecord({
     required int id,
@@ -297,10 +309,11 @@ class VehiclesRepository {
     required PlanPriority priority,
     required PlanProgress progress,
     String notes = '',
+    List<Attachment> files = const [],
   }) =>
       _update(Endpoints.planRecordsUpdate, {
         'id': id.toString(),
-        ..._planBody(description, cost, type, priority, progress, notes),
+        ..._planBody(description, cost, type, priority, progress, notes, files),
       });
 
   Future<void> deletePlanRecord(int id) =>
@@ -347,9 +360,10 @@ class VehiclesRepository {
     required String noteText,
     bool pinned = false,
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       _add(Endpoints.notesAdd, vehicleId,
-          _noteBody(description, noteText, pinned, tags));
+          _noteBody(description, noteText, pinned, tags, files));
 
   Future<void> updateNote({
     required int id,
@@ -357,10 +371,11 @@ class VehiclesRepository {
     required String noteText,
     bool pinned = false,
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       _update(Endpoints.notesUpdate, {
         'id': id.toString(),
-        ..._noteBody(description, noteText, pinned, tags),
+        ..._noteBody(description, noteText, pinned, tags, files),
       });
 
   Future<void> deleteNote(int id) => _delete(Endpoints.notesDelete, id);
@@ -373,9 +388,10 @@ class VehiclesRepository {
     required bool isEquipped,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       _add(Endpoints.equipmentRecordsAdd, vehicleId,
-          _equipmentBody(description, isEquipped, notes, tags));
+          _equipmentBody(description, isEquipped, notes, tags, files));
 
   Future<void> updateEquipmentRecord({
     required int id,
@@ -383,10 +399,11 @@ class VehiclesRepository {
     required bool isEquipped,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       _update(Endpoints.equipmentRecordsUpdate, {
         'id': id.toString(),
-        ..._equipmentBody(description, isEquipped, notes, tags),
+        ..._equipmentBody(description, isEquipped, notes, tags, files),
       });
 
   Future<void> deleteEquipmentRecord(int id) =>
@@ -416,6 +433,7 @@ class VehiclesRepository {
     required num odometer,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -427,6 +445,7 @@ class VehiclesRepository {
             'odometer': _intString(odometer),
             'notes': notes,
             'tags': tags,
+            'files': _filesJson(files),
           },
         );
         _ensureSuccess(res.data);
@@ -442,6 +461,7 @@ class VehiclesRepository {
     required num initialOdometer,
     String notes = '',
     String tags = '',
+    List<Attachment> files = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -454,6 +474,7 @@ class VehiclesRepository {
             'initialOdometer': _intString(initialOdometer),
             'notes': notes,
             'tags': tags,
+            'files': _filesJson(files),
           },
         );
         _ensureSuccess(res.data);
@@ -508,7 +529,7 @@ class VehiclesRepository {
 
   /// `POST {endpoint}?vehicleId=` with a JSON [body] → add a record. Shared by
   /// the per-type add methods (all uniform-CRUD endpoints, see §6).
-  Future<void> _add(String endpoint, int vehicleId, Map<String, String> body) =>
+  Future<void> _add(String endpoint, int vehicleId, Map<String, dynamic> body) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
           endpoint,
@@ -521,7 +542,7 @@ class VehiclesRepository {
 
   /// `PUT {endpoint}` with a JSON [body] (including `id`) → update a record. The
   /// server resolves the record's vehicle from its id, so no query params.
-  Future<void> _update(String endpoint, Map<String, String> body) =>
+  Future<void> _update(String endpoint, Map<String, dynamic> body) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
           endpoint,
@@ -538,6 +559,39 @@ class VehiclesRepository {
           queryParameters: {'id': id},
         );
         _ensureSuccess(res.data);
+      });
+
+  /// `POST /api/documents/upload` (multipart, field `documents`) → upload one or
+  /// more files and return the resulting [Attachment]s, which the caller stores
+  /// in a record's `files` list on add/update.
+  Future<List<Attachment>> uploadDocuments(
+    List<({String path, String name})> files,
+  ) =>
+      guard(() async {
+        final form = FormData();
+        for (final f in files) {
+          form.files.add(MapEntry(
+            'documents',
+            await MultipartFile.fromFile(f.path, filename: f.name),
+          ));
+        }
+        final res = await _dio.post<List<dynamic>>(
+          Endpoints.documentsUpload,
+          data: form,
+        );
+        return [
+          for (final e in res.data ?? const [])
+            if (e is Map<String, dynamic>) Attachment.fromJson(e),
+        ];
+      });
+
+  /// Download an attachment to [savePath]. [location] is a record's
+  /// `files[].location` (e.g. `/documents/<guid>.pdf`), resolved against the
+  /// server base URL; the authenticated client's `x-api-key` is accepted for
+  /// `/documents` paths (see the server's static-file auth).
+  Future<void> downloadDocument(String location, String savePath) =>
+      guard(() async {
+        await _dio.download(location, savePath);
       });
 
   /// `GET /api/info` → server metadata (currency, locale, date format).
@@ -558,7 +612,7 @@ class VehiclesRepository {
   /// unconditionally `int.Parse`d server-side with no null/empty guard — an
   /// absent field throws a 500 ("input string '' was not in a correct
   /// format"). Send `"0"` so a non-EV write never trips that.
-  static Map<String, String> _gasRecordBody({
+  static Map<String, dynamic> _gasRecordBody({
     required DateTime date,
     required num odometer,
     required num fuelConsumed,
@@ -567,6 +621,7 @@ class VehiclesRepository {
     required bool missedFuelUp,
     required String notes,
     required String tags,
+    required List<Attachment> files,
   }) =>
       {
         'date': _isoDate(date),
@@ -579,18 +634,20 @@ class VehiclesRepository {
         'endingSoc': '0',
         'notes': notes,
         'tags': tags,
+        'files': _filesJson(files),
       };
 
   /// Shared field set for a generic record write (add or update). Odometer is
   /// omitted when null (tax records have none); it goes out as a whole-number
   /// string for the server's `int.Parse`, cost as a plain `.`-decimal.
-  static Map<String, String> _recordBody({
+  static Map<String, dynamic> _recordBody({
     required DateTime date,
     required String description,
     required num cost,
     required num? odometer,
     required String notes,
     required String tags,
+    required List<Attachment> files,
   }) =>
       {
         'date': _isoDate(date),
@@ -599,11 +656,12 @@ class VehiclesRepository {
         'cost': cost.toString(),
         'notes': notes,
         'tags': tags,
+        'files': _filesJson(files),
       };
 
   /// Supply write fields. Quantity and cost are decimals; part number/supplier
   /// are free-form and may be empty.
-  static Map<String, String> _supplyBody(
+  static Map<String, dynamic> _supplyBody(
     DateTime date,
     String description,
     num partQuantity,
@@ -612,6 +670,7 @@ class VehiclesRepository {
     String partSupplier,
     String notes,
     String tags,
+    List<Attachment> files,
   ) =>
       {
         'date': _isoDate(date),
@@ -622,17 +681,19 @@ class VehiclesRepository {
         'cost': cost.toString(),
         'notes': notes,
         'tags': tags,
+        'files': _filesJson(files),
       };
 
   /// Plan write fields. Enums go out as their .NET names; there is no
   /// date/odometer/tags. The server sets DateCreated/DateModified itself.
-  static Map<String, String> _planBody(
+  static Map<String, dynamic> _planBody(
     String description,
     num cost,
     PlanType type,
     PlanPriority priority,
     PlanProgress progress,
     String notes,
+    List<Attachment> files,
   ) =>
       {
         'description': description,
@@ -641,6 +702,7 @@ class VehiclesRepository {
         'priority': priority.wireName,
         'progress': progress.wireName,
         'notes': notes,
+        'files': _filesJson(files),
       };
 
   /// Reminder write fields. Metric goes out as its .NET name; the due date and
@@ -664,32 +726,40 @@ class VehiclesRepository {
       };
 
   /// Note write fields: a title ([description]) + body ([noteText]) + pin flag.
-  static Map<String, String> _noteBody(
+  static Map<String, dynamic> _noteBody(
     String description,
     String noteText,
     bool pinned,
     String tags,
+    List<Attachment> files,
   ) =>
       {
         'description': description,
         'noteText': noteText,
         'pinned': pinned.toString(),
         'tags': tags,
+        'files': _filesJson(files),
       };
 
   /// Equipment write fields: a name ([description]) + equipped flag.
-  static Map<String, String> _equipmentBody(
+  static Map<String, dynamic> _equipmentBody(
     String description,
     bool isEquipped,
     String notes,
     String tags,
+    List<Attachment> files,
   ) =>
       {
         'description': description,
         'isEquipped': isEquipped.toString(),
         'notes': notes,
         'tags': tags,
+        'files': _filesJson(files),
       };
+
+  /// Serialize a record's attachments for a write body's `files` field.
+  static List<Map<String, dynamic>> _filesJson(List<Attachment> files) =>
+      [for (final f in files) f.toJson()];
 
   /// Odometer values are stored as integers server-side (`int.Parse`); emit a
   /// whole-number string so a `317240.0`-style double never reaches the parser.

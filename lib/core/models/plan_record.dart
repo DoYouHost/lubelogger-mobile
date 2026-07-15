@@ -1,3 +1,5 @@
+import 'attachment.dart';
+
 /// A planner item from `GET /api/vehicle/planrecords`. Unlike cost records it
 /// has no service date/odometer — it tracks a creation date, a [type], a
 /// priority and a progress state, plus an estimated cost. Enums arrive as their
@@ -12,6 +14,7 @@ class PlanRecord {
     required this.priority,
     required this.progress,
     required this.notes,
+    this.files = const [],
   });
 
   factory PlanRecord.fromJson(Map<String, dynamic> json) => PlanRecord(
@@ -25,6 +28,7 @@ class PlanRecord {
         priority: PlanPriority.parse(json['priority']),
         progress: PlanProgress.parse(json['progress']),
         notes: (json['notes'] as String?) ?? '',
+        files: Attachment.listFrom(json['files']),
       );
 
   final int id;
@@ -35,6 +39,7 @@ class PlanRecord {
   final PlanPriority priority;
   final PlanProgress progress;
   final String notes;
+  final List<Attachment> files;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

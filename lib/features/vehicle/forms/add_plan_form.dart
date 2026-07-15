@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/format/shift_digits_formatter.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/plan_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
+import 'attachments_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
 
@@ -57,6 +59,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
   late PlanType _type;
   late PlanPriority _priority;
   late PlanProgress _progress;
+  List<Attachment> _files = const [];
   bool _submitting = false;
   String? _error;
 
@@ -79,6 +82,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
       _description.text = e.description;
       _cost.text = _costFormat.seed(e.cost);
       _notes.text = e.notes;
+      _files = [...e.files];
     }
   }
 
@@ -163,6 +167,12 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           maxLines: 4,
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
+        const SizedBox(height: 14),
+        AttachmentsField(
+          initial: _files,
+          enabled: !_submitting,
+          onChanged: (files) => _files = files,
+        ),
       ],
     );
   }
@@ -187,6 +197,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           priority: _priority,
           progress: _progress,
           notes: _notes.text.trim(),
+          files: _files,
         );
       } else {
         await repo.updatePlanRecord(
@@ -197,6 +208,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           priority: _priority,
           progress: _progress,
           notes: _notes.text.trim(),
+          files: _files,
         );
       }
       ref.invalidate(planRecordsProvider(widget.vehicleId));

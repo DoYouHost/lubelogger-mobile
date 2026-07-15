@@ -411,6 +411,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formNotesOptional => 'Notes (optional)';
 
   @override
+  String get attachmentsLabel => 'Attachments (optional)';
+
+  @override
+  String get attachmentAddButton => 'Add file';
+
+  @override
+  String get attachmentUploadError => 'Couldn\'t upload the file. Try again.';
+
+  @override
+  String get attachmentOpenError => 'Couldn\'t open the file.';
+
+  @override
   String get actionCancel => 'Cancel';
 
   @override
@@ -515,4 +527,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'Open source licenses';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotificationsNote =>
+      'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.';
+
+  @override
+  String get notifRemindersToggle => 'Past-due reminders';
+
+  @override
+  String get notifPermissionDenied =>
+      'Notification permission is required. Enable it in system settings.';
+
+  @override
+  String get notifReminderChannelName => 'Reminders';
+
+  @override
+  String get notifReminderChannelDescription =>
+      'Past-due vehicle maintenance reminders';
+
+  @override
+  String get notifReminderTitle => 'Reminder past due';
+
+  @override
+  String notifReminderBody(String vehicle, String description) {
+    return '$vehicle: $description';
+  }
 }

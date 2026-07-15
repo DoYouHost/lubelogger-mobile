@@ -1,3 +1,5 @@
+import 'attachment.dart';
+
 /// One refuel from `GET /api/vehicle/gasrecords?vehicleId=`. Fuel economy is
 /// computed locally (see `GasStats`), not read from the server's `fuelEconomy`
 /// field — that field is always emitted in the API's default metric mode and
@@ -13,6 +15,7 @@ class GasRecord {
     required this.missedFuelUp,
     this.notes = '',
     this.tags = '',
+    this.files = const [],
   });
 
   factory GasRecord.fromJson(Map<String, dynamic> json) => GasRecord(
@@ -25,6 +28,7 @@ class GasRecord {
         missedFuelUp: _toBool(json['missedFuelUp']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
+        files: Attachment.listFrom(json['files']),
       );
 
   final int id;
@@ -34,6 +38,7 @@ class GasRecord {
   final double cost;
   final bool isFillToFull;
   final bool missedFuelUp;
+  final List<Attachment> files;
 
   /// Not shown in the fuel table, but read so editing a record can prefill
   /// (and round-trip) its notes/tags instead of the update silently clearing

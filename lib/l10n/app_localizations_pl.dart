@@ -415,6 +415,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get formNotesOptional => 'Notatki (opcjonalnie)';
 
   @override
+  String get attachmentsLabel => 'Załączniki (opcjonalnie)';
+
+  @override
+  String get attachmentAddButton => 'Dodaj plik';
+
+  @override
+  String get attachmentUploadError =>
+      'Nie udało się przesłać pliku. Spróbuj ponownie.';
+
+  @override
+  String get attachmentOpenError => 'Nie udało się otworzyć pliku.';
+
+  @override
   String get actionCancel => 'Anuluj';
 
   @override
@@ -522,4 +535,33 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get openSourceLicenses => 'Licencje open source';
+
+  @override
+  String get settingsNotifications => 'Powiadomienia';
+
+  @override
+  String get settingsNotificationsNote =>
+      'Sprawdzaj w tle przypomnienia po terminie (mniej więcej co 3 godziny) i wysyłaj powiadomienie. Każde przypomnienie powiadamia raz, dopóki nie zostanie rozwiązane.';
+
+  @override
+  String get notifRemindersToggle => 'Przypomnienia po terminie';
+
+  @override
+  String get notifPermissionDenied =>
+      'Wymagane jest pozwolenie na powiadomienia. Włącz je w ustawieniach systemu.';
+
+  @override
+  String get notifReminderChannelName => 'Przypomnienia';
+
+  @override
+  String get notifReminderChannelDescription =>
+      'Przypomnienia serwisowe po terminie';
+
+  @override
+  String get notifReminderTitle => 'Przypomnienie po terminie';
+
+  @override
+  String notifReminderBody(String vehicle, String description) {
+    return '$vehicle: $description';
+  }
 }

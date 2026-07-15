@@ -836,6 +836,30 @@ abstract class AppLocalizations {
   /// **'Notes (optional)'**
   String get formNotesOptional;
 
+  /// No description provided for @attachmentsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments (optional)'**
+  String get attachmentsLabel;
+
+  /// No description provided for @attachmentAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add file'**
+  String get attachmentAddButton;
+
+  /// No description provided for @attachmentUploadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload the file. Try again.'**
+  String get attachmentUploadError;
+
+  /// No description provided for @attachmentOpenError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the file.'**
+  String get attachmentOpenError;
+
   /// No description provided for @actionCancel.
   ///
   /// In en, this message translates to:
@@ -1027,6 +1051,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open source licenses'**
   String get openSourceLicenses;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.'**
+  String get settingsNotificationsNote;
+
+  /// No description provided for @notifRemindersToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Past-due reminders'**
+  String get notifRemindersToggle;
+
+  /// No description provided for @notifPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission is required. Enable it in system settings.'**
+  String get notifPermissionDenied;
+
+  /// No description provided for @notifReminderChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get notifReminderChannelName;
+
+  /// No description provided for @notifReminderChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Past-due vehicle maintenance reminders'**
+  String get notifReminderChannelDescription;
+
+  /// No description provided for @notifReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder past due'**
+  String get notifReminderTitle;
+
+  /// No description provided for @notifReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{vehicle}: {description}'**
+  String notifReminderBody(String vehicle, String description);
 }
 
 class _AppLocalizationsDelegate

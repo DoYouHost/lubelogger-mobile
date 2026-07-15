@@ -1,3 +1,5 @@
+import 'attachment.dart';
+
 /// An equipment item from `GET /api/vehicle/equipmentrecords` (read model
 /// `EquipmentRecordAPIExportModel`). Has no date or cost — a description, an
 /// [isEquipped] flag, and the [distanceTraveled] accrued while equipped (in the
@@ -10,6 +12,7 @@ class EquipmentRecord {
     required this.distanceTraveled,
     required this.notes,
     required this.tags,
+    this.files = const [],
   });
 
   factory EquipmentRecord.fromJson(Map<String, dynamic> json) => EquipmentRecord(
@@ -22,6 +25,7 @@ class EquipmentRecord {
         }(),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
+        files: Attachment.listFrom(json['files']),
       );
 
   final int id;
@@ -30,6 +34,7 @@ class EquipmentRecord {
   final double? distanceTraveled;
   final String notes;
   final String tags;
+  final List<Attachment> files;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

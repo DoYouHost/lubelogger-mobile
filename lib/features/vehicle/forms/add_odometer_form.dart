@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/format/shift_digits_formatter.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/odometer_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
+import 'attachments_field.dart';
 import 'form_fields.dart';
 
 const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
@@ -46,6 +48,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   final _notes = TextEditingController();
 
   late DateTime _date;
+  List<Attachment> _files = const [];
   bool _submitting = false;
   String? _error;
 
@@ -60,6 +63,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       _odometer.text = _odometerFormat.seed(e.odometer);
       _tags.text = e.tags;
       _notes.text = e.notes;
+      _files = [...e.files];
     }
   }
 
@@ -157,6 +161,12 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 decoration:
                     dashFieldDecoration(t, labelText: l10n.formNotesOptional),
               ),
+              const SizedBox(height: 14),
+              AttachmentsField(
+                initial: _files,
+                enabled: !_submitting,
+                onChanged: (files) => _files = files,
+              ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -225,6 +235,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
           odometer: parseFormNumber(_odometer.text)!,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
+          files: _files,
         );
       } else {
         await repo.updateOdometerRecord(
@@ -235,6 +246,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
           initialOdometer: existing.initialOdometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
+          files: _files,
         );
       }
       _invalidateOdometerProviders();

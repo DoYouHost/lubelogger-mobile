@@ -14,6 +14,7 @@ class SettingsRepository {
   static const _profileKey = 'server_profile';
   static const _unitsKey = 'units_settings';
   static const _visibleTabsKey = 'visible_tabs';
+  static const _remindersEnabledKey = 'reminder_notifications_enabled';
 
   final SharedPreferences _prefs;
 
@@ -62,4 +63,12 @@ class SettingsRepository {
         _visibleTabsKey,
         [for (final t in tabs) t.name],
       );
+
+  /// Whether the background check may post past-due reminder notifications.
+  /// Opt-in (defaults off) since it needs the Android 13+ notification
+  /// permission. Also read by the WorkManager background isolate.
+  bool loadRemindersEnabled() => _prefs.getBool(_remindersEnabledKey) ?? false;
+
+  Future<void> saveRemindersEnabled(bool enabled) =>
+      _prefs.setBool(_remindersEnabledKey, enabled);
 }

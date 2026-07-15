@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Required for all API traffic to the self-hosted LubeLogger server. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13+ runtime permission for the past-due reminder notifications
+         posted by the background WorkManager check. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="LubeLogger"
         android:name="${applicationName}"

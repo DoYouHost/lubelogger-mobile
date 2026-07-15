@@ -1,4 +1,5 @@
 import '../api/endpoints.dart';
+import 'attachment.dart';
 
 /// A service / repair / upgrade / tax record from `GET /api/vehicle/X`. These
 /// four share the `GenericRecordExportModel` shape (date, odometer, description,
@@ -13,6 +14,7 @@ class VehicleRecord {
     required this.cost,
     required this.notes,
     required this.tags,
+    this.files = const [],
   });
 
   factory VehicleRecord.fromJson(Map<String, dynamic> json) => VehicleRecord(
@@ -29,6 +31,7 @@ class VehicleRecord {
         cost: _toDouble(json['cost']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
+        files: Attachment.listFrom(json['files']),
       );
 
   final int id;
@@ -38,6 +41,7 @@ class VehicleRecord {
   final double cost;
   final String notes;
   final String tags;
+  final List<Attachment> files;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

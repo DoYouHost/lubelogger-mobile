@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/format/shift_digits_formatter.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/vehicle_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
+import 'attachments_field.dart';
 import 'form_fields.dart';
 
 const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
@@ -74,6 +76,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   final _notes = TextEditingController();
 
   late DateTime _date;
+  List<Attachment> _files = const [];
   bool _submitting = false;
   String? _error;
 
@@ -92,6 +95,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
       _cost.text = _costFormat.seed(e.cost);
       _tags.text = e.tags;
       _notes.text = e.notes;
+      _files = [...e.files];
     }
   }
 
@@ -195,6 +199,12 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 decoration:
                     dashFieldDecoration(t, labelText: l10n.formNotesOptional),
               ),
+              const SizedBox(height: 14),
+              AttachmentsField(
+                initial: _files,
+                enabled: !_submitting,
+                onChanged: (files) => _files = files,
+              ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -297,6 +307,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
+          files: _files,
         );
       } else {
         await repo.updateRecord(
@@ -308,6 +319,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
+          files: _files,
         );
       }
       _invalidateProviders();

@@ -22,6 +22,8 @@ import 'core/models/supply_record.dart';
 import 'core/models/vehicle_info.dart';
 import 'core/models/vehicle_record.dart';
 import 'core/models/vehicle_tab.dart';
+import 'core/notifications/notification_service.dart';
+import 'core/notifications/reminder_worker.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
 import 'core/settings/units_settings.dart';
@@ -130,15 +132,53 @@ class ServerProfileNotifier extends Notifier<ServerProfile?> {
       ref.watch(settingsRepositoryProvider).loadProfile();
 
   Future<void> save(ServerProfile profile) async {
-    await ref.read(settingsRepositoryProvider).saveProfile(profile);
+    final settings = ref.read(settingsRepositoryProvider);
+    await settings.saveProfile(profile);
     state = profile;
+    // Resume the reminder check for the new session if it was left enabled.
+    if (settings.loadRemindersEnabled()) {
+      await registerReminderWorker();
+    }
   }
 
-  /// "Log out / change server": clear the profile and every stored secret.
+  /// "Log out / change server": clear the profile and every stored secret, and
+  /// stop the background reminder check (it can't run without credentials).
   Future<void> clear() async {
     await ref.read(settingsRepositoryProvider).clearProfile();
     await ref.read(credentialsStoreProvider).clearAll();
+    await cancelReminderWorker();
     state = null;
+  }
+}
+
+/// Whether past-due reminder notifications are enabled. Turning it on requests
+/// the Android 13+ notification permission and schedules the background check;
+/// turning it off cancels it. Persisted via [SettingsRepository].
+final reminderNotificationsProvider =
+    NotifierProvider<ReminderNotificationsNotifier, bool>(
+  ReminderNotificationsNotifier.new,
+);
+
+class ReminderNotificationsNotifier extends Notifier<bool> {
+  @override
+  bool build() => ref.watch(settingsRepositoryProvider).loadRemindersEnabled();
+
+  /// Turn reminder notifications on or off. Returns false when enabling was
+  /// blocked by a denied notification permission (state stays off).
+  Future<bool> setEnabled(bool enabled) async {
+    final settings = ref.read(settingsRepositoryProvider);
+    if (enabled) {
+      final granted = await NotificationService().requestPermission();
+      if (!granted) return false;
+      await settings.saveRemindersEnabled(true);
+      state = true;
+      await registerReminderWorker();
+      return true;
+    }
+    await settings.saveRemindersEnabled(false);
+    state = false;
+    await cancelReminderWorker();
+    return true;
   }
 }
 

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/note_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
+import 'attachments_field.dart';
 import 'record_form_scaffold.dart';
 
 /// Opens the add/edit form for a free-text note as a modal bottom sheet. Pass
@@ -43,6 +45,7 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
   final _tags = TextEditingController();
 
   late bool _pinned;
+  List<Attachment> _files = const [];
   bool _submitting = false;
   String? _error;
 
@@ -57,6 +60,7 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
       _title.text = e.description;
       _body.text = e.noteText;
       _tags.text = e.tags;
+      _files = [...e.files];
     }
   }
 
@@ -115,6 +119,12 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
+        const SizedBox(height: 14),
+        AttachmentsField(
+          initial: _files,
+          enabled: !_submitting,
+          onChanged: (files) => _files = files,
+        ),
       ],
     );
   }
@@ -137,6 +147,7 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
           noteText: _body.text.trim(),
           pinned: _pinned,
           tags: _tags.text.trim(),
+          files: _files,
         );
       } else {
         await repo.updateNote(
@@ -145,6 +156,7 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
           noteText: _body.text.trim(),
           pinned: _pinned,
           tags: _tags.text.trim(),
+          files: _files,
         );
       }
       ref.invalidate(notesProvider(widget.vehicleId));

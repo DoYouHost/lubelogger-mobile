@@ -1,3 +1,5 @@
+import 'attachment.dart';
+
 /// A supply / part-inventory record from `GET /api/vehicle/supplyrecords`.
 /// Shares the generic date + cost + description shape (no odometer), plus
 /// part-tracking fields. Numeric fields arrive as numbers under the
@@ -13,6 +15,7 @@ class SupplyRecord {
     required this.partQuantity,
     required this.notes,
     required this.tags,
+    this.files = const [],
   });
 
   factory SupplyRecord.fromJson(Map<String, dynamic> json) => SupplyRecord(
@@ -29,6 +32,7 @@ class SupplyRecord {
         partQuantity: _toNumString(json['partQuantity']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
+        files: Attachment.listFrom(json['files']),
       );
 
   final int id;
@@ -40,6 +44,7 @@ class SupplyRecord {
   final String partQuantity;
   final String notes;
   final String tags;
+  final List<Attachment> files;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

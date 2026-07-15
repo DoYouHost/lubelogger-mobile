@@ -1,3 +1,5 @@
+import 'attachment.dart';
+
 /// One odometer reading from `GET /api/vehicle/odometerrecords`. Monthly
 /// distance is derived from a combined timeline of readings (gas + odometer),
 /// not per-record spans. Values are in the server's raw stored distance unit.
@@ -13,6 +15,7 @@ class OdometerRecord {
     required this.initialOdometer,
     required this.notes,
     required this.tags,
+    this.files = const [],
   });
 
   factory OdometerRecord.fromJson(Map<String, dynamic> json) => OdometerRecord(
@@ -24,6 +27,7 @@ class OdometerRecord {
         initialOdometer: _toDouble(json['initialOdometer']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
+        files: Attachment.listFrom(json['files']),
       );
 
   final int id;
@@ -32,6 +36,7 @@ class OdometerRecord {
   final double initialOdometer;
   final String notes;
   final String tags;
+  final List<Attachment> files;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

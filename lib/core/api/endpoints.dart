@@ -8,6 +8,11 @@
 abstract final class Endpoints {
   static const apiPrefix = '/api';
 
+  /// Upload attachments: `POST` multipart form-data, field `documents` (one or
+  /// more files). Returns an array of `UploadedFiles` (`{name, location,
+  /// isPending}`) to attach to a record's `files` on add/update.
+  static const documentsUpload = '$apiPrefix/documents/upload';
+
   /// Identity of the authenticated caller: `{username, emailAddress, isAdmin,
   /// isRoot}`. Cheapest authenticated read — used to validate credentials on
   /// the login screen.

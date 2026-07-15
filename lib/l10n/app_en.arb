@@ -197,6 +197,10 @@
   "formMissedFuelUp": "Missed fuel-up (skip economy)",
   "formTagsOptional": "Tags (optional)",
   "formNotesOptional": "Notes (optional)",
+  "attachmentsLabel": "Attachments (optional)",
+  "attachmentAddButton": "Add file",
+  "attachmentUploadError": "Couldn't upload the file. Try again.",
+  "attachmentOpenError": "Couldn't open the file.",
   "actionCancel": "Cancel",
   "actionAdd": "Add",
   "actionSave": "Save",
@@ -251,5 +255,20 @@
       "build": { "type": "String" }
     }
   },
-  "openSourceLicenses": "Open source licenses"
+  "openSourceLicenses": "Open source licenses",
+
+  "settingsNotifications": "Notifications",
+  "settingsNotificationsNote": "Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it's resolved.",
+  "notifRemindersToggle": "Past-due reminders",
+  "notifPermissionDenied": "Notification permission is required. Enable it in system settings.",
+  "notifReminderChannelName": "Reminders",
+  "notifReminderChannelDescription": "Past-due vehicle maintenance reminders",
+  "notifReminderTitle": "Reminder past due",
+  "notifReminderBody": "{vehicle}: {description}",
+  "@notifReminderBody": {
+    "placeholders": {
+      "vehicle": { "type": "String" },
+      "description": { "type": "String" }
+    }
+  }
 }

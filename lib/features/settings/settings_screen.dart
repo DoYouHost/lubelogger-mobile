@@ -21,6 +21,8 @@ class SettingsScreen extends ConsumerWidget {
     final unitsCtl = ref.read(unitsSettingsProvider.notifier);
     final visibleTabs = ref.watch(visibleTabsProvider);
     final visibleTabsCtl = ref.read(visibleTabsProvider.notifier);
+    final remindersOn = ref.watch(reminderNotificationsProvider);
+    final remindersCtl = ref.read(reminderNotificationsProvider.notifier);
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
     final profile = ref.watch(serverProfileProvider);
@@ -124,6 +126,26 @@ class SettingsScreen extends ConsumerWidget {
                     value: visibleTabs.contains(tab),
                     onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
                   ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _Section(
+              title: l10n.settingsNotifications,
+              footnote: l10n.settingsNotificationsNote,
+              children: [
+                _ToggleRow(
+                  icon: Icons.notifications_active_outlined,
+                  label: l10n.notifRemindersToggle,
+                  value: remindersOn,
+                  onChanged: (v) async {
+                    final ok = await remindersCtl.setEnabled(v);
+                    if (!ok && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.notifPermissionDenied)),
+                      );
+                    }
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 18),

@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/format/shift_digits_formatter.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/supply_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
+import 'attachments_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
 
@@ -52,6 +54,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
   final _tags = TextEditingController();
 
   late DateTime _date;
+  List<Attachment> _files = const [];
   bool _submitting = false;
   String? _error;
 
@@ -71,6 +74,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
       _cost.text = _costFormat.seed(e.cost);
       _notes.text = e.notes;
       _tags.text = e.tags;
+      _files = [...e.files];
     }
   }
 
@@ -156,6 +160,12 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
+        const SizedBox(height: 14),
+        AttachmentsField(
+          initial: _files,
+          enabled: !_submitting,
+          onChanged: (files) => _files = files,
+        ),
       ],
     );
   }
@@ -220,6 +230,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           partSupplier: _partSupplier.text.trim(),
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
+          files: _files,
         );
       } else {
         await repo.updateSupplyRecord(
@@ -232,6 +243,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           partSupplier: _partSupplier.text.trim(),
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
+          files: _files,
         );
       }
       ref.invalidate(supplyRecordsProvider(widget.vehicleId));

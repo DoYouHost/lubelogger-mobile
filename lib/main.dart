@@ -3,10 +3,21 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/app_localizations_loader.dart';
+import 'core/notifications/notification_service.dart';
+import 'core/notifications/reminder_worker.dart';
+import 'core/settings/settings_repository.dart';
 import 'providers.dart';
+import 'router.dart';
+
+/// Shared notification handle for the UI isolate (init + launch payload). The
+/// WorkManager background isolate builds its own instance — the two isolates
+/// share no Dart state, only the native plugin underneath.
+final notificationService = NotificationService();
 
 /// Bundled fonts (Manrope, JetBrains Mono) aren't pub packages, so their OFL
 /// licenses aren't picked up by Flutter's automatic per-package license
@@ -24,10 +35,34 @@ void _registerFontLicenses() {
   });
 }
 
+/// Navigate to a vehicle from a tapped reminder notification (payload = vehicle
+/// id). Best-effort: silently ignores a malformed payload or a not-yet-ready
+/// navigator.
+void _openVehicleFromNotification(String? payload) {
+  final id = int.tryParse(payload ?? '');
+  if (id == null) return;
+  rootNavigatorKey.currentContext?.go('/vehicle/$id');
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicenses();
   final prefs = await SharedPreferences.getInstance();
+
+  // Reminder notifications: set up the plugin + background worker, and arm the
+  // periodic check when the user is signed in and has opted in.
+  final l10n = await loadAppLocalizations();
+  await notificationService.init(
+    channelName: l10n.notifReminderChannelName,
+    channelDescription: l10n.notifReminderChannelDescription,
+    onTap: _openVehicleFromNotification,
+  );
+  await initReminderWorker();
+  final settings = SettingsRepository(prefs);
+  if (settings.loadProfile() != null && settings.loadRemindersEnabled()) {
+    await registerReminderWorker();
+  }
+  final launchPayload = await notificationService.launchPayload();
 
   runApp(
     ProviderScope(
@@ -37,4 +72,12 @@ Future<void> main() async {
       child: const LubeLoggerApp(),
     ),
   );
+
+  // App launched by tapping a notification: deep-link once the first frame (and
+  // thus the router) is ready.
+  if (launchPayload != null) {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _openVehicleFromNotification(launchPayload),
+    );
+  }
 }
