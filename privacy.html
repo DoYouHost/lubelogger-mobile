@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LubeLogger mobile — Privacy Policy</title>
+  <meta name="description" content="Privacy policy for LubeLogger mobile, an unofficial open-source companion app for a self-hosted LubeLogger vehicle maintenance manager.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="container">
+      <a class="brand" href="index.html">Lube<span class="accent">Logger</span> <span class="sub">mobile</span></a>
+      <div class="links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html" class="active">Privacy</a>
+        <a href="https://codeberg.org/DoYouHost/lubelogger-mobile">Source</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <h1 class="page-title">Privacy Policy</h1>
+      <div class="card">
+        <p class="updated">Last updated: 15 July 2026</p>
+
+        <p>LubeLogger mobile is an unofficial, open-source Android companion app for a
+        <strong>self-hosted LubeLogger server</strong> that manages vehicle maintenance records.
+        It is <strong>not affiliated with, endorsed by, or connected to LubeLogger or Hargata
+        Softworks.</strong></p>
+
+        <p>This policy explains what data the app handles. In short: <strong>LubeLogger mobile does not
+        collect, transmit, or share any personal data with the developer or any third party.</strong>
+        All data stays on your device and travels only to the LubeLogger server address that
+        <strong>you</strong> configure.</p>
+
+        <h2>Who the app talks to</h2>
+        <p>LubeLogger mobile communicates <strong>only</strong> with the self-hosted LubeLogger server
+        whose address you enter during setup. There is no cloud backend, no analytics service, and no
+        advertising SDK. The developer never receives your data.</p>
+
+        <h2>Data stored on your device</h2>
+        <ul>
+          <li><strong>Server address and API key</strong> for your LubeLogger server. The API key is
+          stored in the Android <strong>Keystore-backed encrypted storage</strong> on your device and
+          is never sent anywhere except to your own server, over the connection you configure.</li>
+          <li><strong>App settings and preferences</strong> — such as display units, which record
+          tabs are shown, and notification preferences — stored in local app storage.</li>
+        </ul>
+        <p>This data is removed when you uninstall the app or clear its storage.</p>
+
+        <h2>Permissions and why they are used</h2>
+        <ul>
+          <li><strong>Internet</strong> — to reach the LubeLogger server you configure. This is the
+          only network destination the app contacts.</li>
+          <li><strong>Notifications</strong> — used only if you opt in to reminder notifications, so
+          the app can alert you when a maintenance reminder is due or overdue.</li>
+          <li><strong>Background scheduling / run at startup</strong> — when reminder notifications are
+          enabled, the app periodically checks your server for due reminders in the background and
+          re-registers that check after a device restart. No data leaves your device beyond the
+          connection to your own server.</li>
+        </ul>
+
+        <h2>Files and attachments</h2>
+        <p>When you attach a document or photo to a record, the file you pick is uploaded to
+        <strong>your</strong> LubeLogger server and attached to that record. When you open an
+        attachment, it is downloaded from your server to your device so it can be viewed. Files are
+        exchanged only with your own server.</p>
+
+        <h2>Children</h2>
+        <p>LubeLogger mobile is a utility app for vehicle owners and is not directed at children.</p>
+
+        <h2>Data deletion</h2>
+        <p>Because no data is collected on any server operated by the developer, there is nothing for
+        the developer to delete. To remove all locally stored data, uninstall the app or clear its
+        storage in Android settings. Data held by your LubeLogger server is governed by that server,
+        which you control.</p>
+
+        <h2>Changes to this policy</h2>
+        <p>Updates to this policy will be published at this page. Material changes will be noted by
+        the "Last updated" date above.</p>
+
+        <h2>Contact</h2>
+        <p>Questions about this policy: <a href="mailto:info.doyouhost@gmail.com">info.doyouhost@gmail.com</a></p>
+        <p>Source code (AGPL-3.0):
+        <a href="https://codeberg.org/DoYouHost/lubelogger-mobile">codeberg.org/DoYouHost/lubelogger-mobile</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      &ldquo;LubeLogger&rdquo; is a project of Hargata Softworks. LubeLogger mobile is an independent,
+      community-built companion app and is not affiliated with or endorsed by the LubeLogger project.
+    </div>
+  </footer>
+</body>
+</html>
