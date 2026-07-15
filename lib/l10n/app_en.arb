@@ -19,6 +19,10 @@
 
   "connect": "Connect",
   "connecting": "Connecting…",
+  "tryDemo": "Try the demo",
+  "@tryDemo": {
+    "description": "Button on the login screen that fills in the demo credentials."
+  },
   "logout": "Log out",
   "retry": "Retry",
   "comingSoon": "Coming soon",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/demo/demo_config.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import 'providers.dart';
@@ -32,6 +33,16 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     ref
         .read(setupControllerProvider.notifier)
         .connect(rawUrl: _url.text, apiKey: _apiKey.text);
+  }
+
+  /// Fill the fields with the demo credentials (store-review mode); revealing
+  /// the key so it's visible. The user still taps Connect to enter the demo.
+  void _fillDemo() {
+    setState(() {
+      _url.text = 'demo';
+      _apiKey.text = DemoConfig.token;
+      _obscureKey = false;
+    });
   }
 
   @override
@@ -141,6 +152,26 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               child: state.busy
                   ? _busyLabel(l10n.connecting)
                   : Text(l10n.connect),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: TextButton.icon(
+                onPressed: state.busy ? null : _fillDemo,
+                icon: Icon(
+                  Icons.play_circle_outline,
+                  size: 18,
+                  color: t.textSecondary,
+                ),
+                label: Text(l10n.tryDemo),
+                style: TextButton.styleFrom(
+                  foregroundColor: t.textSecondary,
+                  textStyle: const TextStyle(
+                    fontFamily: DashTokens.fontUi,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
             if (state.error != null)
               Padding(

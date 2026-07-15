@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_exceptions.dart';
 import '../../core/auth/whoami.dart';
+import '../../core/demo/demo_config.dart';
 import '../../core/settings/server_profile.dart';
 import '../../providers.dart';
 
@@ -44,6 +45,21 @@ class SetupController extends AutoDisposeNotifier<SetupState> {
     }
     if (apiKey.trim().isEmpty) {
       state = state.copyWith(error: SetupErrorCode.missingApiKey);
+      return;
+    }
+    // Demo mode (store review): recognized locally, no network probe. The
+    // fabricated backend serves everything; the magic token is the "API key".
+    if (DemoConfig.isDemoUrl(url)) {
+      if (apiKey.trim() != DemoConfig.token) {
+        state = state.copyWith(
+          error: const AuthException(AppErrorCode.apiKeyRejected),
+        );
+        return;
+      }
+      await ref.read(credentialsStoreProvider).writeApiKey(DemoConfig.token);
+      await ref.read(serverProfileProvider.notifier).save(
+            const ServerProfile(baseUrl: DemoConfig.baseUrl, label: 'Demo'),
+          );
       return;
     }
     state = const SetupState(busy: true);

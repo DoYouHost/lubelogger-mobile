@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../auth/credentials_store.dart';
+import '../demo/demo_http_adapter.dart';
 import '../settings/server_profile.dart';
 
 /// Header LubeLogger uses to return culture-invariant payloads: typed JSON and
@@ -30,6 +31,11 @@ class ApiClient {
     this.dio.interceptors.add(AuthInterceptor(credentials: credentials));
     if (kDebugMode) {
       this.dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+    }
+    // Demo profile: serve everything from the in-process fake server, so no
+    // request ever leaves the device. Covers every consumer of this Dio.
+    if (profile.isDemo) {
+      this.dio.httpClientAdapter = DemoHttpClientAdapter();
     }
   }
 

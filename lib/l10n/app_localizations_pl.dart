@@ -42,6 +42,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get connecting => 'Łączenie…';
 
   @override
+  String get tryDemo => 'Wypróbuj wersję demo';
+
+  @override
   String get logout => 'Wyloguj';
 
   @override

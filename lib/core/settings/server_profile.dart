@@ -1,3 +1,5 @@
+import '../demo/demo_config.dart';
+
 /// Connection profile for a LubeLogger server. Holds no secrets — the API key
 /// lives in [CredentialsStore] (secure storage). Authentication is always via
 /// the `x-api-key` header (the only method the app supports).
@@ -14,6 +16,10 @@ class ServerProfile {
 
   /// Human label for the connection (e.g. the signed-in username). Optional.
   final String? label;
+
+  /// Demo profile (store-review mode): all data comes from the in-process
+  /// `DemoBackend`, no network traffic. See [DemoConfig].
+  bool get isDemo => DemoConfig.isDemoUrl(baseUrl);
 
   Map<String, dynamic> toJson() => {
         'baseUrl': baseUrl,

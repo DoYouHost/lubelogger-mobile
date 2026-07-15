@@ -158,6 +158,12 @@ abstract class AppLocalizations {
   /// **'Connecting…'**
   String get connecting;
 
+  /// Button on the login screen that fills in the demo credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Try the demo'**
+  String get tryDemo;
+
   /// No description provided for @logout.
   ///
   /// In en, this message translates to:

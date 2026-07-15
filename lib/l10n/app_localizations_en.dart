@@ -41,6 +41,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connecting => 'Connecting…';
 
   @override
+  String get tryDemo => 'Try the demo';
+
+  @override
   String get logout => 'Log out';
 
   @override
