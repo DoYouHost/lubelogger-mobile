@@ -590,6 +590,216 @@ abstract class AppLocalizations {
   /// **'Edit Odometer Reading'**
   String get formOdometerEditTitle;
 
+  /// No description provided for @formServiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Service Record'**
+  String get formServiceTitle;
+
+  /// No description provided for @formServiceEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Service Record'**
+  String get formServiceEditTitle;
+
+  /// No description provided for @formRepairTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Repair Record'**
+  String get formRepairTitle;
+
+  /// No description provided for @formRepairEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Repair Record'**
+  String get formRepairEditTitle;
+
+  /// No description provided for @formUpgradeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Upgrade Record'**
+  String get formUpgradeTitle;
+
+  /// No description provided for @formUpgradeEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Upgrade Record'**
+  String get formUpgradeEditTitle;
+
+  /// No description provided for @formTaxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tax Record'**
+  String get formTaxTitle;
+
+  /// No description provided for @formTaxEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Tax Record'**
+  String get formTaxEditTitle;
+
+  /// No description provided for @formSupplyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Supply Record'**
+  String get formSupplyTitle;
+
+  /// No description provided for @formSupplyEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Supply Record'**
+  String get formSupplyEditTitle;
+
+  /// No description provided for @formSupplyPartNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Part number (optional)'**
+  String get formSupplyPartNumber;
+
+  /// No description provided for @formSupplyPartSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier (optional)'**
+  String get formSupplyPartSupplier;
+
+  /// No description provided for @formSupplyQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get formSupplyQuantity;
+
+  /// No description provided for @formPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Planner Item'**
+  String get formPlanTitle;
+
+  /// No description provided for @formPlanEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Planner Item'**
+  String get formPlanEditTitle;
+
+  /// No description provided for @formPlanType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get formPlanType;
+
+  /// No description provided for @formPlanPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get formPlanPriority;
+
+  /// No description provided for @formPlanProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get formPlanProgress;
+
+  /// No description provided for @formReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Reminder'**
+  String get formReminderTitle;
+
+  /// No description provided for @formReminderEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Reminder'**
+  String get formReminderEditTitle;
+
+  /// No description provided for @formReminderMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind by'**
+  String get formReminderMetric;
+
+  /// No description provided for @formReminderMetricDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get formReminderMetricDate;
+
+  /// No description provided for @formReminderMetricOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Odometer'**
+  String get formReminderMetricOdometer;
+
+  /// No description provided for @formReminderMetricBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date & odometer'**
+  String get formReminderMetricBoth;
+
+  /// No description provided for @formReminderDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get formReminderDueDate;
+
+  /// No description provided for @formReminderDueOdometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Due odometer ({unit})'**
+  String formReminderDueOdometer(String unit);
+
+  /// No description provided for @formNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Note'**
+  String get formNoteTitle;
+
+  /// No description provided for @formNoteEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Note'**
+  String get formNoteEditTitle;
+
+  /// No description provided for @formNoteTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get formNoteTitleLabel;
+
+  /// No description provided for @formNoteBodyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get formNoteBodyLabel;
+
+  /// No description provided for @formNotePinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get formNotePinned;
+
+  /// No description provided for @formEquipmentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Equipment'**
+  String get formEquipmentTitle;
+
+  /// No description provided for @formEquipmentEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Equipment'**
+  String get formEquipmentEditTitle;
+
+  /// No description provided for @formEquipmentNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get formEquipmentNameLabel;
+
+  /// No description provided for @formEquipmentEquipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipped'**
+  String get formEquipmentEquipped;
+
   /// No description provided for @formOdometerLabel.
   ///
   /// In en, this message translates to:

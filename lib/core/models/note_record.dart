@@ -3,20 +3,32 @@
 /// arrives as the string "True"/"False" on the wire.
 class NoteRecord {
   const NoteRecord({
+    required this.id,
     required this.description,
     required this.noteText,
     required this.pinned,
+    required this.tags,
   });
 
   factory NoteRecord.fromJson(Map<String, dynamic> json) => NoteRecord(
+        id: _toInt(json['id']),
         description: (json['description'] as String?) ?? '',
         noteText: (json['noteText'] as String?) ?? '',
         pinned: _toBool(json['pinned']),
+        tags: (json['tags'] as String?) ?? '',
       );
 
+  final int id;
   final String description;
   final String noteText;
   final bool pinned;
+  final String tags;
+
+  static int _toInt(Object? v) => switch (v) {
+        final num n => n.toInt(),
+        final String s => int.tryParse(s) ?? 0,
+        _ => 0,
+      };
 
   static bool _toBool(Object? v) => switch (v) {
         final bool b => b,

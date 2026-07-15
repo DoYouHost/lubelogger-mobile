@@ -12,6 +12,7 @@ class VehicleRecord {
     required this.description,
     required this.cost,
     required this.notes,
+    required this.tags,
   });
 
   factory VehicleRecord.fromJson(Map<String, dynamic> json) => VehicleRecord(
@@ -27,6 +28,7 @@ class VehicleRecord {
         description: (json['description'] as String?) ?? '',
         cost: _toDouble(json['cost']),
         notes: (json['notes'] as String?) ?? '',
+        tags: (json['tags'] as String?) ?? '',
       );
 
   final int id;
@@ -35,6 +37,7 @@ class VehicleRecord {
   final String description;
   final double cost;
   final String notes;
+  final String tags;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),
@@ -52,15 +55,27 @@ class VehicleRecord {
 /// The four generic (date + cost) record types, each mapping to its list
 /// endpoint. Fuel and odometer have their own richer models/endpoints.
 enum RecordKind {
-  service(Endpoints.serviceRecords, hasOdometer: true),
-  repair(Endpoints.repairRecords, hasOdometer: true),
-  upgrade(Endpoints.upgradeRecords, hasOdometer: true),
-  tax(Endpoints.taxRecords, hasOdometer: false);
+  service(Endpoints.serviceRecords, hasOdometer: true, editable: true),
+  repair(Endpoints.repairRecords, hasOdometer: true, editable: true),
+  upgrade(Endpoints.upgradeRecords, hasOdometer: true, editable: true),
+  tax(Endpoints.taxRecords, hasOdometer: false, editable: true);
 
-  const RecordKind(this.endpoint, {required this.hasOdometer});
+  const RecordKind(this.endpoint,
+      {required this.hasOdometer, this.editable = false});
 
   final String endpoint;
 
   /// Tax records have no odometer column; the others do.
   final bool hasOdometer;
+
+  /// Whether add/edit/delete forms are wired for this kind. Flipped on per type
+  /// as its form lands (service first); the FAB and record cards only offer
+  /// editing when true.
+  final bool editable;
+
+  // Uniform CRUD paths under the list [endpoint] (see LUBELOGGER-API.md §6):
+  // all four types share the same add/update/delete route shape.
+  String get addEndpoint => '$endpoint/add';
+  String get updateEndpoint => '$endpoint/update';
+  String get deleteEndpoint => '$endpoint/delete';
 }

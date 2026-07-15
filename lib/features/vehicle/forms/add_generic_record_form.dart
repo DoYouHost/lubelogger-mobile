@@ -1,0 +1,396 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/api/api_exceptions.dart';
+import '../../../core/format/shift_digits_formatter.dart';
+import '../../../core/models/vehicle_record.dart';
+import '../../../core/theme/dash_theme.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../l10n/error_messages.dart';
+import '../../../providers.dart';
+import 'form_fields.dart';
+
+const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
+const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
+
+/// Opens the add/edit form for a generic (date + cost) record [kind] — service /
+/// repair / upgrade / tax — as a modal bottom sheet. Pass [existing] to edit
+/// that record instead (prefilled, with a delete option). Resolves to `true`
+/// once a record was added/updated/deleted, or `null` if cancelled.
+///
+/// No supply picker: the web UI can requisition supplies onto these records, but
+/// that's a session-authed MVC feature. The public API's write model
+/// (`GenericRecordExportModel`) has no supplies field, so it's not possible over
+/// x-api-key for now — may change if LubeLogger adds it to the API.
+Future<bool?> showGenericRecordForm(
+  BuildContext context,
+  int vehicleId,
+  RecordKind kind, {
+  VehicleRecord? existing,
+}) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) =>
+        _AddGenericRecordForm(vehicleId: vehicleId, kind: kind, existing: existing),
+  );
+}
+
+/// Localized add/edit titles for each generic record [kind].
+({String add, String edit}) _titlesFor(RecordKind kind, AppLocalizations l10n) =>
+    switch (kind) {
+      RecordKind.service =>
+        (add: l10n.formServiceTitle, edit: l10n.formServiceEditTitle),
+      RecordKind.repair =>
+        (add: l10n.formRepairTitle, edit: l10n.formRepairEditTitle),
+      RecordKind.upgrade =>
+        (add: l10n.formUpgradeTitle, edit: l10n.formUpgradeEditTitle),
+      RecordKind.tax => (add: l10n.formTaxTitle, edit: l10n.formTaxEditTitle),
+    };
+
+class _AddGenericRecordForm extends ConsumerStatefulWidget {
+  const _AddGenericRecordForm({
+    required this.vehicleId,
+    required this.kind,
+    this.existing,
+  });
+
+  final int vehicleId;
+  final RecordKind kind;
+  final VehicleRecord? existing;
+
+  @override
+  ConsumerState<_AddGenericRecordForm> createState() =>
+      _AddGenericRecordFormState();
+}
+
+class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _odometer = TextEditingController();
+  final _description = TextEditingController();
+  final _cost = TextEditingController();
+  final _tags = TextEditingController();
+  final _notes = TextEditingController();
+
+  late DateTime _date;
+  bool _submitting = false;
+  String? _error;
+
+  bool get _isEditing => widget.existing != null;
+  bool get _hasOdometer => widget.kind.hasOdometer;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    _date = e?.date ?? DateTime.now();
+    if (e != null) {
+      final o = e.odometer;
+      if (o != null) _odometer.text = _odometerFormat.seed(o);
+      _description.text = e.description;
+      _cost.text = _costFormat.seed(e.cost);
+      _tags.text = e.tags;
+      _notes.text = e.notes;
+    }
+  }
+
+  @override
+  void dispose() {
+    _odometer.dispose();
+    _description.dispose();
+    _cost.dispose();
+    _tags.dispose();
+    _notes.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    final units = ref.watch(unitsSettingsProvider);
+    final distanceUnit = units.distance.label;
+    final titles = _titlesFor(widget.kind, l10n);
+
+    return Padding(
+      // Lift the sheet above the keyboard.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _isEditing ? titles.edit : titles.add,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (_isEditing)
+                    IconButton(
+                      icon: Icon(Icons.delete_outline, color: t.danger),
+                      onPressed: _submitting ? null : _confirmDelete,
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed:
+                        _submitting ? null : () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              DateField(
+                text: units.formatDate(_date),
+                onPick: _submitting ? null : _pickDate,
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _description,
+                enabled: !_submitting,
+                decoration:
+                    dashFieldDecoration(t, labelText: l10n.colDescription),
+                validator: (raw) => (raw == null || raw.trim().isEmpty)
+                    ? l10n.validationRequired
+                    : null,
+              ),
+              if (_hasOdometer) ...[
+                const SizedBox(height: 14),
+                _numberField(
+                  controller: _odometer,
+                  label: l10n.formOdometerLabel(distanceUnit),
+                  format: _odometerFormat,
+                ),
+              ],
+              const SizedBox(height: 14),
+              _numberField(
+                controller: _cost,
+                label: l10n.colCost,
+                format: _costFormat,
+                allowZero: true,
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _tags,
+                enabled: !_submitting,
+                decoration:
+                    dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _notes,
+                enabled: !_submitting,
+                minLines: 2,
+                maxLines: 4,
+                decoration:
+                    dashFieldDecoration(t, labelText: l10n.formNotesOptional),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  style:
+                      TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                ),
+              ],
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          _submitting ? null : () => Navigator.pop(context),
+                      child: Text(l10n.actionCancel),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _submitting ? null : _submit,
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(_isEditing ? l10n.actionSave : l10n.actionAdd),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _numberField({
+    required TextEditingController controller,
+    required String label,
+    required ShiftDigitsFormatter format,
+    bool allowZero = false,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    return TextFormField(
+      controller: controller,
+      enabled: !_submitting,
+      keyboardType: TextInputType.number,
+      inputFormatters: [format],
+      style: const TextStyle(fontFamily: DashTokens.fontMono),
+      decoration: dashFieldDecoration(t, labelText: label),
+      validator: (raw) {
+        final value = parseFormNumber(raw);
+        if (value == null) {
+          return (raw == null || raw.trim().isEmpty)
+              ? l10n.validationRequired
+              : l10n.validationNumber;
+        }
+        if (value < 0 || (!allowZero && value == 0)) return l10n.validationNumber;
+        return null;
+      },
+    );
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(_date.year + 1, 12, 31),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final repo = ref.read(vehiclesRepositoryProvider);
+    final existing = widget.existing;
+    // Odometer is only collected (and required by the server) for the
+    // odometer-bearing kinds; tax sends none.
+    final odometer = _hasOdometer ? parseFormNumber(_odometer.text)! : null;
+    try {
+      if (existing == null) {
+        await repo.addRecord(
+          kind: widget.kind,
+          vehicleId: widget.vehicleId,
+          date: _date,
+          description: _description.text.trim(),
+          cost: parseFormNumber(_cost.text)!,
+          odometer: odometer,
+          notes: _notes.text.trim(),
+          tags: _tags.text.trim(),
+        );
+      } else {
+        await repo.updateRecord(
+          kind: widget.kind,
+          id: existing.id,
+          date: _date,
+          description: _description.text.trim(),
+          cost: parseFormNumber(_cost.text)!,
+          odometer: odometer,
+          notes: _notes.text.trim(),
+          tags: _tags.text.trim(),
+        );
+      }
+      _invalidateProviders();
+      if (!mounted) return;
+      Navigator.pop(context, true);
+      messenger.showSnackBar(
+        SnackBar(
+            content:
+                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+      );
+    } on AppApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.localized(l10n);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error =
+            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+      });
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.actionCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.actionDelete, style: TextStyle(color: t.danger)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(vehiclesRepositoryProvider)
+          .deleteRecord(widget.kind, widget.existing!.id);
+      _invalidateProviders();
+      if (!mounted) return;
+      Navigator.pop(context, true);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.recordDeleted)));
+    } on AppApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = e.localized(l10n);
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+        _error = l10n.recordDeleteError;
+      });
+    }
+  }
+
+  /// Refreshes every view derived from this record type after a write: its own
+  /// tab list, the vehicle's aggregated info (record counts/costs) and the
+  /// monthly expense breakdown.
+  void _invalidateProviders() {
+    ref.invalidate(vehicleRecordsProvider(
+        (vehicleId: widget.vehicleId, kind: widget.kind)));
+    ref.invalidate(vehicleInfoProvider(widget.vehicleId));
+    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
+  }
+}

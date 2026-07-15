@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../common/vehicle_tab_ui.dart';
+import 'forms/add_equipment_form.dart';
 import 'forms/add_fuel_form.dart';
+import 'forms/add_generic_record_form.dart';
+import 'forms/add_note_form.dart';
 import 'forms/add_odometer_form.dart';
+import 'forms/add_plan_form.dart';
+import 'forms/add_reminder_form.dart';
+import 'forms/add_supply_form.dart';
 
 /// FAB action: pick a record type to add, then open its form. The choices mirror
-/// the vehicle's [visible] tabs (in enum order). Fuel opens the working form;
-/// the others show a "coming soon" notice until their forms land.
+/// the vehicle's [visible] tabs (in enum order). Every record type has its own
+/// add form; a tab with no form falls back to a "coming soon" notice.
 Future<void> showAddRecordSheet(
   BuildContext context,
   int vehicleId,
@@ -28,17 +35,45 @@ Future<void> showAddRecordSheet(
   );
   if (picked == null || !context.mounted) return;
 
-  if (picked == VehicleTab.fuel) {
-    await showAddFuelForm(context, vehicleId);
+  final kind = _recordKindForTab(picked);
+  if (kind != null) {
+    await showGenericRecordForm(context, vehicleId, kind);
     return;
   }
-  if (picked == VehicleTab.odometer) {
-    await showAddOdometerForm(context, vehicleId);
-    return;
+  switch (picked) {
+    case VehicleTab.fuel:
+      await showAddFuelForm(context, vehicleId);
+    case VehicleTab.odometer:
+      await showAddOdometerForm(context, vehicleId);
+    case VehicleTab.supply:
+      await showAddSupplyForm(context, vehicleId);
+    case VehicleTab.plan:
+      await showAddPlanForm(context, vehicleId);
+    case VehicleTab.reminder:
+      await showAddReminderForm(context, vehicleId);
+    case VehicleTab.note:
+      await showAddNoteForm(context, vehicleId);
+    case VehicleTab.equipment:
+      await showAddEquipmentForm(context, vehicleId);
+    case VehicleTab.service ||
+          VehicleTab.repair ||
+          VehicleTab.upgrade ||
+          VehicleTab.tax:
+      // Handled by the generic-record branch above; unreachable here.
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).comingSoon)));
   }
-  ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).comingSoon)));
 }
+
+/// The generic (date + cost) record kind a tab maps to, or null for tabs with
+/// their own bespoke form (fuel/odometer/supply/plan/reminder/note/equipment).
+RecordKind? _recordKindForTab(VehicleTab tab) => switch (tab) {
+      VehicleTab.service => RecordKind.service,
+      VehicleTab.repair => RecordKind.repair,
+      VehicleTab.upgrade => RecordKind.upgrade,
+      VehicleTab.tax => RecordKind.tax,
+      _ => null,
+    };
 
 /// The record types as a scrollable two-column grid of tiles.
 class _AddRecordGrid extends StatelessWidget {

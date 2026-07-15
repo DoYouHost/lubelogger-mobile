@@ -61,18 +61,35 @@ abstract final class Endpoints {
   /// Delete an odometer reading: `DELETE ?id=`.
   static const odometerRecordsDelete = '$odometerRecords/delete';
 
-  // Additional record types with their own shapes (read-only tabs). Each is a
-  // uniform-CRUD list endpoint under `/api/vehicle/`; see LUBELOGGER-API.md §6.
+  // Additional record types with their own shapes. Each is a uniform-CRUD list
+  // endpoint under `/api/vehicle/` (POST `/add?vehicleId=`, PUT `/update`,
+  // DELETE `/delete?id=`); see LUBELOGGER-API.md §6.
   static const supplyRecords = '$apiPrefix/vehicle/supplyrecords';
+  static const supplyRecordsAdd = '$supplyRecords/add';
+  static const supplyRecordsUpdate = '$supplyRecords/update';
+  static const supplyRecordsDelete = '$supplyRecords/delete';
+
   static const planRecords = '$apiPrefix/vehicle/planrecords';
+  static const planRecordsAdd = '$planRecords/add';
+  static const planRecordsUpdate = '$planRecords/update';
+  static const planRecordsDelete = '$planRecords/delete';
 
   /// Reminders: `?vehicleId=&tags=&urgencies=` (no date range, unlike the
   /// cost records). The read model adds computed `dueDays`/`dueDistance`.
   static const reminders = '$apiPrefix/vehicle/reminders';
+  static const remindersAdd = '$reminders/add';
+  static const remindersUpdate = '$reminders/update';
+  static const remindersDelete = '$reminders/delete';
 
   /// Notes: `?vehicleId=&tags=` only. No date/cost; carry a title + body.
   static const notes = '$apiPrefix/vehicle/notes';
+  static const notesAdd = '$notes/add';
+  static const notesUpdate = '$notes/update';
+  static const notesDelete = '$notes/delete';
 
   /// Equipment: `?vehicleId=&tags=` only. Read model adds `distanceTraveled`.
   static const equipmentRecords = '$apiPrefix/vehicle/equipmentrecords';
+  static const equipmentRecordsAdd = '$equipmentRecords/add';
+  static const equipmentRecordsUpdate = '$equipmentRecords/update';
+  static const equipmentRecordsDelete = '$equipmentRecords/delete';
 }

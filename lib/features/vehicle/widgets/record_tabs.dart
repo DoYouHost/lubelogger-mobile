@@ -15,8 +15,14 @@ import '../../../core/settings/units_settings.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';
+import '../forms/add_equipment_form.dart';
 import '../forms/add_fuel_form.dart';
+import '../forms/add_generic_record_form.dart';
+import '../forms/add_note_form.dart';
 import '../forms/add_odometer_form.dart';
+import '../forms/add_plan_form.dart';
+import '../forms/add_reminder_form.dart';
+import '../forms/add_supply_form.dart';
 import 'record_list.dart';
 
 const _placeholder = '—';
@@ -152,6 +158,10 @@ class GenericRecordsTab extends ConsumerWidget {
                     RecordMetaItem(Icons.speed,
                         _odoUnit(r.odometer, units, unit, useHours: useHours)),
                 ],
+                onTap: kind.editable
+                    ? () => showGenericRecordForm(context, vehicleId, kind,
+                        existing: r)
+                    : null,
               ),
           ],
         );
@@ -339,6 +349,7 @@ class SupplyTab extends ConsumerWidget {
                   if (r.partQuantity.isNotEmpty)
                     RecordMetaItem(Icons.numbers, r.partQuantity),
                 ],
+                onTap: () => showAddSupplyForm(context, vehicleId, existing: r),
               ),
           ],
         );
@@ -389,6 +400,7 @@ class PlanTab extends ConsumerWidget {
                   RecordMetaItem(
                       Icons.timelapse, _planProgress(r.progress, l10n)),
                 ],
+                onTap: () => showAddPlanForm(context, vehicleId, existing: r),
               ),
           ],
         );
@@ -442,6 +454,8 @@ class ReminderTab extends ConsumerWidget {
                     RecordMetaItem(Icons.speed,
                         _odoUnit(r.dueOdometer, units, unit, useHours: useHours)),
                 ],
+                onTap: () =>
+                    showAddReminderForm(context, vehicleId, existing: r),
               ),
           ],
         );
@@ -487,6 +501,7 @@ class NoteTab extends ConsumerWidget {
                   if (r.pinned)
                     RecordMetaItem(Icons.push_pin, l10n.notePinned),
                 ],
+                onTap: () => showAddNoteForm(context, vehicleId, existing: r),
               ),
           ],
         );
@@ -540,6 +555,8 @@ class EquipmentTab extends ConsumerWidget {
                         _odoUnit(r.distanceTraveled, units, unit,
                             useHours: useHours)),
                 ],
+                onTap: () =>
+                    showAddEquipmentForm(context, vehicleId, existing: r),
               ),
           ],
         );

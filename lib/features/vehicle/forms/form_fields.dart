@@ -11,12 +11,14 @@ num? parseFormNumber(String? raw) {
 }
 
 /// Read-only date display with a gold calendar button (design #3). Shared across
-/// the record forms.
+/// the record forms. [label] overrides the default "Date" field label.
 class DateField extends StatelessWidget {
-  const DateField({super.key, required this.text, required this.onPick});
+  const DateField(
+      {super.key, required this.text, required this.onPick, this.label});
 
   final String text;
   final VoidCallback? onPick;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,7 @@ class DateField extends StatelessWidget {
       children: [
         Expanded(
           child: InputDecorator(
-            decoration: dashFieldDecoration(t, labelText: l10n.colDate),
+            decoration: dashFieldDecoration(t, labelText: label ?? l10n.colDate),
             child: Text(
               text,
               style: TextStyle(

@@ -4,6 +4,9 @@
 apk := "build/dist/app-release.apk"
 # Shared headless GPU Android 14 emulator (TofuSadurki: lxc-docker-android).
 emu := "192.168.2.208:5555"
+# Local AVD (Pixel 7, API 35) — boots as emulator-5554 (see dev-env-fedora).
+avd := "pixel35"
+local_emu := "emulator-5554"
 
 # show available commands
 default:
@@ -43,6 +46,31 @@ emu-connect:
 # run the app on the remote GPU emulator (screen view at http://192.168.2.208:8000)
 dev: emu-connect
     flutter run -d {{emu}}
+
+# Idempotent (no-op if emulator-5554 is already online); boots in the background
+# and blocks until Android finishes booting, so local recipes can depend on it.
+# boot the local pixel35 AVD
+emu-local:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if adb devices | grep -q "^{{local_emu}}"; then
+        echo "{{local_emu}} already running"
+        exit 0
+    fi
+    "$HOME/Android/Sdk/emulator/emulator" -avd {{avd}} >/dev/null 2>&1 &
+    disown
+    echo "Booting {{avd}}..."
+    adb -s {{local_emu}} wait-for-device
+    until [ "$(adb -s {{local_emu}} shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+        sleep 2
+    done
+    echo "{{avd}} ready"
+
+# Boots the emulator first if needed; builds, installs and runs with hot reload.
+# This is the primary pre-commit verify loop.
+# run the app (debug) on the local pixel35 AVD
+dev-local: emu-local
+    flutter run -d {{local_emu}}
 
 # one-time setup: open the device list in emu-view's dedicated Chrome profile so
 # "Fit to screen" + Save settings persists there (localStorage, per player=mse).

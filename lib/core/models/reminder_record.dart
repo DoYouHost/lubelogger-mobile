@@ -4,15 +4,18 @@
 /// their .NET names (e.g. "PastDue", "Odometer"), matched case-insensitively.
 class ReminderRecord {
   const ReminderRecord({
+    required this.id,
     required this.description,
     required this.urgency,
     required this.metric,
     required this.dueDate,
     required this.dueOdometer,
     required this.notes,
+    required this.tags,
   });
 
   factory ReminderRecord.fromJson(Map<String, dynamic> json) => ReminderRecord(
+        id: _toInt(json['id']),
         description: (json['description'] as String?) ?? '',
         urgency: ReminderUrgency.parse(json['urgency']),
         metric: ReminderMetric.parse(json['metric']),
@@ -24,20 +27,29 @@ class ReminderRecord {
           return o > 0 ? o : null;
         }(),
         notes: (json['notes'] as String?) ?? '',
+        tags: (json['tags'] as String?) ?? '',
       );
 
+  final int id;
   final String description;
   final ReminderUrgency urgency;
   final ReminderMetric metric;
   final DateTime? dueDate;
   final double? dueOdometer;
   final String notes;
+  final String tags;
 
   /// Whether the due date is relevant for this reminder's [metric].
   bool get showsDate => metric != ReminderMetric.odometer && dueDate != null;
 
   /// Whether the due odometer is relevant for this reminder's [metric].
   bool get showsOdometer => metric != ReminderMetric.date && dueOdometer != null;
+
+  static int _toInt(Object? v) => switch (v) {
+        final num n => n.toInt(),
+        final String s => int.tryParse(s) ?? 0,
+        _ => 0,
+      };
 
   static double _toDouble(Object? v) => switch (v) {
         final num n => n.toDouble(),
@@ -68,10 +80,15 @@ enum ReminderUrgency {
 /// What a reminder is measured against (`ReminderMetric`: Date=0, Odometer=1,
 /// Both=2).
 enum ReminderMetric {
-  date,
-  odometer,
-  both,
-  unknown;
+  date('Date'),
+  odometer('Odometer'),
+  both('Both'),
+  unknown('Date');
+
+  const ReminderMetric(this.wireName);
+
+  /// The .NET enum name the API expects on write.
+  final String wireName;
 
   static ReminderMetric parse(Object? raw) =>
       switch (raw?.toString().toLowerCase()) {

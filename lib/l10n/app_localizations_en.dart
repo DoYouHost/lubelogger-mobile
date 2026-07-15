@@ -282,6 +282,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formOdometerEditTitle => 'Edit Odometer Reading';
 
   @override
+  String get formServiceTitle => 'Add Service Record';
+
+  @override
+  String get formServiceEditTitle => 'Edit Service Record';
+
+  @override
+  String get formRepairTitle => 'Add Repair Record';
+
+  @override
+  String get formRepairEditTitle => 'Edit Repair Record';
+
+  @override
+  String get formUpgradeTitle => 'Add Upgrade Record';
+
+  @override
+  String get formUpgradeEditTitle => 'Edit Upgrade Record';
+
+  @override
+  String get formTaxTitle => 'Add Tax Record';
+
+  @override
+  String get formTaxEditTitle => 'Edit Tax Record';
+
+  @override
+  String get formSupplyTitle => 'Add Supply Record';
+
+  @override
+  String get formSupplyEditTitle => 'Edit Supply Record';
+
+  @override
+  String get formSupplyPartNumber => 'Part number (optional)';
+
+  @override
+  String get formSupplyPartSupplier => 'Supplier (optional)';
+
+  @override
+  String get formSupplyQuantity => 'Quantity';
+
+  @override
+  String get formPlanTitle => 'Add Planner Item';
+
+  @override
+  String get formPlanEditTitle => 'Edit Planner Item';
+
+  @override
+  String get formPlanType => 'Type';
+
+  @override
+  String get formPlanPriority => 'Priority';
+
+  @override
+  String get formPlanProgress => 'Progress';
+
+  @override
+  String get formReminderTitle => 'Add Reminder';
+
+  @override
+  String get formReminderEditTitle => 'Edit Reminder';
+
+  @override
+  String get formReminderMetric => 'Remind by';
+
+  @override
+  String get formReminderMetricDate => 'Date';
+
+  @override
+  String get formReminderMetricOdometer => 'Odometer';
+
+  @override
+  String get formReminderMetricBoth => 'Date & odometer';
+
+  @override
+  String get formReminderDueDate => 'Due date';
+
+  @override
+  String formReminderDueOdometer(String unit) {
+    return 'Due odometer ($unit)';
+  }
+
+  @override
+  String get formNoteTitle => 'Add Note';
+
+  @override
+  String get formNoteEditTitle => 'Edit Note';
+
+  @override
+  String get formNoteTitleLabel => 'Title';
+
+  @override
+  String get formNoteBodyLabel => 'Note';
+
+  @override
+  String get formNotePinned => 'Pinned';
+
+  @override
+  String get formEquipmentTitle => 'Add Equipment';
+
+  @override
+  String get formEquipmentEditTitle => 'Edit Equipment';
+
+  @override
+  String get formEquipmentNameLabel => 'Name';
+
+  @override
+  String get formEquipmentEquipped => 'Equipped';
+
+  @override
   String formOdometerLabel(String unit) {
     return 'Odometer reading ($unit)';
   }

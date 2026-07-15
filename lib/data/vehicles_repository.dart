@@ -164,6 +164,234 @@ class VehiclesRepository {
         ];
       });
 
+  /// `POST {kind}/add?vehicleId=` → add a generic (service / repair / upgrade /
+  /// tax) record. The server requires date, description and cost — plus
+  /// odometer for the odometer-bearing kinds; pass [odometer] as null for tax so
+  /// it's omitted. Values go out as strings (odometer as a whole number for the
+  /// server's `int.Parse`, cost as a plain `.`-decimal).
+  Future<void> addRecord({
+    required RecordKind kind,
+    required int vehicleId,
+    required DateTime date,
+    required String description,
+    required num cost,
+    num? odometer,
+    String notes = '',
+    String tags = '',
+  }) =>
+      guard(() async {
+        final res = await _dio.post<Map<String, dynamic>>(
+          kind.addEndpoint,
+          queryParameters: {'vehicleId': vehicleId},
+          options: Options(contentType: Headers.jsonContentType),
+          data: _recordBody(
+            date: date,
+            description: description,
+            cost: cost,
+            odometer: odometer,
+            notes: notes,
+            tags: tags,
+          ),
+        );
+        _ensureSuccess(res.data);
+      });
+
+  /// `PUT {kind}/update` → update a generic record by [id]. No query params; the
+  /// server resolves the record's vehicle from [id], so `vehicleId` isn't sent.
+  Future<void> updateRecord({
+    required RecordKind kind,
+    required int id,
+    required DateTime date,
+    required String description,
+    required num cost,
+    num? odometer,
+    String notes = '',
+    String tags = '',
+  }) =>
+      guard(() async {
+        final res = await _dio.put<Map<String, dynamic>>(
+          kind.updateEndpoint,
+          options: Options(contentType: Headers.jsonContentType),
+          data: {
+            'id': id.toString(),
+            ..._recordBody(
+              date: date,
+              description: description,
+              cost: cost,
+              odometer: odometer,
+              notes: notes,
+              tags: tags,
+            ),
+          },
+        );
+        _ensureSuccess(res.data);
+      });
+
+  /// `DELETE {kind}/delete?id=` → delete a generic record.
+  Future<void> deleteRecord(RecordKind kind, int id) => guard(() async {
+        final res = await _dio.delete<Map<String, dynamic>>(
+          kind.deleteEndpoint,
+          queryParameters: {'id': id},
+        );
+        _ensureSuccess(res.data);
+      });
+
+  // ── Supply records ──────────────────────────────────────────────────────
+  // Server requires date, description, quantity and cost; part number/supplier
+  // are optional. Quantity and cost are decimals.
+  Future<void> addSupplyRecord({
+    required int vehicleId,
+    required DateTime date,
+    required String description,
+    required num partQuantity,
+    required num cost,
+    String partNumber = '',
+    String partSupplier = '',
+    String notes = '',
+    String tags = '',
+  }) =>
+      _add(Endpoints.supplyRecordsAdd, vehicleId,
+          _supplyBody(date, description, partQuantity, cost, partNumber,
+              partSupplier, notes, tags));
+
+  Future<void> updateSupplyRecord({
+    required int id,
+    required DateTime date,
+    required String description,
+    required num partQuantity,
+    required num cost,
+    String partNumber = '',
+    String partSupplier = '',
+    String notes = '',
+    String tags = '',
+  }) =>
+      _update(Endpoints.supplyRecordsUpdate, {
+        'id': id.toString(),
+        ..._supplyBody(date, description, partQuantity, cost, partNumber,
+            partSupplier, notes, tags),
+      });
+
+  Future<void> deleteSupplyRecord(int id) =>
+      _delete(Endpoints.supplyRecordsDelete, id);
+
+  // ── Plan (planner) records ──────────────────────────────────────────────
+  // Server requires description, cost, type, priority and progress; there is no
+  // date/odometer/tags. The API refuses to set Progress.done (see PlanProgress).
+  Future<void> addPlanRecord({
+    required int vehicleId,
+    required String description,
+    required num cost,
+    required PlanType type,
+    required PlanPriority priority,
+    required PlanProgress progress,
+    String notes = '',
+  }) =>
+      _add(Endpoints.planRecordsAdd, vehicleId,
+          _planBody(description, cost, type, priority, progress, notes));
+
+  Future<void> updatePlanRecord({
+    required int id,
+    required String description,
+    required num cost,
+    required PlanType type,
+    required PlanPriority priority,
+    required PlanProgress progress,
+    String notes = '',
+  }) =>
+      _update(Endpoints.planRecordsUpdate, {
+        'id': id.toString(),
+        ..._planBody(description, cost, type, priority, progress, notes),
+      });
+
+  Future<void> deletePlanRecord(int id) =>
+      _delete(Endpoints.planRecordsDelete, id);
+
+  // ── Reminders ───────────────────────────────────────────────────────────
+  // Server requires description and metric; the due date and/or odometer are
+  // required per the metric (date → dueDate, odometer → dueOdometer, both →
+  // both). Urgency is computed server-side, never sent.
+  Future<void> addReminder({
+    required int vehicleId,
+    required String description,
+    required ReminderMetric metric,
+    DateTime? dueDate,
+    num? dueOdometer,
+    String notes = '',
+    String tags = '',
+  }) =>
+      _add(Endpoints.remindersAdd, vehicleId,
+          _reminderBody(description, metric, dueDate, dueOdometer, notes, tags));
+
+  Future<void> updateReminder({
+    required int id,
+    required String description,
+    required ReminderMetric metric,
+    DateTime? dueDate,
+    num? dueOdometer,
+    String notes = '',
+    String tags = '',
+  }) =>
+      _update(Endpoints.remindersUpdate, {
+        'id': id.toString(),
+        ..._reminderBody(description, metric, dueDate, dueOdometer, notes, tags),
+      });
+
+  Future<void> deleteReminder(int id) =>
+      _delete(Endpoints.remindersDelete, id);
+
+  // ── Notes ───────────────────────────────────────────────────────────────
+  // Server requires description (title) and noteText (body).
+  Future<void> addNote({
+    required int vehicleId,
+    required String description,
+    required String noteText,
+    bool pinned = false,
+    String tags = '',
+  }) =>
+      _add(Endpoints.notesAdd, vehicleId,
+          _noteBody(description, noteText, pinned, tags));
+
+  Future<void> updateNote({
+    required int id,
+    required String description,
+    required String noteText,
+    bool pinned = false,
+    String tags = '',
+  }) =>
+      _update(Endpoints.notesUpdate, {
+        'id': id.toString(),
+        ..._noteBody(description, noteText, pinned, tags),
+      });
+
+  Future<void> deleteNote(int id) => _delete(Endpoints.notesDelete, id);
+
+  // ── Equipment ───────────────────────────────────────────────────────────
+  // Server requires description and isEquipped.
+  Future<void> addEquipmentRecord({
+    required int vehicleId,
+    required String description,
+    required bool isEquipped,
+    String notes = '',
+    String tags = '',
+  }) =>
+      _add(Endpoints.equipmentRecordsAdd, vehicleId,
+          _equipmentBody(description, isEquipped, notes, tags));
+
+  Future<void> updateEquipmentRecord({
+    required int id,
+    required String description,
+    required bool isEquipped,
+    String notes = '',
+    String tags = '',
+  }) =>
+      _update(Endpoints.equipmentRecordsUpdate, {
+        'id': id.toString(),
+        ..._equipmentBody(description, isEquipped, notes, tags),
+      });
+
+  Future<void> deleteEquipmentRecord(int id) =>
+      _delete(Endpoints.equipmentRecordsDelete, id);
+
   /// `GET /api/vehicle/odometerrecords?vehicleId=` → odometer readings, source
   /// of the monthly distance line.
   Future<List<OdometerRecord>> odometerRecords(int vehicleId) =>
@@ -278,6 +506,40 @@ class VehiclesRepository {
         ];
       });
 
+  /// `POST {endpoint}?vehicleId=` with a JSON [body] → add a record. Shared by
+  /// the per-type add methods (all uniform-CRUD endpoints, see §6).
+  Future<void> _add(String endpoint, int vehicleId, Map<String, String> body) =>
+      guard(() async {
+        final res = await _dio.post<Map<String, dynamic>>(
+          endpoint,
+          queryParameters: {'vehicleId': vehicleId},
+          options: Options(contentType: Headers.jsonContentType),
+          data: body,
+        );
+        _ensureSuccess(res.data);
+      });
+
+  /// `PUT {endpoint}` with a JSON [body] (including `id`) → update a record. The
+  /// server resolves the record's vehicle from its id, so no query params.
+  Future<void> _update(String endpoint, Map<String, String> body) =>
+      guard(() async {
+        final res = await _dio.put<Map<String, dynamic>>(
+          endpoint,
+          options: Options(contentType: Headers.jsonContentType),
+          data: body,
+        );
+        _ensureSuccess(res.data);
+      });
+
+  /// `DELETE {endpoint}?id=` → delete a record by [id].
+  Future<void> _delete(String endpoint, int id) => guard(() async {
+        final res = await _dio.delete<Map<String, dynamic>>(
+          endpoint,
+          queryParameters: {'id': id},
+        );
+        _ensureSuccess(res.data);
+      });
+
   /// `GET /api/info` → server metadata (currency, locale, date format).
   Future<ServerInfo> serverInfo() => guard(() async {
         final res = await _dio.get<Map<String, dynamic>>(Endpoints.info);
@@ -315,6 +577,116 @@ class VehiclesRepository {
         'missedFuelUp': missedFuelUp.toString(),
         'startingSoc': '0',
         'endingSoc': '0',
+        'notes': notes,
+        'tags': tags,
+      };
+
+  /// Shared field set for a generic record write (add or update). Odometer is
+  /// omitted when null (tax records have none); it goes out as a whole-number
+  /// string for the server's `int.Parse`, cost as a plain `.`-decimal.
+  static Map<String, String> _recordBody({
+    required DateTime date,
+    required String description,
+    required num cost,
+    required num? odometer,
+    required String notes,
+    required String tags,
+  }) =>
+      {
+        'date': _isoDate(date),
+        if (odometer != null) 'odometer': _intString(odometer),
+        'description': description,
+        'cost': cost.toString(),
+        'notes': notes,
+        'tags': tags,
+      };
+
+  /// Supply write fields. Quantity and cost are decimals; part number/supplier
+  /// are free-form and may be empty.
+  static Map<String, String> _supplyBody(
+    DateTime date,
+    String description,
+    num partQuantity,
+    num cost,
+    String partNumber,
+    String partSupplier,
+    String notes,
+    String tags,
+  ) =>
+      {
+        'date': _isoDate(date),
+        'description': description,
+        'partNumber': partNumber,
+        'partSupplier': partSupplier,
+        'partQuantity': partQuantity.toString(),
+        'cost': cost.toString(),
+        'notes': notes,
+        'tags': tags,
+      };
+
+  /// Plan write fields. Enums go out as their .NET names; there is no
+  /// date/odometer/tags. The server sets DateCreated/DateModified itself.
+  static Map<String, String> _planBody(
+    String description,
+    num cost,
+    PlanType type,
+    PlanPriority priority,
+    PlanProgress progress,
+    String notes,
+  ) =>
+      {
+        'description': description,
+        'cost': cost.toString(),
+        'type': type.wireName,
+        'priority': priority.wireName,
+        'progress': progress.wireName,
+        'notes': notes,
+      };
+
+  /// Reminder write fields. Metric goes out as its .NET name; the due date and
+  /// odometer are sent only when set (the caller supplies whichever the metric
+  /// requires). Urgency is computed server-side and never sent.
+  static Map<String, String> _reminderBody(
+    String description,
+    ReminderMetric metric,
+    DateTime? dueDate,
+    num? dueOdometer,
+    String notes,
+    String tags,
+  ) =>
+      {
+        'description': description,
+        'metric': metric.wireName,
+        if (dueDate != null) 'dueDate': _isoDate(dueDate),
+        if (dueOdometer != null) 'dueOdometer': _intString(dueOdometer),
+        'notes': notes,
+        'tags': tags,
+      };
+
+  /// Note write fields: a title ([description]) + body ([noteText]) + pin flag.
+  static Map<String, String> _noteBody(
+    String description,
+    String noteText,
+    bool pinned,
+    String tags,
+  ) =>
+      {
+        'description': description,
+        'noteText': noteText,
+        'pinned': pinned.toString(),
+        'tags': tags,
+      };
+
+  /// Equipment write fields: a name ([description]) + equipped flag.
+  static Map<String, String> _equipmentBody(
+    String description,
+    bool isEquipped,
+    String notes,
+    String tags,
+  ) =>
+      {
+        'description': description,
+        'isEquipped': isEquipped.toString(),
         'notes': notes,
         'tags': tags,
       };

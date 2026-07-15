@@ -4,13 +4,16 @@
 /// server's raw stored distance unit). The bool arrives as "True"/"False".
 class EquipmentRecord {
   const EquipmentRecord({
+    required this.id,
     required this.description,
     required this.isEquipped,
     required this.distanceTraveled,
     required this.notes,
+    required this.tags,
   });
 
   factory EquipmentRecord.fromJson(Map<String, dynamic> json) => EquipmentRecord(
+        id: _toInt(json['id']),
         description: (json['description'] as String?) ?? '',
         isEquipped: _toBool(json['isEquipped']),
         distanceTraveled: () {
@@ -18,12 +21,21 @@ class EquipmentRecord {
           return d > 0 ? d : null;
         }(),
         notes: (json['notes'] as String?) ?? '',
+        tags: (json['tags'] as String?) ?? '',
       );
 
+  final int id;
   final String description;
   final bool isEquipped;
   final double? distanceTraveled;
   final String notes;
+  final String tags;
+
+  static int _toInt(Object? v) => switch (v) {
+        final num n => n.toInt(),
+        final String s => int.tryParse(s) ?? 0,
+        _ => 0,
+      };
 
   static bool _toBool(Object? v) => switch (v) {
         final bool b => b,
