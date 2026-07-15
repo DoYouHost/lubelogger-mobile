@@ -9,6 +9,7 @@ import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../dashboard/dashboard_screen.dart';
+import '../common/vehicle_image.dart';
 import '../common/vehicle_tab_ui.dart';
 import 'add_record_sheet.dart';
 import 'widgets/record_tabs.dart';
@@ -290,10 +291,13 @@ class _Avatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: image.isEmpty
           ? Center(child: placeholder)
-          : Image.network(
-              '$baseUrl$image',
+          : Image(
+              image: vehicleImageProvider(
+                imageLocation: image,
+                baseUrl: baseUrl,
+                apiKey: apiKey,
+              ),
               fit: BoxFit.cover,
-              headers: apiKey == null ? null : {'x-api-key': apiKey!},
               errorBuilder: (_, _, _) => Center(child: placeholder),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),

@@ -6,6 +6,7 @@ import '../../core/models/vehicle_info.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
+import '../common/vehicle_image.dart';
 
 /// Asks the user which vehicle a quick-action record should be added to.
 /// Resolves to the chosen vehicle id, or `null` if dismissed. Only shown when
@@ -132,10 +133,13 @@ class _Avatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: image.isEmpty
           ? Center(child: placeholder)
-          : Image.network(
-              '$baseUrl$image',
+          : Image(
+              image: vehicleImageProvider(
+                imageLocation: image,
+                baseUrl: baseUrl,
+                apiKey: apiKey,
+              ),
               fit: BoxFit.cover,
-              headers: apiKey == null ? null : {'x-api-key': apiKey!},
               errorBuilder: (_, _, _) => Center(child: placeholder),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),

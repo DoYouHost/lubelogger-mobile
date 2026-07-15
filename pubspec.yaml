@@ -46,6 +46,9 @@ flutter:
   assets:
     - assets/licenses/OFL-Manrope.txt
     - assets/licenses/OFL-JetBrainsMono.txt
+    # Demo-mode vehicle photos (store-review mode; served offline as assets).
+    - assets/demo/car_photo1.jpg
+    - assets/demo/car_photo2.webp
 
   fonts:
     - family: Manrope

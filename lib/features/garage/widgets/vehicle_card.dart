@@ -4,6 +4,7 @@ import '../../../core/format/formatters.dart';
 import '../../../core/models/vehicle_info.dart';
 import '../../../core/settings/units_settings.dart';
 import '../../../core/theme/dash_theme.dart';
+import '../../common/vehicle_image.dart';
 
 /// A single vehicle in the garage list (design screen #2): a photo with floating
 /// odometer + cost badges, then year / make-model / plate below.
@@ -128,10 +129,13 @@ class VehicleCard extends StatelessWidget {
       ),
     );
     if (info.vehicle.imageLocation.isEmpty) return placeholder;
-    return Image.network(
-      '$baseUrl${info.vehicle.imageLocation}',
+    return Image(
+      image: vehicleImageProvider(
+        imageLocation: info.vehicle.imageLocation,
+        baseUrl: baseUrl,
+        apiKey: apiKey,
+      ),
       fit: BoxFit.cover,
-      headers: apiKey == null ? null : {'x-api-key': apiKey!},
       errorBuilder: (_, _, _) => placeholder,
       loadingBuilder: (context, child, progress) =>
           progress == null ? child : ColoredBox(color: t.subCard),
