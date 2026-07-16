@@ -1,6 +1,6 @@
 ---
 name: run-app-emulator
-description: Launch the bambuddy-mobile Flutter app on an Android emulator so that hot reload (r) and hot restart (R) work from a background session. Use when asked to run/start the app, verify a UI change live, or take a screenshot on the emulator.
+description: Launch the lubelogger-mobile Flutter app on an Android emulator so that hot reload (r) and hot restart (R) work from a background session. Use when asked to run/start the app, verify a UI change live, or take a screenshot on the emulator.
 ---
 
 # Run the app on an emulator with working hot reload / hot restart
@@ -18,8 +18,8 @@ into that FIFO to send the interactive commands.
 - Emulator online: `adb devices` should list the target (e.g. `emulator-5554`
   for the local AVD, or `192.168.2.208:5555` for the shared headless GPU
   emulator — `just emu-connect` connects the latter).
-- Flavors are mandatory: every `flutter run` **must** pass `--flavor mobile`
-  (or `--flavor wear --target lib/wear/main_wear.dart` for the watch).
+- No flavors: this app has a single build variant, so `flutter run` takes **no**
+  `--flavor` flag (unlike bambuddy-mobile, which this skill was adapted from).
 
 ## Launch (do this once)
 
@@ -31,7 +31,7 @@ SCRATCH=<your-scratchpad-dir>
 mkfifo "$SCRATCH/flutter_stdin"          # ignore error if it already exists
 # Hold the FIFO open read-write on fd 3 so flutter doesn't see EOF and detach.
 exec 3<>"$SCRATCH/flutter_stdin"
-flutter run -d emulator-5554 --flavor mobile <&3 2>&1 | tee "$SCRATCH/flutter_run.log"
+flutter run -d emulator-5554 <&3 2>&1 | tee "$SCRATCH/flutter_run.log"
 ```
 
 Run that command with `run_in_background: true`. Wait for the log line
@@ -73,3 +73,12 @@ its content-desc label) over blind coordinates; see the ui-automation memory.
   **restart** (`R`).
 - Changes to native code, `pubspec.yaml`, or assets need a full relaunch, not
   reload/restart.
+- **Booting an AVD:** `-no-snapshot-save` only stops *saving* a snapshot on exit
+  — it still **loads** the existing boot snapshot, so a corrupted state persists
+  across restarts (seen on tablet10: display stuck at ROTATION_180, which broke
+  touch input — taps landed point-mirrored while the frame still looked upright).
+  To purge it, cold-boot with `-no-snapshot` (disables load *and* save) or
+  `-wipe-data` (factory-resets userdata). Boot the AVD with
+  `$HOME/Android/Sdk/emulator/emulator -avd <name> -no-snapshot`. Tablet AVDs
+  (`tablet7`, `tablet10`) may boot at a serial other than `emulator-5554` if a
+  phone AVD is already running — resolve it from `adb devices` before running.

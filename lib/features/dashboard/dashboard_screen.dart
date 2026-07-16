@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -323,11 +325,52 @@ class _StatBlock extends ConsumerWidget {
       _StatRow(value: economy, label: l10n.statAvgEconomy),
     ];
 
-    // Side by side across the width in landscape; stacked in portrait.
+    // Side by side across the width in landscape/tablet; stacked in portrait.
     if (context.isWideLayout) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [for (final row in rows) Expanded(child: row)],
+      final t = DashTokens.of(context);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          // Fit as many stat cells across as possible without the mono value
+          // wrapping mid-number. Measure the widest value at its real style
+          // (TextPainter) instead of guessing, so it adapts to font metrics,
+          // locale and currency width. Falls back to two rows of two.
+          final valueStyle = _StatRow.valueStyle(t);
+          final scaler = MediaQuery.textScalerOf(context);
+          var widest = 0.0;
+          for (final row in rows) {
+            final painter = TextPainter(
+              text: TextSpan(text: row.value, style: valueStyle),
+              textDirection: TextDirection.ltr,
+              textScaler: scaler,
+              maxLines: 1,
+            )..layout();
+            widest = math.max(widest, painter.width);
+          }
+          const gap = 12.0;
+          const cellSideRoom = 24.0; // breathing room around each value
+          final perCell = widest + cellSideRoom;
+          var columns = ((constraints.maxWidth + gap) / (perCell + gap))
+              .floor()
+              .clamp(1, rows.length);
+          // Prefer a balanced 2×2 over a lopsided 3 + 1.
+          if (columns == 3 && rows.length == 4) columns = 2;
+          return Column(
+            children: [
+              for (var i = 0; i < rows.length; i += columns)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (var j = 0; j < columns; j++)
+                      Expanded(
+                        child: (i + j) < rows.length
+                            ? rows[i + j]
+                            : const SizedBox.shrink(),
+                      ),
+                  ],
+                ),
+            ],
+          );
+        },
       );
     }
     return Column(children: rows);
@@ -346,6 +389,15 @@ class _StatRow extends StatelessWidget {
   /// Optional small chip under the value (e.g. the date of the reading).
   final String? secondary;
 
+  /// Style of the big mono value. Shared so the [_StatBlock] layout can measure
+  /// value widths (TextPainter) with the exact metrics used to render them.
+  static TextStyle valueStyle(DashTokens t) => TextStyle(
+    fontFamily: DashTokens.fontMono,
+    fontSize: 26,
+    fontWeight: FontWeight.w700,
+    color: t.textPrimary,
+  );
+
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
@@ -353,15 +405,7 @@ class _StatRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: DashTokens.fontMono,
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              color: t.textPrimary,
-            ),
-          ),
+          Text(value, style: valueStyle(t)),
           if (secondary != null) ...[
             const SizedBox(height: 6),
             Container(
