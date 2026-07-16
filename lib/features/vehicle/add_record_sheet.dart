@@ -86,7 +86,13 @@ class _AddRecordGrid extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
 
+    // Only the bottom inset (gesture bar) matters here: the sheet is centered
+    // via its width constraint, so applying the landscape display-cutout inset
+    // on the notch side would shove the grid off-centre.
     return SafeArea(
+      top: false,
+      left: false,
+      right: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -36,8 +36,12 @@ class _VehiclePickerSheet extends ConsumerWidget {
     final baseUrl = ref.watch(serverProfileProvider)?.baseUrl ?? '';
     final apiKey = ref.watch(apiKeyProvider).valueOrNull;
 
+    // Bottom inset only — the sheet is centered via its width constraint, so a
+    // landscape cutout inset on the notch side would push the list off-centre.
     return SafeArea(
       top: false,
+      left: false,
+      right: false,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
