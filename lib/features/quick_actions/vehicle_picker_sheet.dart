@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/vehicle.dart';
@@ -17,6 +18,7 @@ Future<int?> showVehiclePicker(
 ) {
   return showModalBottomSheet<int>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     showDragHandle: true,
     builder: (_) => _VehiclePickerSheet(vehicles: vehicles),
   );
@@ -119,8 +121,11 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    final placeholder =
-        Icon(Icons.directions_car, size: 20, color: t.textTertiary);
+    final placeholder = Icon(
+      Icons.directions_car,
+      size: 20,
+      color: t.textTertiary,
+    );
     final image = vehicle.imageLocation;
     return Container(
       width: 40,

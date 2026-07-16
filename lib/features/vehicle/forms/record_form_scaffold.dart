@@ -80,8 +80,10 @@ class RecordFormScaffold extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   error!,
-                  style:
-                      TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                  style: TextStyle(
+                    color: t.danger,
+                    fontFamily: DashTokens.fontUi,
+                  ),
                 ),
               ],
               const SizedBox(height: 20),

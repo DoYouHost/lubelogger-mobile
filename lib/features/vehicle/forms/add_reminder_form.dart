@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -11,7 +12,10 @@ import '../../../providers.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
 
-const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
+const _odometerFormat = ShiftDigitsFormatter(
+  decimalDigits: 0,
+  minIntegerDigits: 6,
+);
 
 /// Metrics a reminder can be measured against (excludes the [unknown] sentinel).
 const _selectableMetrics = [
@@ -32,6 +36,7 @@ Future<bool?> showAddReminderForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddReminderForm(vehicleId: vehicleId, existing: existing),
@@ -117,7 +122,10 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
         const SizedBox(height: 14),
         DropdownButtonFormField<ReminderMetric>(
           initialValue: _metric,
-          decoration: dashFieldDecoration(t, labelText: l10n.formReminderMetric),
+          decoration: dashFieldDecoration(
+            t,
+            labelText: l10n.formReminderMetric,
+          ),
           items: [
             for (final m in _selectableMetrics)
               DropdownMenuItem(value: m, child: Text(_metricLabel(m, l10n))),
@@ -142,8 +150,10 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
             keyboardType: TextInputType.number,
             inputFormatters: const [_odometerFormat],
             style: const TextStyle(fontFamily: DashTokens.fontMono),
-            decoration: dashFieldDecoration(t,
-                labelText: l10n.formReminderDueOdometer(units.distance.label)),
+            decoration: dashFieldDecoration(
+              t,
+              labelText: l10n.formReminderDueOdometer(units.distance.label),
+            ),
             validator: (raw) {
               // Only enforced while the field is shown (odometer/both metrics).
               final value = parseFormNumber(raw);
@@ -196,7 +206,9 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
     final repo = ref.read(vehiclesRepositoryProvider);
     final existing = widget.existing;
     final dueDate = _needsDate ? _dueDate : null;
-    final dueOdometer = _needsOdometer ? parseFormNumber(_odometer.text)! : null;
+    final dueOdometer = _needsOdometer
+        ? parseFormNumber(_odometer.text)!
+        : null;
     try {
       if (existing == null) {
         await repo.addReminder(
@@ -225,8 +237,10 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -238,8 +252,9 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }
@@ -297,8 +312,8 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
 }
 
 String _metricLabel(ReminderMetric m, AppLocalizations l10n) => switch (m) {
-      ReminderMetric.date => l10n.formReminderMetricDate,
-      ReminderMetric.odometer => l10n.formReminderMetricOdometer,
-      ReminderMetric.both => l10n.formReminderMetricBoth,
-      ReminderMetric.unknown => l10n.formReminderMetricDate,
-    };
+  ReminderMetric.date => l10n.formReminderMetricDate,
+  ReminderMetric.odometer => l10n.formReminderMetricOdometer,
+  ReminderMetric.both => l10n.formReminderMetricBoth,
+  ReminderMetric.unknown => l10n.formReminderMetricDate,
+};

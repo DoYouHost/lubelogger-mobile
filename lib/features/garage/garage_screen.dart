@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
@@ -94,42 +95,52 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
               if (vehicles.isEmpty) {
                 return _EmptyGarage(l10n: l10n, onAdd: _openAddVehicle);
               }
-              // Auto-close any open swipe action when another card is tapped or
-              // the list scrolls, so the Edit button doesn't linger open.
+              // A single scrolling child holds the responsive card grid, so
+              // pull-to-refresh and swipe-auto-close keep working while the
+              // cards flow into 2–3 columns on wider (landscape) screens.
+              // SlidableAutoCloseBehavior closes any open Edit action when
+              // another card is tapped or the list scrolls.
               return SlidableAutoCloseBehavior(
-                child: ListView.separated(
+                child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                  itemCount: vehicles.length + 1,
-                  separatorBuilder: (_, _) => const SizedBox(height: 18),
-                  itemBuilder: (context, i) {
-                    if (i == vehicles.length) {
-                      return AddVehicleTile(onTap: _openAddVehicle);
-                    }
-                    final info = vehicles[i];
-                    return Slidable(
-                      key: ValueKey(info.vehicle.id),
-                      controller: _controllerFor(info.vehicle.id),
-                      endActionPane: ActionPane(
-                        motion: const DrawerMotion(),
-                        extentRatio: 0.3,
-                        children: [
-                          _EditVehicleAction(
-                            onPressed: () => _editVehicle(info.vehicle),
+                  children: [
+                    ResponsiveCardWrap(
+                      spacing: 18,
+                      runSpacing: 18,
+                      children: [
+                        for (final info in vehicles)
+                          // Clip each card to its grid cell so a slid-open card
+                          // stays within its own column instead of bleeding over
+                          // the neighbouring vehicle when swiped.
+                          ClipRect(
+                            child: Slidable(
+                              key: ValueKey(info.vehicle.id),
+                              controller: _controllerFor(info.vehicle.id),
+                              endActionPane: ActionPane(
+                                motion: const DrawerMotion(),
+                                extentRatio: 0.3,
+                                children: [
+                                  _EditVehicleAction(
+                                    onPressed: () => _editVehicle(info.vehicle),
+                                  ),
+                                ],
+                              ),
+                              child: VehicleCard(
+                                info: info,
+                                baseUrl: baseUrl,
+                                apiKey: apiKey,
+                                currencySymbol: currency,
+                                measurementBase: units.base,
+                                distanceUnit: units.distance,
+                                onTap: () =>
+                                    context.push('/vehicle/${info.vehicle.id}'),
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
-                      child: VehicleCard(
-                        info: info,
-                        baseUrl: baseUrl,
-                        apiKey: apiKey,
-                        currencySymbol: currency,
-                        measurementBase: units.base,
-                        distanceUnit: units.distance,
-                        onTap: () =>
-                            context.push('/vehicle/${info.vehicle.id}'),
-                      ),
-                    );
-                  },
+                        AddVehicleTile(onTap: _openAddVehicle),
+                      ],
+                    ),
+                  ],
                 ),
               );
             },

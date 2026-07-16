@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/layout/responsive.dart';
 
 import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';
@@ -27,6 +28,7 @@ Future<void> showAddRecordSheet(
 
   final picked = await showModalBottomSheet<VehicleTab>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     showDragHandle: true,
     builder: (_) => _AddRecordGrid(options: tabs),
   );
@@ -53,24 +55,25 @@ Future<void> showAddRecordSheet(
     case VehicleTab.equipment:
       await showAddEquipmentForm(context, vehicleId);
     case VehicleTab.service ||
-          VehicleTab.repair ||
-          VehicleTab.upgrade ||
-          VehicleTab.tax:
+        VehicleTab.repair ||
+        VehicleTab.upgrade ||
+        VehicleTab.tax:
       // Handled by the generic-record branch above; unreachable here.
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).comingSoon)));
+        SnackBar(content: Text(AppLocalizations.of(context).comingSoon)),
+      );
   }
 }
 
 /// The generic (date + cost) record kind a tab maps to, or null for tabs with
 /// their own bespoke form (fuel/odometer/supply/plan/reminder/note/equipment).
 RecordKind? _recordKindForTab(VehicleTab tab) => switch (tab) {
-      VehicleTab.service => RecordKind.service,
-      VehicleTab.repair => RecordKind.repair,
-      VehicleTab.upgrade => RecordKind.upgrade,
-      VehicleTab.tax => RecordKind.tax,
-      _ => null,
-    };
+  VehicleTab.service => RecordKind.service,
+  VehicleTab.repair => RecordKind.repair,
+  VehicleTab.upgrade => RecordKind.upgrade,
+  VehicleTab.tax => RecordKind.tax,
+  _ => null,
+};
 
 /// The record types as a scrollable two-column grid of tiles.
 class _AddRecordGrid extends StatelessWidget {

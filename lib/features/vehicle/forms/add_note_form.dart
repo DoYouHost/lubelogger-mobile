@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -22,6 +23,7 @@ Future<bool?> showAddNoteForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddNoteForm(vehicleId: vehicleId, existing: existing),
@@ -90,7 +92,10 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
         TextFormField(
           controller: _title,
           enabled: !_submitting,
-          decoration: dashFieldDecoration(t, labelText: l10n.formNoteTitleLabel),
+          decoration: dashFieldDecoration(
+            t,
+            labelText: l10n.formNoteTitleLabel,
+          ),
           validator: (raw) => (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
               : null,
@@ -164,8 +169,10 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -177,8 +184,9 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }
@@ -211,7 +219,9 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
       _error = null;
     });
     try {
-      await ref.read(vehiclesRepositoryProvider).deleteNote(widget.existing!.id);
+      await ref
+          .read(vehiclesRepositoryProvider)
+          .deleteNote(widget.existing!.id);
       ref.invalidate(notesProvider(widget.vehicleId));
       if (!mounted) return;
       Navigator.pop(context, true);

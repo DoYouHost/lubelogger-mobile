@@ -60,8 +60,9 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
 
     setState(() => _uploading = true);
     try {
-      final uploaded =
-          await ref.read(vehiclesRepositoryProvider).uploadDocuments(picked);
+      final uploaded = await ref
+          .read(vehiclesRepositoryProvider)
+          .uploadDocuments(picked);
       if (!mounted) return;
       setState(() {
         _files = [..._files, ...uploaded];
@@ -133,53 +134,56 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
   }
 
   Widget _chip(DashTokens t, Attachment file) => Container(
-        padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
-        decoration: BoxDecoration(
-          color: t.subCard,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: t.subCardBorder),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InkWell(
-              onTap: () => openAttachment(context, ref, file),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.insert_drive_file_outlined,
-                        size: 15, color: t.textTertiary),
-                    const SizedBox(width: 6),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 180),
-                      child: Text(
-                        file.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: DashTokens.fontUi,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: t.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
+    padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+    decoration: BoxDecoration(
+      color: t.subCard,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: t.subCardBorder),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () => openAttachment(context, ref, file),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.insert_drive_file_outlined,
+                  size: 15,
+                  color: t.textTertiary,
                 ),
-              ),
+                const SizedBox(width: 6),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 180),
+                  child: Text(
+                    file.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: DashTokens.fontUi,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: t.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 16),
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              color: t.textTertiary,
-              onPressed: _busy ? null : () => _remove(file),
-            ),
-          ],
+          ),
         ),
-      );
+        IconButton(
+          icon: const Icon(Icons.close, size: 16),
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          color: t.textTertiary,
+          onPressed: _busy ? null : () => _remove(file),
+        ),
+      ],
+    ),
+  );
 }

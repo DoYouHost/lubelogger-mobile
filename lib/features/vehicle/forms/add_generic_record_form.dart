@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -12,7 +13,10 @@ import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
 
-const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
+const _odometerFormat = ShiftDigitsFormatter(
+  decimalDigits: 0,
+  minIntegerDigits: 6,
+);
 const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Opens the add/edit form for a generic (date + cost) record [kind] — service /
@@ -32,24 +36,36 @@ Future<bool?> showGenericRecordForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) =>
-        _AddGenericRecordForm(vehicleId: vehicleId, kind: kind, existing: existing),
+    builder: (_) => _AddGenericRecordForm(
+      vehicleId: vehicleId,
+      kind: kind,
+      existing: existing,
+    ),
   );
 }
 
 /// Localized add/edit titles for each generic record [kind].
-({String add, String edit}) _titlesFor(RecordKind kind, AppLocalizations l10n) =>
-    switch (kind) {
-      RecordKind.service =>
-        (add: l10n.formServiceTitle, edit: l10n.formServiceEditTitle),
-      RecordKind.repair =>
-        (add: l10n.formRepairTitle, edit: l10n.formRepairEditTitle),
-      RecordKind.upgrade =>
-        (add: l10n.formUpgradeTitle, edit: l10n.formUpgradeEditTitle),
-      RecordKind.tax => (add: l10n.formTaxTitle, edit: l10n.formTaxEditTitle),
-    };
+({String add, String edit}) _titlesFor(
+  RecordKind kind,
+  AppLocalizations l10n,
+) => switch (kind) {
+  RecordKind.service => (
+    add: l10n.formServiceTitle,
+    edit: l10n.formServiceEditTitle,
+  ),
+  RecordKind.repair => (
+    add: l10n.formRepairTitle,
+    edit: l10n.formRepairEditTitle,
+  ),
+  RecordKind.upgrade => (
+    add: l10n.formUpgradeTitle,
+    edit: l10n.formUpgradeEditTitle,
+  ),
+  RecordKind.tax => (add: l10n.formTaxTitle, edit: l10n.formTaxEditTitle),
+};
 
 class _AddGenericRecordForm extends ConsumerStatefulWidget {
   const _AddGenericRecordForm({
@@ -148,8 +164,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                     ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed:
-                        _submitting ? null : () => Navigator.pop(context),
+                    onPressed: _submitting
+                        ? null
+                        : () => Navigator.pop(context),
                   ),
                 ],
               ),
@@ -162,8 +179,10 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
               TextFormField(
                 controller: _description,
                 enabled: !_submitting,
-                decoration:
-                    dashFieldDecoration(t, labelText: l10n.colDescription),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.colDescription,
+                ),
                 validator: (raw) => (raw == null || raw.trim().isEmpty)
                     ? l10n.validationRequired
                     : null,
@@ -187,8 +206,10 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
-                decoration:
-                    dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formTagsOptional,
+                ),
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -196,8 +217,10 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 enabled: !_submitting,
                 minLines: 2,
                 maxLines: 4,
-                decoration:
-                    dashFieldDecoration(t, labelText: l10n.formNotesOptional),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formNotesOptional,
+                ),
               ),
               const SizedBox(height: 14),
               AttachmentsField(
@@ -209,8 +232,10 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style:
-                      TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                  style: TextStyle(
+                    color: t.danger,
+                    fontFamily: DashTokens.fontUi,
+                  ),
                 ),
               ],
               const SizedBox(height: 20),
@@ -218,8 +243,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed:
-                          _submitting ? null : () => Navigator.pop(context),
+                      onPressed: _submitting
+                          ? null
+                          : () => Navigator.pop(context),
                       child: Text(l10n.actionCancel),
                     ),
                   ),
@@ -267,7 +293,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
               ? l10n.validationRequired
               : l10n.validationNumber;
         }
-        if (value < 0 || (!allowZero && value == 0)) return l10n.validationNumber;
+        if (value < 0 || (!allowZero && value == 0)) {
+          return l10n.validationNumber;
+        }
         return null;
       },
     );
@@ -327,8 +355,10 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -340,8 +370,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }
@@ -400,8 +431,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   /// tab list, the vehicle's aggregated info (record counts/costs) and the
   /// monthly expense breakdown.
   void _invalidateProviders() {
-    ref.invalidate(vehicleRecordsProvider(
-        (vehicleId: widget.vehicleId, kind: widget.kind)));
+    ref.invalidate(
+      vehicleRecordsProvider((vehicleId: widget.vehicleId, kind: widget.kind)),
+    );
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
     ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }

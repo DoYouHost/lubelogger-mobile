@@ -33,9 +33,19 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   TabController? _tabController;
   List<_VehicleTab> _tabs = const [];
 
+  /// Height of the collapsible tab strip: the [TabBar]'s own minimum (46px)
+  /// plus the strip Container's 1px bottom hairline, with 1px to spare.
+  static const double _tabStripHeight = 48;
+
+  // Outer scroll controller of the NestedScrollView — it drives the floating
+  // tab strip. Used to snap the strip back into view on a tab change.
+  final ScrollController _outerController = ScrollController();
+  int _lastTabIndex = 0;
+
   @override
   void dispose() {
     _tabController?.dispose();
+    _outerController.dispose();
     super.dispose();
   }
 
@@ -46,8 +56,26 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   /// arrives instead of flashing a full-screen spinner.
   void _onTabChanged() {
     final controller = _tabController;
-    if (controller == null || controller.indexIsChanging) return;
+    if (controller == null) return;
+    // A tab change (including a sideways swipe) snaps the collapsed tab strip
+    // back into view, without disturbing the list's scroll position.
+    if (controller.index != _lastTabIndex) {
+      _lastTabIndex = controller.index;
+      _revealTabStrip();
+    }
+    if (controller.indexIsChanging) return;
     _tabs[controller.index].refresh(ref);
+  }
+
+  /// Scrolls the NestedScrollView header back to fully-expanded, bringing the
+  /// floating tab strip back on screen.
+  void _revealTabStrip() {
+    if (!_outerController.hasClients || _outerController.offset <= 0) return;
+    _outerController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
   }
 
   /// Returns a controller of the given [length], reusing the current one when
@@ -57,21 +85,26 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   TabController _controllerFor(int length) {
     final existing = _tabController;
     if (existing != null && existing.length == length) return existing;
-    final initialIndex =
-        existing == null ? 0 : existing.index.clamp(0, length - 1);
+    final initialIndex = existing == null
+        ? 0
+        : existing.index.clamp(0, length - 1);
     existing?.removeListener(_onTabChanged);
     existing?.dispose();
-    return _tabController =
-        TabController(length: length, initialIndex: initialIndex, vsync: this)
-          ..addListener(_onTabChanged);
+    return _tabController = TabController(
+      length: length,
+      initialIndex: initialIndex,
+      vsync: this,
+    )..addListener(_onTabChanged);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final vehicleId = widget.vehicleId;
-    final vehicle =
-        ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
+    final vehicle = ref
+        .watch(vehicleInfoProvider(vehicleId))
+        .valueOrNull
+        ?.vehicle;
     final useHours = vehicle?.useHours ?? false;
     final visible = ref.watch(visibleTabsProvider);
     final order = ref.watch(tabOrderProvider);
@@ -113,12 +146,39 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
           bottom: false,
           child: Column(
             children: [
+              // The vehicle header stays pinned; only the tab strip collapses.
               _VehicleHeader(vehicle: vehicle),
-              _VehicleTabBar(tabs: _tabs, controller: controller),
               Expanded(
-                child: TabBarView(
-                  controller: controller,
-                  children: [for (final t in _tabs) t.content],
+                child: NestedScrollView(
+                  controller: _outerController,
+                  headerSliverBuilder: (context, _) => [
+                    // Floating, non-pinned header carrying just the tab strip:
+                    // it scrolls away as the list scrolls down and snaps back
+                    // on scroll-up (and, via [_revealTabStrip], on tab change).
+                    SliverAppBar(
+                      primary: false,
+                      pinned: false,
+                      floating: true,
+                      snap: true,
+                      automaticallyImplyLeading: false,
+                      toolbarHeight: 0,
+                      backgroundColor: Colors.transparent,
+                      surfaceTintColor: Colors.transparent,
+                      elevation: 0,
+                      scrolledUnderElevation: 0,
+                      bottom: PreferredSize(
+                        preferredSize: const Size.fromHeight(_tabStripHeight),
+                        child: _VehicleTabBar(
+                          tabs: _tabs,
+                          controller: controller,
+                        ),
+                      ),
+                    ),
+                  ],
+                  body: TabBarView(
+                    controller: controller,
+                    children: [for (final t in _tabs) t.content],
+                  ),
                 ),
               ),
             ],
@@ -138,40 +198,48 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   }) {
     final (Widget content, void Function(WidgetRef) refresh) = switch (tab) {
       VehicleTab.odometer => (
-          OdometerTab(vehicleId: vehicleId, useHours: useHours),
-          (ref) => ref.invalidate(odometerRecordsProvider(vehicleId)),
-        ),
-      VehicleTab.service => _genericTab(vehicleId, RecordKind.service, useHours),
+        OdometerTab(vehicleId: vehicleId, useHours: useHours),
+        (ref) => ref.invalidate(odometerRecordsProvider(vehicleId)),
+      ),
+      VehicleTab.service => _genericTab(
+        vehicleId,
+        RecordKind.service,
+        useHours,
+      ),
       VehicleTab.repair => _genericTab(vehicleId, RecordKind.repair, useHours),
-      VehicleTab.upgrade => _genericTab(vehicleId, RecordKind.upgrade, useHours),
+      VehicleTab.upgrade => _genericTab(
+        vehicleId,
+        RecordKind.upgrade,
+        useHours,
+      ),
       VehicleTab.fuel => (
-          FuelTab(vehicleId: vehicleId, useHours: useHours),
-          (ref) {
-            ref.invalidate(gasRecordsProvider(vehicleId));
-            ref.invalidate(gasStatsProvider(vehicleId));
-          },
-        ),
+        FuelTab(vehicleId: vehicleId, useHours: useHours),
+        (ref) {
+          ref.invalidate(gasRecordsProvider(vehicleId));
+          ref.invalidate(gasStatsProvider(vehicleId));
+        },
+      ),
       VehicleTab.tax => _genericTab(vehicleId, RecordKind.tax, useHours),
       VehicleTab.supply => (
-          SupplyTab(vehicleId: vehicleId),
-          (ref) => ref.invalidate(supplyRecordsProvider(vehicleId)),
-        ),
+        SupplyTab(vehicleId: vehicleId),
+        (ref) => ref.invalidate(supplyRecordsProvider(vehicleId)),
+      ),
       VehicleTab.plan => (
-          PlanTab(vehicleId: vehicleId),
-          (ref) => ref.invalidate(planRecordsProvider(vehicleId)),
-        ),
+        PlanTab(vehicleId: vehicleId),
+        (ref) => ref.invalidate(planRecordsProvider(vehicleId)),
+      ),
       VehicleTab.reminder => (
-          ReminderTab(vehicleId: vehicleId, useHours: useHours),
-          (ref) => ref.invalidate(remindersProvider(vehicleId)),
-        ),
+        ReminderTab(vehicleId: vehicleId, useHours: useHours),
+        (ref) => ref.invalidate(remindersProvider(vehicleId)),
+      ),
       VehicleTab.note => (
-          NoteTab(vehicleId: vehicleId),
-          (ref) => ref.invalidate(notesProvider(vehicleId)),
-        ),
+        NoteTab(vehicleId: vehicleId),
+        (ref) => ref.invalidate(notesProvider(vehicleId)),
+      ),
       VehicleTab.equipment => (
-          EquipmentTab(vehicleId: vehicleId, useHours: useHours),
-          (ref) => ref.invalidate(equipmentRecordsProvider(vehicleId)),
-        ),
+        EquipmentTab(vehicleId: vehicleId, useHours: useHours),
+        (ref) => ref.invalidate(equipmentRecordsProvider(vehicleId)),
+      ),
     };
     return _VehicleTab(tab.label(l10n), tab.icon, content, refresh);
   }
@@ -179,12 +247,15 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   /// The generic (date + cost) record tab + its refresh, shared by
   /// service / repair / upgrade / tax.
   (Widget, void Function(WidgetRef)) _genericTab(
-          int vehicleId, RecordKind kind, bool useHours) =>
-      (
-        GenericRecordsTab(vehicleId: vehicleId, kind: kind, useHours: useHours),
-        (ref) => ref.invalidate(
-            vehicleRecordsProvider((vehicleId: vehicleId, kind: kind))),
-      );
+    int vehicleId,
+    RecordKind kind,
+    bool useHours,
+  ) => (
+    GenericRecordsTab(vehicleId: vehicleId, kind: kind, useHours: useHours),
+    (ref) => ref.invalidate(
+      vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)),
+    ),
+  );
 }
 
 /// A tab's label, icon, content pane, and the quiet background-refresh it
@@ -277,8 +348,11 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    final placeholder =
-        Icon(Icons.directions_car, size: 22, color: t.textTertiary);
+    final placeholder = Icon(
+      Icons.directions_car,
+      size: 22,
+      color: t.textTertiary,
+    );
     final image = vehicle?.imageLocation ?? '';
     return Container(
       width: 44,
@@ -328,7 +402,8 @@ class _VehicleTabBar extends StatelessWidget {
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         overlayColor: WidgetStatePropertyAll(
-            t.accentGold.withValues(alpha: 0.06)),
+          t.accentGold.withValues(alpha: 0.06),
+        ),
         indicator: BoxDecoration(
           color: t.accentGold.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(20),

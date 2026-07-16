@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -12,8 +13,14 @@ import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
 
-const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
-const _volumeFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
+const _odometerFormat = ShiftDigitsFormatter(
+  decimalDigits: 0,
+  minIntegerDigits: 6,
+);
+const _volumeFormat = ShiftDigitsFormatter(
+  decimalDigits: 2,
+  minIntegerDigits: 3,
+);
 const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Opens the "Add fuel record" form as a modal bottom sheet. Pass [existing] to
@@ -27,6 +34,7 @@ Future<bool?> showAddFuelForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddFuelForm(vehicleId: vehicleId, existing: existing),
@@ -126,8 +134,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                     ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed:
-                        _submitting ? null : () => Navigator.pop(context),
+                    onPressed: _submitting
+                        ? null
+                        : () => Navigator.pop(context),
                   ),
                 ],
               ),
@@ -178,7 +187,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
-                decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formTagsOptional,
+                ),
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -186,8 +198,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 enabled: !_submitting,
                 minLines: 2,
                 maxLines: 4,
-                decoration:
-                    dashFieldDecoration(t, labelText: l10n.formNotesOptional),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formNotesOptional,
+                ),
               ),
               const SizedBox(height: 14),
               AttachmentsField(
@@ -199,7 +213,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                  style: TextStyle(
+                    color: t.danger,
+                    fontFamily: DashTokens.fontUi,
+                  ),
                 ),
               ],
               const SizedBox(height: 20),
@@ -207,8 +224,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed:
-                          _submitting ? null : () => Navigator.pop(context),
+                      onPressed: _submitting
+                          ? null
+                          : () => Navigator.pop(context),
                       child: Text(l10n.actionCancel),
                     ),
                   ),
@@ -256,7 +274,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               ? l10n.validationRequired
               : l10n.validationNumber;
         }
-        if (value < 0 || (!allowZero && value == 0)) return l10n.validationNumber;
+        if (value < 0 || (!allowZero && value == 0)) {
+          return l10n.validationNumber;
+        }
         return null;
       },
     );
@@ -315,7 +335,11 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       if (!mounted) return;
       Navigator.pop(context, true);
       messenger.showSnackBar(
-        SnackBar(content: Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+        SnackBar(
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -327,7 +351,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }
@@ -360,7 +386,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       _error = null;
     });
     try {
-      await ref.read(vehiclesRepositoryProvider).deleteGasRecord(widget.existing!.id);
+      await ref
+          .read(vehiclesRepositoryProvider)
+          .deleteGasRecord(widget.existing!.id);
       _invalidateFuelProviders();
       if (!mounted) return;
       Navigator.pop(context, true);

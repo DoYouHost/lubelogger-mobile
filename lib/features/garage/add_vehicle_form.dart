@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/layout/responsive.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,6 +24,7 @@ const _minVehicleDeleteVersion = '1.7.0';
 Future<int?> showVehicleForm(BuildContext context, {Vehicle? existing}) {
   return showModalBottomSheet<int>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _VehicleForm(existing: existing),
@@ -42,14 +44,14 @@ enum _FuelType {
   static _FuelType of(Vehicle v) => v.isElectric
       ? _FuelType.electric
       : v.isDiesel
-          ? _FuelType.diesel
-          : _FuelType.gasoline;
+      ? _FuelType.diesel
+      : _FuelType.gasoline;
 
   String label(AppLocalizations l10n) => switch (this) {
-        _FuelType.gasoline => l10n.fuelTypeGasoline,
-        _FuelType.diesel => l10n.fuelTypeDiesel,
-        _FuelType.electric => l10n.fuelTypeElectric,
-      };
+    _FuelType.gasoline => l10n.fuelTypeGasoline,
+    _FuelType.diesel => l10n.fuelTypeDiesel,
+    _FuelType.electric => l10n.fuelTypeElectric,
+  };
 }
 
 class _VehicleForm extends ConsumerStatefulWidget {
@@ -161,14 +163,18 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           enabled: !_submitting,
           textCapitalization: TextCapitalization.characters,
           decoration: dashFieldDecoration(
-              t, labelText: l10n.formVehicleLicensePlate),
+            t,
+            labelText: l10n.formVehicleLicensePlate,
+          ),
           validator: _requiredValidator,
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<_FuelType>(
           initialValue: _fuelType,
-          decoration:
-              dashFieldDecoration(t, labelText: l10n.formVehicleFuelType),
+          decoration: dashFieldDecoration(
+            t,
+            labelText: l10n.formVehicleFuelType,
+          ),
           items: [
             for (final v in _FuelType.values)
               DropdownMenuItem(value: v, child: Text(v.label(l10n))),
@@ -255,8 +261,12 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: Text(l10n.vehicleDeleteUnsupportedTitle),
-          content: Text(l10n.vehicleDeleteUnsupportedMessage(
-              _minVehicleDeleteVersion, serverVersion)),
+          content: Text(
+            l10n.vehicleDeleteUnsupportedMessage(
+              _minVehicleDeleteVersion,
+              serverVersion,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -356,8 +366,13 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
       ref.invalidate(garageProvider);
       if (!mounted) return;
       Navigator.pop(context, resultId);
-      messenger.showSnackBar(SnackBar(
-          content: Text(existing == null ? l10n.vehicleAdded : l10n.vehicleUpdated)));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            existing == null ? l10n.vehicleAdded : l10n.vehicleUpdated,
+          ),
+        ),
+      );
     } on AppApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -368,7 +383,9 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = existing == null ? l10n.vehicleAddError : l10n.vehicleUpdateError;
+        _error = existing == null
+            ? l10n.vehicleAddError
+            : l10n.vehicleUpdateError;
       });
     }
   }

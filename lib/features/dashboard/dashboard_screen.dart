@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/format/formatters.dart';
 import '../../core/format/gas_stats.dart';
 import '../../core/format/monthly_breakdown.dart';
+import '../../core/layout/responsive.dart';
 import '../../core/models/vehicle_info.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
@@ -81,103 +82,127 @@ class _DashboardBody extends ConsumerWidget {
     final units = ref.watch(unitsSettingsProvider);
     final symbol = ref.watch(currencySymbolProvider);
     final stats = ref.watch(gasStatsProvider(vehicleId)).valueOrNull;
-    final breakdown = ref.watch(monthlyBreakdownProvider(vehicleId)).valueOrNull;
+    final breakdown = ref
+        .watch(monthlyBreakdownProvider(vehicleId))
+        .valueOrNull;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         _StatBlock(info: info, stats: stats, units: units, symbol: symbol),
         const SizedBox(height: 16),
-        ChartCard(
-          title: l10n.chartExpensesByType,
-          child: DonutChart(
-            emptyLabel: l10n.chartNoData,
-            slices: [
-              ChartSlice(
-                label: l10n.catService,
-                value: info.serviceRecordCost,
-                color: DashTokens.of(context).accentBlue,
-                legendValue: Formatters.currency(info.serviceRecordCost, symbol),
+        // Charts flow two-up on wider (landscape) screens, single column on
+        // portrait phones.
+        ResponsiveCardWrap(
+          maxColumns: 2,
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            ChartCard(
+              title: l10n.chartExpensesByType,
+              child: DonutChart(
+                emptyLabel: l10n.chartNoData,
+                slices: [
+                  ChartSlice(
+                    label: l10n.catService,
+                    value: info.serviceRecordCost,
+                    color: DashTokens.of(context).accentBlue,
+                    legendValue: Formatters.currency(
+                      info.serviceRecordCost,
+                      symbol,
+                    ),
+                  ),
+                  ChartSlice(
+                    label: l10n.catRepairs,
+                    value: info.repairRecordCost,
+                    color: _repairsColor,
+                    legendValue: Formatters.currency(
+                      info.repairRecordCost,
+                      symbol,
+                    ),
+                  ),
+                  ChartSlice(
+                    label: l10n.catUpgrades,
+                    value: info.upgradeRecordCost,
+                    color: _upgradesColor,
+                    legendValue: Formatters.currency(
+                      info.upgradeRecordCost,
+                      symbol,
+                    ),
+                  ),
+                  ChartSlice(
+                    label: l10n.catFuel,
+                    value: info.gasRecordCost,
+                    color: DashTokens.of(context).accentGold,
+                    legendValue: Formatters.currency(
+                      info.gasRecordCost,
+                      symbol,
+                    ),
+                  ),
+                  ChartSlice(
+                    label: l10n.catTax,
+                    value: info.taxRecordCost,
+                    color: DashTokens.of(context).danger,
+                    legendValue: Formatters.currency(
+                      info.taxRecordCost,
+                      symbol,
+                    ),
+                  ),
+                ],
               ),
-              ChartSlice(
-                label: l10n.catRepairs,
-                value: info.repairRecordCost,
-                color: _repairsColor,
-                legendValue: Formatters.currency(info.repairRecordCost, symbol),
+            ),
+            ChartCard(
+              title: l10n.chartExpensesDistanceByMonth,
+              child: MonthlyComboChart(
+                currencySymbol: symbol,
+                expensesLegend: l10n.legendExpenses,
+                distanceLegend:
+                    '${l10n.legendDistance} (${units.distance.label})',
+                emptyLabel: l10n.chartNoData,
+                months: _comboMonths(context, breakdown, units),
               ),
-              ChartSlice(
-                label: l10n.catUpgrades,
-                value: info.upgradeRecordCost,
-                color: _upgradesColor,
-                legendValue: Formatters.currency(info.upgradeRecordCost, symbol),
+            ),
+            ChartCard(
+              title: l10n.chartRemindersByUrgency,
+              child: DonutChart(
+                emptyLabel: l10n.chartNoReminders,
+                slices: [
+                  ChartSlice(
+                    label: l10n.urgencyNotUrgent,
+                    value: info.notUrgentReminderCount.toDouble(),
+                    color: _okGreen,
+                    legendValue: '${info.notUrgentReminderCount}',
+                  ),
+                  ChartSlice(
+                    label: l10n.urgencyUrgent,
+                    value: info.urgentReminderCount.toDouble(),
+                    color: DashTokens.of(context).accentOrange,
+                    legendValue: '${info.urgentReminderCount}',
+                  ),
+                  ChartSlice(
+                    label: l10n.urgencyVeryUrgent,
+                    value: info.veryUrgentReminderCount.toDouble(),
+                    color: DashTokens.of(context).danger,
+                    legendValue: '${info.veryUrgentReminderCount}',
+                  ),
+                  ChartSlice(
+                    label: l10n.urgencyPastDue,
+                    value: info.pastDueReminderCount.toDouble(),
+                    color: DashTokens.of(context).textTertiary,
+                    legendValue: '${info.pastDueReminderCount}',
+                  ),
+                ],
               ),
-              ChartSlice(
-                label: l10n.catFuel,
-                value: info.gasRecordCost,
-                color: DashTokens.of(context).accentGold,
-                legendValue: Formatters.currency(info.gasRecordCost, symbol),
+            ),
+            ChartCard(
+              title: '${l10n.chartFuelMileageByMonth} (${units.economy.label})',
+              child: MonthlyBars(
+                lowerIsBetter: units.economy.lowerIsBetter,
+                emptyLabel: l10n.chartNoData,
+                bars: _monthlyBars(stats, units),
               ),
-              ChartSlice(
-                label: l10n.catTax,
-                value: info.taxRecordCost,
-                color: DashTokens.of(context).danger,
-                legendValue: Formatters.currency(info.taxRecordCost, symbol),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        ChartCard(
-          title: l10n.chartExpensesDistanceByMonth,
-          child: MonthlyComboChart(
-            currencySymbol: symbol,
-            expensesLegend: l10n.legendExpenses,
-            distanceLegend: '${l10n.legendDistance} (${units.distance.label})',
-            emptyLabel: l10n.chartNoData,
-            months: _comboMonths(context, breakdown, units),
-          ),
-        ),
-        const SizedBox(height: 16),
-        ChartCard(
-          title: l10n.chartRemindersByUrgency,
-          child: DonutChart(
-            emptyLabel: l10n.chartNoReminders,
-            slices: [
-              ChartSlice(
-                label: l10n.urgencyNotUrgent,
-                value: info.notUrgentReminderCount.toDouble(),
-                color: _okGreen,
-                legendValue: '${info.notUrgentReminderCount}',
-              ),
-              ChartSlice(
-                label: l10n.urgencyUrgent,
-                value: info.urgentReminderCount.toDouble(),
-                color: DashTokens.of(context).accentOrange,
-                legendValue: '${info.urgentReminderCount}',
-              ),
-              ChartSlice(
-                label: l10n.urgencyVeryUrgent,
-                value: info.veryUrgentReminderCount.toDouble(),
-                color: DashTokens.of(context).danger,
-                legendValue: '${info.veryUrgentReminderCount}',
-              ),
-              ChartSlice(
-                label: l10n.urgencyPastDue,
-                value: info.pastDueReminderCount.toDouble(),
-                color: DashTokens.of(context).textTertiary,
-                legendValue: '${info.pastDueReminderCount}',
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        ChartCard(
-          title: '${l10n.chartFuelMileageByMonth} (${units.economy.label})',
-          child: MonthlyBars(
-            lowerIsBetter: units.economy.lowerIsBetter,
-            emptyLabel: l10n.chartNoData,
-            bars: _monthlyBars(stats, units),
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -202,10 +227,14 @@ class _DashboardBody extends ConsumerWidget {
           return ComboMonth(
             label: _monthLabels[month - 1],
             cost: entry?.totalCost ?? 0,
-            barColor:
-                dominant == null ? t.accentGold : _categoryColor(dominant, t),
+            barColor: dominant == null
+                ? t.accentGold
+                : _categoryColor(dominant, t),
             distance: Formatters.distanceValue(
-                entry?.distance ?? 0, units.base, units.distance),
+              entry?.distance ?? 0,
+              units.base,
+              units.distance,
+            ),
           );
         }(),
     ];
@@ -225,7 +254,11 @@ class _DashboardBody extends ConsumerWidget {
           value: byMonth[month] == null
               ? null
               : Formatters.fuelEconomyValue(
-                  byMonth[month]!, 1, units.base, units.economy),
+                  byMonth[month]!,
+                  1,
+                  units.base,
+                  units.economy,
+                ),
         ),
     ];
   }
@@ -253,32 +286,51 @@ class _StatBlock extends ConsumerWidget {
     final odometer = useHours
         ? '${Formatters.odometer(info.lastReportedOdometer)} h'
         : Formatters.distance(
-            info.lastReportedOdometer, units.base, units.distance);
+            info.lastReportedOdometer,
+            units.base,
+            units.distance,
+          );
 
-    final lastOdometerDate =
-        ref.watch(lastOdometerDateProvider(info.vehicle.id)).valueOrNull;
-    final lastOdometerDateLabel =
-        lastOdometerDate == null ? null : units.formatDate(lastOdometerDate);
+    final lastOdometerDate = ref
+        .watch(lastOdometerDateProvider(info.vehicle.id))
+        .valueOrNull;
+    final lastOdometerDateLabel = lastOdometerDate == null
+        ? null
+        : units.formatDate(lastOdometerDate);
 
     final distance = stats == null
         ? '—'
         : useHours
-            ? '${Formatters.odometer(stats!.distanceSpan)} h'
-            : Formatters.distance(stats!.distanceSpan, units.base, units.distance);
+        ? '${Formatters.odometer(stats!.distanceSpan)} h'
+        : Formatters.distance(stats!.distanceSpan, units.base, units.distance);
 
     final economy = stats == null
         ? '—'
-        : Formatters.fuelEconomy(stats!.totalRawDistance, stats!.totalRawVolume,
-            units.base, units.economy);
+        : Formatters.fuelEconomy(
+            stats!.totalRawDistance,
+            stats!.totalRawVolume,
+            units.base,
+            units.economy,
+          );
 
-    return Column(
-      children: [
-        _StatRow(value: odometer, secondary: lastOdometerDateLabel),
-        _StatRow(value: distance, label: l10n.statDistanceTraveled),
-        _StatRow(value: Formatters.currency(info.totalCost, symbol), label: l10n.statTotalCost),
-        _StatRow(value: economy, label: l10n.statAvgEconomy),
-      ],
-    );
+    final rows = [
+      _StatRow(value: odometer, secondary: lastOdometerDateLabel),
+      _StatRow(value: distance, label: l10n.statDistanceTraveled),
+      _StatRow(
+        value: Formatters.currency(info.totalCost, symbol),
+        label: l10n.statTotalCost,
+      ),
+      _StatRow(value: economy, label: l10n.statAvgEconomy),
+    ];
+
+    // Side by side across the width in landscape; stacked in portrait.
+    if (context.isWideLayout) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [for (final row in rows) Expanded(child: row)],
+      );
+    }
+    return Column(children: rows);
   }
 }
 

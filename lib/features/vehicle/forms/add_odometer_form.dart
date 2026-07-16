@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -12,7 +13,10 @@ import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
 
-const _odometerFormat = ShiftDigitsFormatter(decimalDigits: 0, minIntegerDigits: 6);
+const _odometerFormat = ShiftDigitsFormatter(
+  decimalDigits: 0,
+  minIntegerDigits: 6,
+);
 
 /// Opens the "Add odometer reading" form as a modal bottom sheet. Pass
 /// [existing] to edit that reading instead (prefilled, with a delete option).
@@ -25,6 +29,7 @@ Future<bool?> showAddOdometerForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddOdometerForm(vehicleId: vehicleId, existing: existing),
@@ -115,8 +120,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                     ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed:
-                        _submitting ? null : () => Navigator.pop(context),
+                    onPressed: _submitting
+                        ? null
+                        : () => Navigator.pop(context),
                   ),
                 ],
               ),
@@ -132,8 +138,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 keyboardType: TextInputType.number,
                 inputFormatters: const [_odometerFormat],
                 style: const TextStyle(fontFamily: DashTokens.fontMono),
-                decoration: dashFieldDecoration(t,
-                    labelText: l10n.formOdometerLabel(distanceUnit)),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formOdometerLabel(distanceUnit),
+                ),
                 validator: (raw) {
                   final value = parseFormNumber(raw);
                   if (value == null) {
@@ -149,8 +157,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
-                decoration:
-                    dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formTagsOptional,
+                ),
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -158,8 +168,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 enabled: !_submitting,
                 minLines: 2,
                 maxLines: 4,
-                decoration:
-                    dashFieldDecoration(t, labelText: l10n.formNotesOptional),
+                decoration: dashFieldDecoration(
+                  t,
+                  labelText: l10n.formNotesOptional,
+                ),
               ),
               const SizedBox(height: 14),
               AttachmentsField(
@@ -171,8 +183,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style:
-                      TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+                  style: TextStyle(
+                    color: t.danger,
+                    fontFamily: DashTokens.fontUi,
+                  ),
                 ),
               ],
               const SizedBox(height: 20),
@@ -180,8 +194,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed:
-                          _submitting ? null : () => Navigator.pop(context),
+                      onPressed: _submitting
+                          ? null
+                          : () => Navigator.pop(context),
                       child: Text(l10n.actionCancel),
                     ),
                   ),
@@ -254,8 +269,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -267,8 +284,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }

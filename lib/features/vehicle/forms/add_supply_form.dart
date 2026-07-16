@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -13,7 +14,10 @@ import 'attachments_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
 
-const _quantityFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 1);
+const _quantityFormat = ShiftDigitsFormatter(
+  decimalDigits: 2,
+  minIntegerDigits: 1,
+);
 const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Opens the add/edit form for a supply / part record as a modal bottom sheet.
@@ -27,6 +31,7 @@ Future<bool?> showAddSupplyForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddSupplyForm(vehicleId: vehicleId, existing: existing),
@@ -123,15 +128,19 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
         TextFormField(
           controller: _partNumber,
           enabled: !_submitting,
-          decoration:
-              dashFieldDecoration(t, labelText: l10n.formSupplyPartNumber),
+          decoration: dashFieldDecoration(
+            t,
+            labelText: l10n.formSupplyPartNumber,
+          ),
         ),
         const SizedBox(height: 14),
         TextFormField(
           controller: _partSupplier,
           enabled: !_submitting,
-          decoration:
-              dashFieldDecoration(t, labelText: l10n.formSupplyPartSupplier),
+          decoration: dashFieldDecoration(
+            t,
+            labelText: l10n.formSupplyPartSupplier,
+          ),
         ),
         const SizedBox(height: 14),
         _numberField(
@@ -192,7 +201,9 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
               ? l10n.validationRequired
               : l10n.validationNumber;
         }
-        if (value < 0 || (!allowZero && value == 0)) return l10n.validationNumber;
+        if (value < 0 || (!allowZero && value == 0)) {
+          return l10n.validationNumber;
+        }
         return null;
       },
     );
@@ -251,8 +262,10 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -264,8 +277,9 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }

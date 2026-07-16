@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -34,6 +35,7 @@ Future<bool?> showAddPlanForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddPlanForm(vehicleId: vehicleId, existing: existing),
@@ -71,7 +73,9 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
     final e = widget.existing;
     // Fall back to sensible defaults for add, or when a stored value isn't one
     // the API can write back (unknown enum, or a Done plan being edited).
-    _type = (e != null && e.type != PlanType.unknown) ? e.type : PlanType.service;
+    _type = (e != null && e.type != PlanType.unknown)
+        ? e.type
+        : PlanType.service;
     _priority = (e != null && e.priority != PlanPriority.unknown)
         ? e.priority
         : PlanPriority.normal;
@@ -126,8 +130,9 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
               if (v != PlanType.unknown)
                 DropdownMenuItem(value: v, child: Text(_typeLabel(v, l10n))),
           ],
-          onChanged:
-              _submitting ? null : (v) => setState(() => _type = v ?? _type),
+          onChanged: _submitting
+              ? null
+              : (v) => setState(() => _type = v ?? _type),
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<PlanPriority>(
@@ -136,7 +141,10 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           items: [
             for (final v in PlanPriority.values)
               if (v != PlanPriority.unknown)
-                DropdownMenuItem(value: v, child: Text(_priorityLabel(v, l10n))),
+                DropdownMenuItem(
+                  value: v,
+                  child: Text(_priorityLabel(v, l10n)),
+                ),
           ],
           onChanged: _submitting
               ? null
@@ -155,10 +163,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
               : (v) => setState(() => _progress = v ?? _progress),
         ),
         const SizedBox(height: 14),
-        _CostField(
-          controller: _cost,
-          enabled: !_submitting,
-        ),
+        _CostField(controller: _cost, enabled: !_submitting),
         const SizedBox(height: 14),
         TextFormField(
           controller: _notes,
@@ -217,8 +222,10 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -230,8 +237,9 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }
@@ -289,26 +297,26 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
 }
 
 String _typeLabel(PlanType v, AppLocalizations l10n) => switch (v) {
-      PlanType.service => l10n.catService,
-      PlanType.repair => l10n.catRepairs,
-      PlanType.upgrade => l10n.catUpgrades,
-      PlanType.unknown => l10n.catService,
-    };
+  PlanType.service => l10n.catService,
+  PlanType.repair => l10n.catRepairs,
+  PlanType.upgrade => l10n.catUpgrades,
+  PlanType.unknown => l10n.catService,
+};
 
 String _priorityLabel(PlanPriority v, AppLocalizations l10n) => switch (v) {
-      PlanPriority.critical => l10n.planPriorityCritical,
-      PlanPriority.normal => l10n.planPriorityNormal,
-      PlanPriority.low => l10n.planPriorityLow,
-      PlanPriority.unknown => l10n.planPriorityNormal,
-    };
+  PlanPriority.critical => l10n.planPriorityCritical,
+  PlanPriority.normal => l10n.planPriorityNormal,
+  PlanPriority.low => l10n.planPriorityLow,
+  PlanPriority.unknown => l10n.planPriorityNormal,
+};
 
 String _progressLabel(PlanProgress v, AppLocalizations l10n) => switch (v) {
-      PlanProgress.backlog => l10n.planProgressBacklog,
-      PlanProgress.inProgress => l10n.planProgressInProgress,
-      PlanProgress.testing => l10n.planProgressTesting,
-      PlanProgress.done => l10n.planProgressDone,
-      PlanProgress.unknown => l10n.planProgressBacklog,
-    };
+  PlanProgress.backlog => l10n.planProgressBacklog,
+  PlanProgress.inProgress => l10n.planProgressInProgress,
+  PlanProgress.testing => l10n.planProgressTesting,
+  PlanProgress.done => l10n.planProgressDone,
+  PlanProgress.unknown => l10n.planProgressBacklog,
+};
 
 /// Required cost field (allows 0) shared shape with the other forms' numeric
 /// inputs — monospace, shift-digits entry.

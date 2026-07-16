@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -22,6 +23,7 @@ Future<bool?> showAddEquipmentForm(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _AddEquipmentForm(vehicleId: vehicleId, existing: existing),
@@ -90,8 +92,10 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
         TextFormField(
           controller: _name,
           enabled: !_submitting,
-          decoration:
-              dashFieldDecoration(t, labelText: l10n.formEquipmentNameLabel),
+          decoration: dashFieldDecoration(
+            t,
+            labelText: l10n.formEquipmentNameLabel,
+          ),
           validator: (raw) => (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
               : null,
@@ -101,7 +105,9 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.formEquipmentEquipped),
           value: _isEquipped,
-          onChanged: _submitting ? null : (v) => setState(() => _isEquipped = v),
+          onChanged: _submitting
+              ? null
+              : (v) => setState(() => _isEquipped = v),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -162,8 +168,10 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
       Navigator.pop(context, true);
       messenger.showSnackBar(
         SnackBar(
-            content:
-                Text(existing == null ? l10n.recordAdded : l10n.recordUpdated)),
+          content: Text(
+            existing == null ? l10n.recordAdded : l10n.recordUpdated,
+          ),
+        ),
       );
     } on AppApiException catch (e) {
       if (!mounted) return;
@@ -175,8 +183,9 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error =
-            existing == null ? l10n.recordAddError : l10n.recordUpdateError;
+        _error = existing == null
+            ? l10n.recordAddError
+            : l10n.recordUpdateError;
       });
     }
   }

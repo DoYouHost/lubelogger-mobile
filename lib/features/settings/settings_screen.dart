@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/layout/responsive.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
@@ -35,273 +36,282 @@ class SettingsScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: dashAppBar(context, title: l10n.settingsTitle),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            _Section(
-              title: l10n.settingsUnits,
-              footnote: l10n.settingsUnitsMetricNote,
-              children: [
-                _SettingRow(
-                  label: l10n.settingsStorageBase,
-                  control: SegmentedButton<MeasurementSystem>(
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: MeasurementSystem.metric,
-                        label: Text(l10n.baseMetric),
-                      ),
-                      ButtonSegment(
-                        value: MeasurementSystem.imperial,
-                        label: Text(l10n.baseImperial),
-                      ),
-                    ],
-                    selected: {units.base},
-                    onSelectionChanged: (s) => unitsCtl.setBase(s.first),
-                  ),
-                ),
-                _divider(t),
-                _SettingRow(
-                  label: l10n.settingsCurrency,
-                  control: _Dropdown<CurrencyOption>(
-                    value: units.currency,
-                    items: CurrencyOption.values,
-                    labelOf: (c) => c.fixedSymbol == null
-                        ? l10n.currencyAuto(serverSymbol)
-                        : '${c.fixedSymbol} (${c.name.toUpperCase()})',
-                    onChanged: unitsCtl.setCurrency,
-                  ),
-                ),
-                _divider(t),
-                _SettingRow(
-                  label: l10n.settingsDistance,
-                  control: SegmentedButton<DistanceUnit>(
-                    showSelectedIcon: false,
-                    segments: [
-                      for (final u in DistanceUnit.values)
-                        ButtonSegment(value: u, label: Text(u.label)),
-                    ],
-                    selected: {units.distance},
-                    onSelectionChanged: (s) => unitsCtl.setDistance(s.first),
-                  ),
-                ),
-                _divider(t),
-                _SettingRow(
-                  label: l10n.settingsFuelEconomy,
-                  control: _Dropdown<FuelEconomyUnit>(
-                    value: units.economy,
-                    items: FuelEconomyUnit.values,
-                    labelOf: (e) => e.label,
-                    onChanged: unitsCtl.setEconomy,
-                  ),
-                ),
-                _divider(t),
-                _SettingRow(
-                  label: l10n.settingsDateFormat,
-                  control: _Dropdown<DateOrder>(
-                    value: units.dateOrder,
-                    items: DateOrder.values,
-                    labelOf: (o) => o.labelWith(units.dateSeparator),
-                    onChanged: unitsCtl.setDateOrder,
-                  ),
-                ),
-                _divider(t),
-                _SettingRow(
-                  label: l10n.settingsDateSeparator,
-                  control: _Dropdown<DateSeparator>(
-                    value: units.dateSeparator,
-                    items: DateSeparator.values,
-                    labelOf: (s) => units.dateOrder.labelWith(s),
-                    onChanged: unitsCtl.setDateSeparator,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _Section(
-              title: l10n.settingsVisibleTabs,
-              footnote: l10n.settingsVisibleTabsNote,
-              children: [
-                ReorderableListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  // Drag only from the explicit handle so the row's switch and
-                  // tap-to-toggle keep working.
-                  buildDefaultDragHandles: false,
-                  itemCount: tabOrder.length,
-                  onReorderItem: tabOrderCtl.move,
-                  itemBuilder: (context, i) {
-                    final tab = tabOrder[i];
-                    return _TabOrderRow(
-                      key: ValueKey(tab),
-                      index: i,
-                      icon: tab.icon,
-                      label: tab.label(l10n),
-                      value: visibleTabs.contains(tab),
-                      onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _Section(
-              title: l10n.settingsNotifications,
-              footnote: l10n.settingsNotificationsNote,
-              children: [
-                _ToggleRow(
-                  icon: Icons.notifications_active_outlined,
-                  label: l10n.notifRemindersToggle,
-                  value: remindersOn,
-                  onChanged: (v) async {
-                    final ok = await remindersCtl.setEnabled(v);
-                    if (!ok && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.notifPermissionDenied)),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _Section(
-              title: l10n.settingsServer,
-              children: [
-                if (who?.displayName.isNotEmpty ?? profile?.label != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      l10n.signedInAs(who?.displayName ?? profile!.label!),
-                      style: TextStyle(
-                        fontFamily: DashTokens.fontUi,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: t.textPrimary,
-                      ),
-                    ),
-                  ),
-                if (who != null && who.emailAddress.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(
-                      who.emailAddress,
-                      style: TextStyle(
-                        fontFamily: DashTokens.fontUi,
-                        fontSize: 12.5,
-                        color: t.textSecondary,
-                      ),
-                    ),
-                  ),
-                if (who != null && (who.isRoot || who.isAdmin))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Wrap(
-                      spacing: 6,
-                      children: [
-                        if (who.isRoot) _roleChip(t, l10n.roleRoot),
-                        if (who.isAdmin) _roleChip(t, l10n.roleAdmin),
+        body: ContentConstraint(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            children: [
+              _Section(
+                title: l10n.settingsUnits,
+                footnote: l10n.settingsUnitsMetricNote,
+                children: [
+                  _SettingRow(
+                    label: l10n.settingsStorageBase,
+                    control: SegmentedButton<MeasurementSystem>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(
+                          value: MeasurementSystem.metric,
+                          label: Text(l10n.baseMetric),
+                        ),
+                        ButtonSegment(
+                          value: MeasurementSystem.imperial,
+                          label: Text(l10n.baseImperial),
+                        ),
                       ],
+                      selected: {units.base},
+                      onSelectionChanged: (s) => unitsCtl.setBase(s.first),
                     ),
                   ),
-                Text(
-                  profile?.baseUrl ?? '',
-                  style: TextStyle(
-                    fontFamily: DashTokens.fontMono,
-                    fontSize: 12,
-                    color: t.textTertiary,
+                  _divider(t),
+                  _SettingRow(
+                    label: l10n.settingsCurrency,
+                    control: _Dropdown<CurrencyOption>(
+                      value: units.currency,
+                      items: CurrencyOption.values,
+                      labelOf: (c) => c.fixedSymbol == null
+                          ? l10n.currencyAuto(serverSymbol)
+                          : '${c.fixedSymbol} (${c.name.toUpperCase()})',
+                      onChanged: unitsCtl.setCurrency,
+                    ),
                   ),
-                ),
-                if (who?.isRoot ?? false) ...[
-                  const SizedBox(height: 16),
-                  const _BackupButton(),
+                  _divider(t),
+                  _SettingRow(
+                    label: l10n.settingsDistance,
+                    control: SegmentedButton<DistanceUnit>(
+                      showSelectedIcon: false,
+                      segments: [
+                        for (final u in DistanceUnit.values)
+                          ButtonSegment(value: u, label: Text(u.label)),
+                      ],
+                      selected: {units.distance},
+                      onSelectionChanged: (s) => unitsCtl.setDistance(s.first),
+                    ),
+                  ),
+                  _divider(t),
+                  _SettingRow(
+                    label: l10n.settingsFuelEconomy,
+                    control: _Dropdown<FuelEconomyUnit>(
+                      value: units.economy,
+                      items: FuelEconomyUnit.values,
+                      labelOf: (e) => e.label,
+                      onChanged: unitsCtl.setEconomy,
+                    ),
+                  ),
+                  _divider(t),
+                  _SettingRow(
+                    label: l10n.settingsDateFormat,
+                    control: _Dropdown<DateOrder>(
+                      value: units.dateOrder,
+                      items: DateOrder.values,
+                      labelOf: (o) => o.labelWith(units.dateSeparator),
+                      onChanged: unitsCtl.setDateOrder,
+                    ),
+                  ),
+                  _divider(t),
+                  _SettingRow(
+                    label: l10n.settingsDateSeparator,
+                    control: _Dropdown<DateSeparator>(
+                      value: units.dateSeparator,
+                      items: DateSeparator.values,
+                      labelOf: (s) => units.dateOrder.labelWith(s),
+                      onChanged: unitsCtl.setDateSeparator,
+                    ),
+                  ),
                 ],
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: t.danger,
-                    side: BorderSide(color: t.danger.withValues(alpha: 0.5)),
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                title: l10n.settingsVisibleTabs,
+                footnote: l10n.settingsVisibleTabsNote,
+                children: [
+                  ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    // Drag only from the explicit handle so the row's switch and
+                    // tap-to-toggle keep working.
+                    buildDefaultDragHandles: false,
+                    itemCount: tabOrder.length,
+                    onReorderItem: tabOrderCtl.move,
+                    itemBuilder: (context, i) {
+                      final tab = tabOrder[i];
+                      return _TabOrderRow(
+                        key: ValueKey(tab),
+                        index: i,
+                        icon: tab.icon,
+                        label: tab.label(l10n),
+                        value: visibleTabs.contains(tab),
+                        onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
+                      );
+                    },
                   ),
-                  icon: const Icon(Icons.logout, size: 18),
-                  label: Text(l10n.logout),
-                  onPressed: () =>
-                      ref.read(serverProfileProvider.notifier).clear(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _Section(
-              title: l10n.settingsAbout,
-              children: [
-                Text(
-                  packageInfo?.appName ?? l10n.appTitle,
-                  style: TextStyle(
-                    fontFamily: DashTokens.fontUi,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: t.textPrimary,
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                title: l10n.settingsNotifications,
+                footnote: l10n.settingsNotificationsNote,
+                children: [
+                  _ToggleRow(
+                    icon: Icons.notifications_active_outlined,
+                    label: l10n.notifRemindersToggle,
+                    value: remindersOn,
+                    onChanged: (v) async {
+                      final ok = await remindersCtl.setEnabled(v);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.notifPermissionDenied)),
+                        );
+                      }
+                    },
                   ),
-                ),
-                if (packageInfo != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      l10n.appVersion(
-                          packageInfo.version, packageInfo.buildNumber),
-                      style: TextStyle(
-                        fontFamily: DashTokens.fontMono,
-                        fontSize: 12,
-                        color: t.textTertiary,
-                      ),
-                    ),
-                  ),
-                if (serverVersion != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      l10n.serverVersionLabel(serverVersion.currentVersion),
-                      style: TextStyle(
-                        fontFamily: DashTokens.fontMono,
-                        fontSize: 12,
-                        color: t.textTertiary,
-                      ),
-                    ),
-                  ),
-                  if (serverVersion.updateAvailable)
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                title: l10n.settingsServer,
+                children: [
+                  if (who?.displayName.isNotEmpty ?? profile?.label != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Row(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        l10n.signedInAs(who?.displayName ?? profile!.label!),
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontUi,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: t.textPrimary,
+                        ),
+                      ),
+                    ),
+                  if (who != null && who.emailAddress.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        who.emailAddress,
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontUi,
+                          fontSize: 12.5,
+                          color: t.textSecondary,
+                        ),
+                      ),
+                    ),
+                  if (who != null && (who.isRoot || who.isAdmin))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Wrap(
+                        spacing: 6,
                         children: [
-                          Icon(Icons.system_update_alt,
-                              size: 15, color: t.accentGold),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              l10n.updateAvailable(serverVersion.latestVersion),
-                              style: TextStyle(
-                                fontFamily: DashTokens.fontUi,
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: t.accentGold,
-                              ),
-                            ),
-                          ),
+                          if (who.isRoot) _roleChip(t, l10n.roleRoot),
+                          if (who.isAdmin) _roleChip(t, l10n.roleAdmin),
                         ],
                       ),
                     ),
-                ],
-                _divider(t),
-                _LinkRow(
-                  label: l10n.openSourceLicenses,
-                  onTap: () => showLicensePage(
-                    context: context,
-                    applicationName: packageInfo?.appName ?? l10n.appTitle,
-                    applicationVersion: packageInfo?.version,
+                  Text(
+                    profile?.baseUrl ?? '',
+                    style: TextStyle(
+                      fontFamily: DashTokens.fontMono,
+                      fontSize: 12,
+                      color: t.textTertiary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  if (who?.isRoot ?? false) ...[
+                    const SizedBox(height: 16),
+                    const _BackupButton(),
+                  ],
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: t.danger,
+                      side: BorderSide(color: t.danger.withValues(alpha: 0.5)),
+                    ),
+                    icon: const Icon(Icons.logout, size: 18),
+                    label: Text(l10n.logout),
+                    onPressed: () =>
+                        ref.read(serverProfileProvider.notifier).clear(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                title: l10n.settingsAbout,
+                children: [
+                  Text(
+                    packageInfo?.appName ?? l10n.appTitle,
+                    style: TextStyle(
+                      fontFamily: DashTokens.fontUi,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: t.textPrimary,
+                    ),
+                  ),
+                  if (packageInfo != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        l10n.appVersion(
+                          packageInfo.version,
+                          packageInfo.buildNumber,
+                        ),
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontMono,
+                          fontSize: 12,
+                          color: t.textTertiary,
+                        ),
+                      ),
+                    ),
+                  if (serverVersion != null) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        l10n.serverVersionLabel(serverVersion.currentVersion),
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontMono,
+                          fontSize: 12,
+                          color: t.textTertiary,
+                        ),
+                      ),
+                    ),
+                    if (serverVersion.updateAvailable)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.system_update_alt,
+                              size: 15,
+                              color: t.accentGold,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                l10n.updateAvailable(
+                                  serverVersion.latestVersion,
+                                ),
+                                style: TextStyle(
+                                  fontFamily: DashTokens.fontUi,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: t.accentGold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                  _divider(t),
+                  _LinkRow(
+                    label: l10n.openSourceLicenses,
+                    onTap: () => showLicensePage(
+                      context: context,
+                      applicationName: packageInfo?.appName ?? l10n.appTitle,
+                      applicationVersion: packageInfo?.version,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -312,22 +322,22 @@ class SettingsScreen extends ConsumerWidget {
 
   /// A small pill labelling an account role (Admin / Root).
   Widget _roleChip(DashTokens t, String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: t.accentGold.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: t.accentGold.withValues(alpha: 0.5)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: DashTokens.fontUi,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: t.accentGoldInk,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: t.accentGold.withValues(alpha: 0.14),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: t.accentGold.withValues(alpha: 0.5)),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontFamily: DashTokens.fontUi,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: t.accentGoldInk,
+      ),
+    ),
+  );
 }
 
 /// Root-only "create backup" button that triggers a server-side backup and
@@ -375,11 +385,7 @@ class _BackupButtonState extends ConsumerState<_BackupButton> {
 
 /// A titled card grouping related settings, with an optional footnote caption.
 class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    this.footnote,
-    required this.children,
-  });
+  const _Section({required this.title, this.footnote, required this.children});
 
   final String title;
   final List<Widget> children;
@@ -576,7 +582,11 @@ class _TabOrderRow extends StatelessWidget {
             index: index,
             child: Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: Icon(Icons.drag_indicator, size: 20, color: t.textTertiary),
+              child: Icon(
+                Icons.drag_indicator,
+                size: 20,
+                color: t.textTertiary,
+              ),
             ),
           ),
           Expanded(
