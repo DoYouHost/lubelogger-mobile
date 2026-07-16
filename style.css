@@ -139,6 +139,21 @@ main { padding: 2.75rem 0 1rem; }
 .feature p { margin: 0; color: var(--muted); font-size: 0.95rem; }
 .feature .ico { font-size: 1.4rem; line-height: 1; }
 
+/* --- Screenshot gallery --- */
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin: 0 0 2.5rem;
+}
+.shots img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: block;
+}
+
 a { color: var(--accent-dark); text-decoration: none; }
 @media (prefers-color-scheme: dark) { a { color: var(--accent); } }
 a:hover { text-decoration: underline; }
