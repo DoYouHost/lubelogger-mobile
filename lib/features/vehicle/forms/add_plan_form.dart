@@ -3,7 +3,6 @@ import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/format/shift_digits_formatter.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/models/plan_record.dart';
 import '../../../core/theme/dash_theme.dart';
@@ -13,8 +12,6 @@ import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
-
-const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Progress states the API accepts on write — Done is excluded (plans reach
 /// Done only via the planner board; the API rejects setting it).
@@ -84,7 +81,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
         : PlanProgress.backlog;
     if (e != null) {
       _description.text = e.description;
-      _cost.text = _costFormat.seed(e.cost);
+      _cost.text = formatFormNumber(e.cost);
       _notes.text = e.notes;
       _files = [...e.files];
     }
@@ -333,8 +330,8 @@ class _CostField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       enabled: enabled,
-      keyboardType: TextInputType.number,
-      inputFormatters: const [_costFormat],
+      keyboardType: numberKeyboard(decimal: true),
+      inputFormatters: decimalInputFormatters,
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: l10n.colCost),
       validator: (raw) {

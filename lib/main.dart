@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/app_localizations_loader.dart';
+import 'core/format/formatters.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/reminder_worker.dart';
 import 'core/quick_actions_service.dart';
@@ -49,6 +50,11 @@ void _openVehicleFromNotification(String? payload) {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicenses();
+  // Numbers and money follow the device's regional format (separators, and
+  // whether the currency symbol leads or trails the amount).
+  Formatters.useLocale(
+    WidgetsBinding.instance.platformDispatcher.locale.toString(),
+  );
   final prefs = await SharedPreferences.getInstance();
 
   // Notification + quick-action setup is non-essential to the app running, so a

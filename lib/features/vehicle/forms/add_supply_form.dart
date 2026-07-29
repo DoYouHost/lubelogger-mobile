@@ -3,7 +3,6 @@ import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/format/shift_digits_formatter.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/models/supply_record.dart';
 import '../../../core/theme/dash_theme.dart';
@@ -13,12 +12,6 @@ import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
-
-const _quantityFormat = ShiftDigitsFormatter(
-  decimalDigits: 2,
-  minIntegerDigits: 1,
-);
-const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Opens the add/edit form for a supply / part record as a modal bottom sheet.
 /// Pass [existing] to edit that record instead (prefilled, with a delete
@@ -75,8 +68,8 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
       _partNumber.text = e.partNumber;
       _partSupplier.text = e.partSupplier;
       final q = parseFormNumber(e.partQuantity);
-      if (q != null) _quantity.text = _quantityFormat.seed(q);
-      _cost.text = _costFormat.seed(e.cost);
+      if (q != null) _quantity.text = formatFormNumber(q);
+      _cost.text = formatFormNumber(e.cost);
       _notes.text = e.notes;
       _tags.text = e.tags;
       _files = [...e.files];
@@ -146,13 +139,11 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
         _numberField(
           controller: _quantity,
           label: l10n.formSupplyQuantity,
-          format: _quantityFormat,
         ),
         const SizedBox(height: 14),
         _numberField(
           controller: _cost,
           label: l10n.colCost,
-          format: _costFormat,
           allowZero: true,
         ),
         const SizedBox(height: 14),
@@ -182,7 +173,6 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
   Widget _numberField({
     required TextEditingController controller,
     required String label,
-    required ShiftDigitsFormatter format,
     bool allowZero = false,
   }) {
     final l10n = AppLocalizations.of(context);
@@ -190,8 +180,8 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
     return TextFormField(
       controller: controller,
       enabled: !_submitting,
-      keyboardType: TextInputType.number,
-      inputFormatters: [format],
+      keyboardType: numberKeyboard(decimal: true),
+      inputFormatters: decimalInputFormatters,
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {

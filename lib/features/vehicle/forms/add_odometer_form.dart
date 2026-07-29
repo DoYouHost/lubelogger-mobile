@@ -3,7 +3,6 @@ import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/format/shift_digits_formatter.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/models/odometer_record.dart';
 import '../../../core/theme/dash_theme.dart';
@@ -12,11 +11,6 @@ import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
-
-const _odometerFormat = ShiftDigitsFormatter(
-  decimalDigits: 0,
-  minIntegerDigits: 6,
-);
 
 /// Opens the "Add odometer reading" form as a modal bottom sheet. Pass
 /// [existing] to edit that reading instead (prefilled, with a delete option).
@@ -65,7 +59,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     final e = widget.existing;
     _date = e?.date ?? DateTime.now();
     if (e != null) {
-      _odometer.text = _odometerFormat.seed(e.odometer);
+      _odometer.text = formatFormNumber(e.odometer);
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
@@ -135,8 +129,8 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
               TextFormField(
                 controller: _odometer,
                 enabled: !_submitting,
-                keyboardType: TextInputType.number,
-                inputFormatters: const [_odometerFormat],
+                keyboardType: numberKeyboard(decimal: false),
+                inputFormatters: integerInputFormatters,
                 style: const TextStyle(fontFamily: DashTokens.fontMono),
                 decoration: dashFieldDecoration(
                   t,

@@ -221,7 +221,7 @@ class FuelTab extends ConsumerWidget {
         units.base,
         units.economy,
       );
-      return v == null ? _placeholder : v.toStringAsFixed(1);
+      return v == null ? _placeholder : Formatters.number(v, decimals: 1);
     }
 
     String pricePerVolume(GasRecord r) => r.fuelConsumed <= 0
@@ -271,7 +271,7 @@ class FuelTab extends ConsumerWidget {
             : Formatters.fuelEconomyValue(avg, 1, units.base, units.economy);
         String econLabel(double? v) => v == null
             ? _placeholder
-            : '${v.toStringAsFixed(1)} ${units.economy.label}';
+            : '${Formatters.number(v, decimals: 1)} ${units.economy.label}';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

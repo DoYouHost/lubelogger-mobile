@@ -3,7 +3,6 @@ import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/format/shift_digits_formatter.dart';
 import '../../../core/models/reminder_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -11,11 +10,6 @@ import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
-
-const _odometerFormat = ShiftDigitsFormatter(
-  decimalDigits: 0,
-  minIntegerDigits: 6,
-);
 
 /// Metrics a reminder can be measured against (excludes the [unknown] sentinel).
 const _selectableMetrics = [
@@ -80,7 +74,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
     if (e != null) {
       _description.text = e.description;
       final o = e.dueOdometer;
-      if (o != null) _odometer.text = _odometerFormat.seed(o);
+      if (o != null) _odometer.text = formatFormNumber(o);
       _notes.text = e.notes;
       _tags.text = e.tags;
     }
@@ -147,8 +141,8 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
           TextFormField(
             controller: _odometer,
             enabled: !_submitting,
-            keyboardType: TextInputType.number,
-            inputFormatters: const [_odometerFormat],
+            keyboardType: numberKeyboard(decimal: false),
+            inputFormatters: integerInputFormatters,
             style: const TextStyle(fontFamily: DashTokens.fontMono),
             decoration: dashFieldDecoration(
               t,

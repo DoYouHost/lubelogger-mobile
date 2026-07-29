@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -8,6 +9,39 @@ import '../../../l10n/app_localizations.dart';
 num? parseFormNumber(String? raw) {
   if (raw == null) return null;
   return num.tryParse(raw.trim().replaceAll(',', '.'));
+}
+
+/// Digits with at most one decimal separator (`.` or `,`) — nothing else.
+final _decimalEntry = RegExp(r'^\d*[.,]?\d*$');
+
+/// Free-form decimal entry: the field keeps whatever the user types as long as
+/// it stays a plain number — no forced width, leading zeros or fixed decimals.
+/// Edits that would break that are rejected outright.
+final List<TextInputFormatter> decimalInputFormatters = [
+  TextInputFormatter.withFunction(
+    (oldValue, newValue) =>
+        _decimalEntry.hasMatch(newValue.text) ? newValue : oldValue,
+  ),
+];
+
+/// Free-form whole-number entry (odometers, quantities of whole units).
+final List<TextInputFormatter> integerInputFormatters = [
+  FilteringTextInputFormatter.digitsOnly,
+];
+
+/// Keyboard for a numeric field — decimal point included when [decimal].
+TextInputType numberKeyboard({required bool decimal}) =>
+    TextInputType.numberWithOptions(decimal: decimal);
+
+/// Renders [value] the way a person would type it, for prefilling a numeric
+/// field on edit: no grouping, no padding, no trailing zeros.
+String formatFormNumber(num value) {
+  if (value == value.truncateToDouble()) return value.toInt().toString();
+  // toStringAsFixed avoids exponent notation; drop the zeros it pads with.
+  return value
+      .toStringAsFixed(4)
+      .replaceFirst(RegExp(r'0+$'), '')
+      .replaceFirst(RegExp(r'[.,]$'), '');
 }
 
 /// Read-only date display with a gold calendar button (design #3). Shared across

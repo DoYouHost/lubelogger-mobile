@@ -3,7 +3,6 @@ import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/format/shift_digits_formatter.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/models/gas_record.dart';
 import '../../../core/theme/dash_theme.dart';
@@ -12,16 +11,6 @@ import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
-
-const _odometerFormat = ShiftDigitsFormatter(
-  decimalDigits: 0,
-  minIntegerDigits: 6,
-);
-const _volumeFormat = ShiftDigitsFormatter(
-  decimalDigits: 2,
-  minIntegerDigits: 3,
-);
-const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Opens the "Add fuel record" form as a modal bottom sheet. Pass [existing] to
 /// edit that record instead (prefilled, with a delete option). Resolves to
@@ -76,9 +65,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     _fillToFull = e?.isFillToFull ?? true;
     _missedFuelUp = e?.missedFuelUp ?? false;
     if (e != null) {
-      _odometer.text = _odometerFormat.seed(e.odometer);
-      _fuel.text = _volumeFormat.seed(e.fuelConsumed);
-      _cost.text = _costFormat.seed(e.cost);
+      _odometer.text = formatFormNumber(e.odometer);
+      _fuel.text = formatFormNumber(e.fuelConsumed);
+      _cost.text = formatFormNumber(e.cost);
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
@@ -149,13 +138,12 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               _numberField(
                 controller: _odometer,
                 label: l10n.formOdometerLabel(distanceUnit),
-                format: _odometerFormat,
+                decimal: false,
               ),
               const SizedBox(height: 14),
               _numberField(
                 controller: _fuel,
                 label: l10n.formFuelLabel(volumeUnit),
-                format: _volumeFormat,
               ),
               const SizedBox(height: 8),
               SwitchListTile(
@@ -180,7 +168,6 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               _numberField(
                 controller: _cost,
                 label: l10n.colCost,
-                format: _costFormat,
                 allowZero: true,
               ),
               const SizedBox(height: 14),
@@ -255,7 +242,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   Widget _numberField({
     required TextEditingController controller,
     required String label,
-    required ShiftDigitsFormatter format,
+    bool decimal = true,
     bool allowZero = false,
   }) {
     final l10n = AppLocalizations.of(context);
@@ -263,8 +250,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     return TextFormField(
       controller: controller,
       enabled: !_submitting,
-      keyboardType: TextInputType.number,
-      inputFormatters: [format],
+      keyboardType: numberKeyboard(decimal: decimal),
+      inputFormatters: decimal
+          ? decimalInputFormatters
+          : integerInputFormatters,
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {

@@ -65,4 +65,52 @@ void main() {
           DistanceUnit.mi), '100,000 mi');
     });
   });
+
+  group('Formatters.currency', () {
+    // Every locale is restored to the intl default so later groups (and other
+    // test files sharing the isolate) keep the en_US readouts they expect.
+    tearDown(() => Formatters.useLocale(null));
+
+    /// The amount's digits, separators and all, with the symbol stripped off.
+    String amountOf(String formatted, String symbol) =>
+        formatted.replaceAll(symbol, '').trim();
+
+    test('the currency decides the layout, not the device locale', () {
+      // Same amount, same two symbols, opposite device locales: each currency
+      // keeps its own side and separators either way.
+      for (final device in ['en_US', 'pl_PL']) {
+        Formatters.useLocale(device);
+        expect(Formatters.currency(5728.01, r'$'), r'$5,728.01',
+            reason: 'device $device');
+        final zloty = Formatters.currency(5728.01, 'zł');
+        expect(zloty.endsWith('zł'), isTrue, reason: '$device: $zloty');
+        // Polish separators: comma decimal, non-breaking-space grouping.
+        expect(amountOf(zloty, 'zł'), '5\u00a0728,01', reason: 'device $device');
+      }
+    });
+
+    test('an ISO code is recognized like its symbol', () {
+      Formatters.useLocale('en_US');
+      expect(amountOf(Formatters.currency(5728.01, 'PLN'), 'PLN'),
+          '5\u00a0728,01');
+      expect(Formatters.currency(5728.01, 'USD'), 'USD5,728.01');
+    });
+
+    test('an unlisted currency follows the device locale', () {
+      Formatters.useLocale('pl_PL');
+      expect(amountOf(Formatters.currency(5728.01, '¤'), '¤'), '5\u00a0728,01');
+      Formatters.useLocale('en_US');
+      expect(amountOf(Formatters.currency(5728.01, '¤'), '¤'), '5,728.01');
+    });
+
+    test('an unknown device locale falls back instead of throwing', () {
+      Formatters.useLocale('zz_ZZ');
+      expect(Formatters.currency(1.5, '¤'), contains('1.50'));
+    });
+
+    test('rounds to the nearest whole unit', () {
+      expect(Formatters.currency(5728.005, r'$'), r'$5,728.01');
+      expect(Formatters.currencyRounded(1234.56, r'$'), r'$1,235');
+    });
+  });
 }

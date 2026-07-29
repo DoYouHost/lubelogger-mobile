@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/format/formatters.dart';
 import '../../../core/theme/dash_theme.dart';
 
 /// One slice of a donut chart: its value, color, and legend label.
@@ -253,7 +254,7 @@ class MonthlyBars extends StatelessWidget {
             touchTooltipData: BarTouchTooltipData(
               getTooltipColor: (_) => t.overlaySurface,
               getTooltipItem: (group, _, rod, _) => BarTooltipItem(
-                rod.toY.toStringAsFixed(1),
+                Formatters.number(rod.toY, decimals: 1),
                 TextStyle(
                   fontFamily: DashTokens.fontMono,
                   fontSize: 12,
@@ -274,7 +275,7 @@ class MonthlyBars extends StatelessWidget {
                   // the chart title); keep the cropped baseline label.
                   if (value >= meta.max) return const SizedBox.shrink();
                   return Text(
-                    value.toStringAsFixed(decimals),
+                    Formatters.number(value, decimals: decimals),
                     style: TextStyle(
                       fontFamily: DashTokens.fontMono,
                       fontSize: 9,
@@ -473,7 +474,7 @@ class MonthlyComboChart extends StatelessWidget {
           touchTooltipData: BarTouchTooltipData(
             getTooltipColor: (_) => t.overlaySurface,
             getTooltipItem: (group, _, rod, _) => BarTooltipItem(
-              '$currencySymbol${rod.toY.toStringAsFixed(0)}',
+              Formatters.currencyRounded(rod.toY, currencySymbol),
               TextStyle(
                 fontFamily: DashTokens.fontMono,
                 fontSize: 12,
@@ -663,8 +664,8 @@ class MonthlyComboChart extends StatelessWidget {
   String _compact(double v) {
     if (v >= 1000) {
       final k = v / 1000;
-      return '${k.toStringAsFixed(k >= 10 ? 0 : 1)}k';
+      return '${Formatters.number(k, decimals: k >= 10 ? 0 : 1)}k';
     }
-    return v.toStringAsFixed(0);
+    return Formatters.number(v);
   }
 }

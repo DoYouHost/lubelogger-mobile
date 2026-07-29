@@ -3,7 +3,6 @@ import '../../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/format/shift_digits_formatter.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/models/vehicle_record.dart';
 import '../../../core/theme/dash_theme.dart';
@@ -12,12 +11,6 @@ import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
 import 'form_fields.dart';
-
-const _odometerFormat = ShiftDigitsFormatter(
-  decimalDigits: 0,
-  minIntegerDigits: 6,
-);
-const _costFormat = ShiftDigitsFormatter(decimalDigits: 2, minIntegerDigits: 3);
 
 /// Opens the add/edit form for a generic (date + cost) record [kind] — service /
 /// repair / upgrade / tax — as a modal bottom sheet. Pass [existing] to edit
@@ -106,9 +99,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     _date = e?.date ?? DateTime.now();
     if (e != null) {
       final o = e.odometer;
-      if (o != null) _odometer.text = _odometerFormat.seed(o);
+      if (o != null) _odometer.text = formatFormNumber(o);
       _description.text = e.description;
-      _cost.text = _costFormat.seed(e.cost);
+      _cost.text = formatFormNumber(e.cost);
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
@@ -192,14 +185,13 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 _numberField(
                   controller: _odometer,
                   label: l10n.formOdometerLabel(distanceUnit),
-                  format: _odometerFormat,
+                  decimal: false,
                 ),
               ],
               const SizedBox(height: 14),
               _numberField(
                 controller: _cost,
                 label: l10n.colCost,
-                format: _costFormat,
                 allowZero: true,
               ),
               const SizedBox(height: 14),
@@ -274,7 +266,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   Widget _numberField({
     required TextEditingController controller,
     required String label,
-    required ShiftDigitsFormatter format,
+    bool decimal = true,
     bool allowZero = false,
   }) {
     final l10n = AppLocalizations.of(context);
@@ -282,8 +274,10 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     return TextFormField(
       controller: controller,
       enabled: !_submitting,
-      keyboardType: TextInputType.number,
-      inputFormatters: [format],
+      keyboardType: numberKeyboard(decimal: decimal),
+      inputFormatters: decimal
+          ? decimalInputFormatters
+          : integerInputFormatters,
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {
