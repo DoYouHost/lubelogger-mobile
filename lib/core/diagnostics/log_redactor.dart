@@ -212,32 +212,99 @@ class LogRedactor {
   /// rule is inverted — a string survives only if it looks *technical*
   /// ([_isTechnical]); anything else becomes `<str:N>`.
   ///
+  /// [_freeTextKeys] then takes the shape rule back off the fields that are
+  /// known to be the user's, because "one word of letters" is the shape of an
+  /// enum value and of a one-word note alike.
+  ///
   /// That keeps what a bug report is actually read for — which fields the
   /// server sent, in what types, and how it formatted its dates and numbers
   /// (`"01/15/2024"` versus `"2024-01-15"` is the single most common
   /// wire-format report) — while the content of a note never leaves the phone.
   /// Field *names* are kept: they are the API's schema, not the user's data,
   /// except where [_secretKey] says otherwise.
-  Object? scrubSample(Object? value) {
+  /// [key] is the field the value came off, which decides whether the shape rule
+  /// gets a say at all — see [_freeTextKeys].
+  Object? scrubSample(Object? value, {String? key}) {
     if (value is String) {
       if (value.isEmpty) return value;
-      return _isTechnical(value) ? scrubString(value) : '<str:${value.length}>';
+      final field = key?.toLowerCase();
+      if (field != null && _schemaKeys.contains(field)) {
+        return scrubString(value);
+      }
+      return field != null && _freeTextKeys.contains(field)
+          ? '<str:${value.length}>'
+          : _isTechnical(value)
+          ? scrubString(value)
+          : '<str:${value.length}>';
     }
     if (value is Map) {
       return {
         for (final e in value.entries)
           '${e.key}': _secretKey.hasMatch('${e.key}')
               ? _redacted(e.value)
-              : scrubSample(e.value),
+              : scrubSample(e.value, key: '${e.key}'),
       };
     }
     // Only the head of a nested list: a vehicle's `extraFields` or a record's
     // `files` can be long, and the second entry says nothing the first did not.
+    // The key travels with it — `tags` is a list, and each entry is as much the
+    // user's as the field is.
     if (value is List) {
-      return [for (final v in value.take(3)) scrubSample(v)];
+      return [for (final v in value.take(3)) scrubSample(v, key: key)];
     }
     return value;
   }
+
+  /// Fields the user writes into, whose value is therefore theirs whatever it
+  /// looks like.
+  ///
+  /// This is the counterweight to [_enumish], which keeps any single word of
+  /// letters because that is the shape of `Gasoline` and `PastDue` — and also
+  /// the shape of a one-word note. The schema is closed enough to name where
+  /// that matters: the record text fields, the vehicle's identity, and the
+  /// `name`/`value` pair of an `extraFields` entry, which is the one place the
+  /// user invents the key as well as the content.
+  ///
+  /// Exact names, lower-cased, rather than substrings: `partNumber` is theirs
+  /// and `partQuantity` is a number, and a substring rule that caught the first
+  /// would have to be argued about for every field added later.
+  ///
+  /// What this cannot cover is a free-text field a future LubeLogger version
+  /// adds and this app does not model yet. The residual is one word, and only on
+  /// the way *in* — every key the app sends is a key the app chose.
+  static const _freeTextKeys = {
+    'description',
+    'identifier',
+    'imagelocation',
+    'licenseplate',
+    'location',
+    'make',
+    'model',
+    'name',
+    'notes',
+    'notetext',
+    'partnumber',
+    'partsupplier',
+    'tags',
+    'value',
+    'vehicleidentifier',
+  };
+
+  /// Fields holding the *server's* configuration, kept exactly as it sent them.
+  ///
+  /// These are the fields a formatting report is read for, and none of them
+  /// survives the shape rule on its own: `MM/dd/yyyy` is not a date, `zł` is not
+  /// a word, and `1.4.9.0` is not a number. Measuring them would leave a report
+  /// that says the server sent `<str:10>` where the whole question was which ten
+  /// characters.
+  static const _schemaKeys = {
+    'currencysymbol',
+    'currentversion',
+    'dateformat',
+    'decimalseparator',
+    'latestversion',
+    'locale',
+  };
 
   /// Whether a string is the machine's own vocabulary rather than the user's.
   ///

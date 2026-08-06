@@ -818,6 +818,25 @@ class _SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (summary.sessionFacts.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              // The header describes the whole session and is not one of the
+              // records below, so without this the only way to read the phone,
+              // the time zone and the server's version is to open the raw log —
+              // and the screen before this one promises the user they are there.
+              [
+                for (final e in summary.sessionFacts.entries)
+                  '${e.key} ${e.value}',
+              ].join('  ·  '),
+              style: TextStyle(
+                fontFamily: DashTokens.fontMono,
+                fontSize: 11,
+                height: 1.5,
+                color: t.textTertiary,
+              ),
+            ),
+          ],
         ],
       ),
     );

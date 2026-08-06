@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/diagnostics/log_form.dart';
 import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -34,6 +35,14 @@ class RecordFormScaffold extends StatelessWidget {
   final VoidCallback? onDelete;
   final String? error;
   final List<Widget> fields;
+
+  /// The shell owns the verdict because it owns the [Form] — every caller
+  /// re-validates inside its own handler, which is idempotent, and this way a
+  /// refusal is recorded once for all of them instead of once per form that
+  /// remembered to.
+  void _submit(BuildContext context) {
+    if (validateAndLog(context, formKey)) onSubmit?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +111,9 @@ class RecordFormScaffold extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: FilledButton(
-                      onPressed: submitting ? null : onSubmit,
+                      onPressed: submitting || onSubmit == null
+                          ? null
+                          : () => _submit(context),
                       child: submitting
                           ? const SizedBox(
                               height: 18,

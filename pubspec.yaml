@@ -36,6 +36,11 @@ dependencies:
   flutter_slidable: ^4.0.3
   # Opens the issue URL the relay hands back, in the system browser.
   url_launcher: ^6.3.0
+  # Manufacturer, model and API level for a bug report's session header. The
+  # reminder check runs on WorkManager, and whether a background task survives is
+  # decided by the OEM's battery manager — so "notifications never arrive" is
+  # answered by the make of the phone more often than by anything in the code.
+  device_info_plus: ^12.4.0
 
 dev_dependencies:
   flutter_test:

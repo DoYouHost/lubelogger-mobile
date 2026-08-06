@@ -81,10 +81,32 @@ class LogHeader {
     this.server,
     this.serverUrl,
     this.demo = false,
+    this.extra = const {},
   });
 
   /// Bumped when the record shape changes in a way a parser must know about.
+  ///
+  /// Adding a key to [extra] is not such a change: readers ignore what they do
+  /// not know, and the relay accepts a fixed window of versions, so a bump costs
+  /// a deployment before any build that sends one.
   static const formatVersion = 1;
+
+  /// Keys this class owns. Everything else on a header line belongs to [extra]
+  /// and is carried through untouched.
+  static const _ownKeys = {
+    'v',
+    'ts',
+    'session',
+    'stream',
+    'app',
+    'os',
+    'locale',
+    'server',
+    'scheme',
+    'host_kind',
+    'port',
+    'demo',
+  };
 
   /// Reads a header line back, or null when the line is not the header of
   /// [session].
@@ -131,6 +153,10 @@ class LogHeader {
         _ => null,
       },
       demo: fields['demo'] == true,
+      extra: {
+        for (final e in fields.entries)
+          if (!_ownKeys.contains(e.key)) e.key: e.value,
+      },
     );
   }
 
@@ -146,6 +172,7 @@ class LogHeader {
     server: server,
     serverUrl: serverUrl,
     demo: demo,
+    extra: extra,
   );
 
   /// Session identifier shared by every stream file of one recording.
@@ -184,6 +211,16 @@ class LogHeader {
   /// nothing below describes a real server.
   final bool demo;
 
+  /// Everything else that is true for the whole session — the device, the time
+  /// zone, the screen. Kept as an open map rather than as fields so a new fact
+  /// survives the one round trip that would otherwise silently drop it: the
+  /// background isolate reads this header off disk and writes it back out at the
+  /// top of its own stream.
+  ///
+  /// **Scalars only.** The relay renders this map into the issue and rejects
+  /// anything else; see `SessionFacts.environment` for what goes in.
+  final Map<String, Object?> extra;
+
   Map<String, Object?> toJson() => {
     'v': formatVersion,
     'ts': ts.toUtc().toIso8601String(),
@@ -195,6 +232,10 @@ class LogHeader {
     if (server != null) 'server': server,
     if (serverUrl != null) ...serverUrl!.toJson(),
     if (demo) 'demo': true,
+    // Last, and never over an own key: a fact that collided with `session` or
+    // `ts` would change what the line means rather than add to it.
+    for (final e in extra.entries)
+      if (!_ownKeys.contains(e.key) && e.value != null) e.key: e.value,
   };
 
   String toJsonLine() => jsonEncode(toJson());

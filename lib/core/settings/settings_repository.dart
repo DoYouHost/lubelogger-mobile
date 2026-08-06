@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../diagnostics/diagnostic_recorder.dart';
+import '../diagnostics/log_event.dart';
 import '../models/vehicle_tab.dart';
 import 'server_profile.dart';
 import 'units_settings.dart';
@@ -32,10 +34,18 @@ class SettingsRepository {
     }
   }
 
-  Future<void> saveProfile(ServerProfile profile) =>
-      _prefs.setString(_profileKey, jsonEncode(profile.toJson()));
+  Future<void> saveProfile(ServerProfile profile) {
+    // Not the URL — that is the user's private host, and the session header
+    // already carries its shape. What matters here is that the server the log
+    // describes changed halfway through.
+    _logChange('profile', profile.isDemo ? 'demo' : 'saved');
+    return _prefs.setString(_profileKey, jsonEncode(profile.toJson()));
+  }
 
-  Future<void> clearProfile() => _prefs.remove(_profileKey);
+  Future<void> clearProfile() {
+    _logChange('profile', 'cleared');
+    return _prefs.remove(_profileKey);
+  }
 
   UnitsSettings loadUnits() {
     final raw = _prefs.getString(_unitsKey);
@@ -47,8 +57,10 @@ class SettingsRepository {
     }
   }
 
-  Future<void> saveUnits(UnitsSettings units) =>
-      _prefs.setString(_unitsKey, jsonEncode(units.toJson()));
+  Future<void> saveUnits(UnitsSettings units) {
+    _logChange('units', _unitFacts(units));
+    return _prefs.setString(_unitsKey, jsonEncode(units.toJson()));
+  }
 
   /// The record tabs the user wants visible. Absent (never set) defaults to all
   /// tabs; unknown persisted ids are dropped so removing a tab type can't break
@@ -61,10 +73,13 @@ class SettingsRepository {
     };
   }
 
-  Future<void> saveVisibleTabs(Set<VehicleTab> tabs) => _prefs.setStringList(
-        _visibleTabsKey,
-        [for (final t in tabs) t.name],
-      );
+  Future<void> saveVisibleTabs(Set<VehicleTab> tabs) {
+    _logChange('tabs_visible', _hiddenTabs(tabs));
+    return _prefs.setStringList(
+      _visibleTabsKey,
+      [for (final t in tabs) t.name],
+    );
+  }
 
   /// The order record tabs appear in — on the vehicle screen (after the always-
   /// first Dashboard) and in the FAB add sheet. A full permutation of
@@ -86,18 +101,23 @@ class SettingsRepository {
     ];
   }
 
-  Future<void> saveTabOrder(List<VehicleTab> order) => _prefs.setStringList(
-        _tabOrderKey,
-        [for (final t in order) t.name],
-      );
+  Future<void> saveTabOrder(List<VehicleTab> order) {
+    _logChange('tab_order', [for (final t in order) t.name]);
+    return _prefs.setStringList(
+      _tabOrderKey,
+      [for (final t in order) t.name],
+    );
+  }
 
   /// Whether the background check may post past-due reminder notifications.
   /// Opt-in (defaults off) since it needs the Android 13+ notification
   /// permission. Also read by the WorkManager background isolate.
   bool loadRemindersEnabled() => _prefs.getBool(_remindersEnabledKey) ?? false;
 
-  Future<void> saveRemindersEnabled(bool enabled) =>
-      _prefs.setBool(_remindersEnabledKey, enabled);
+  Future<void> saveRemindersEnabled(bool enabled) {
+    _logChange('reminders', enabled);
+    return _prefs.setBool(_remindersEnabledKey, enabled);
+  }
 
   /// Id of the diagnostic recording in progress, or null when nothing is being
   /// recorded — the id doubles as the flag. Written by the UI isolate and read
@@ -114,4 +134,68 @@ class SettingsRepository {
   Future<void> saveDiagnosticsSession(String? session) => session == null
       ? _prefs.remove(_diagnosticsSessionKey)
       : _prefs.setString(_diagnosticsSessionKey, session);
+
+  /// Every preference that changes what the user sees, for the top of a bug
+  /// report.
+  ///
+  /// This app displays other people's numbers, and almost all of how it displays
+  /// them is decided here: whether the server's `148230` is kilometres or miles,
+  /// which symbol goes next to a cost, and in which order a date's fields are
+  /// printed. Without this snapshot, "the odometer is wrong" and "the date is
+  /// wrong" both begin with a round of questions whose answers were on the phone
+  /// all along.
+  ///
+  /// None of it is personal: the values are this app's own enum names.
+  Map<String, Object?> diagnosticsSnapshot() {
+    final hidden = _hiddenTabs(loadVisibleTabs());
+    final order = [for (final t in loadTabOrder()) t.name];
+    final defaultOrder = [for (final t in VehicleTab.values) t.name];
+    return {
+      'units': _unitFacts(loadUnits()),
+      if (hidden.isNotEmpty) 'tabs_hidden': hidden,
+      // Only when the user moved something: the default permutation is twelve
+      // names that say nothing, printed at the top of every report.
+      if (!_sameOrder(order, defaultOrder)) 'tab_order': order,
+      'reminders': loadRemindersEnabled(),
+    };
+  }
+
+  /// The units settings, plus the date pattern they add up to. The pattern is
+  /// derived rather than stored, and it is the field a reader actually wants:
+  /// `dd/MM/yyyy` next to a date the server sent as `01/15/2024` is the whole
+  /// diagnosis.
+  static Map<String, Object?> _unitFacts(UnitsSettings units) => {
+        'base': units.base.name,
+        'currency': units.currency.name,
+        'distance': units.distance.name,
+        'economy': units.economy.name,
+        'date_fmt': units.dateOrder.pattern.join(units.dateSeparator.value),
+      };
+
+  /// Hidden rather than visible: the default is that nothing is hidden, so this
+  /// is empty in the common case and names exactly what the user turned off.
+  static List<String> _hiddenTabs(Set<VehicleTab> visible) => [
+        for (final t in VehicleTab.values)
+          if (!visible.contains(t)) t.name,
+      ];
+
+  static bool _sameOrder(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  /// One preference changed while a recording was running.
+  ///
+  /// Here rather than in the notifiers that call it, because this class is the
+  /// single door every preference goes through — a setting added later is logged
+  /// by the same line that persists it, and cannot be forgotten separately.
+  static void _logChange(String name, Object? value) =>
+      DiagnosticRecorder.active?.add(
+        LogSource.app,
+        'setting',
+        fields: {'name': name, 'value': value},
+      );
 }

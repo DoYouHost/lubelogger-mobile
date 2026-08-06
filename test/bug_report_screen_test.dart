@@ -109,10 +109,17 @@ void main() {
     // The review lists what was recorded, and the file is the default
     // destination — publishing is never the choice made for the user.
     expect(find.text(l10n.bugReportReviewHeader), findsOneWidget);
-    expect(find.textContaining('garage.card'), findsOneWidget);
     expect(find.text(l10n.bugReportSaveShort), findsOneWidget);
     expect(find.text(l10n.bugReportDestinationFileBody), findsOneWidget);
     expect(find.text(l10n.bugReportDescriptionLabel), findsNothing);
+    // What describes the whole session is shown above the records, so the phone
+    // and the time zone the header carries are reviewed like everything else.
+    expect(find.textContaining('app 0.2.7+207'), findsOneWidget);
+
+    // The records themselves are below the fold on a small screen.
+    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('garage.card'), findsOneWidget);
   });
 
   testWidgets('choosing the public issue asks for a description and warns',

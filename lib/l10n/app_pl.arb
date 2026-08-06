@@ -294,7 +294,7 @@
   "bugReportIntroHeader": "Jak to działa",
   "bugReportIntroBody": "Włącz nagrywanie, odtwórz problem i wróć tutaj, żeby je zakończyć. Aplikacja zapisuje, co robi — otwierane ekrany, naciskane przyciski, zapytania do serwera i błędy — żeby zgłoszenie mówiło więcej niż „nie działa”.",
   "bugReportPrivacyHeader": "Co trafia do logu",
-  "bugReportPrivacyBody": "Nigdy klucz API, hasło ani tekst, który wpisujesz. Adres serwera zostaje sprowadzony do kształtu: http czy https, nazwa czy IP, i port. Z rekordów zwróconych przez serwer zostają nazwy pól, liczby i daty — tablice rejestracyjne, notatki i wszystko, co wpisałeś, zastępuje ich długość. Wszystko przeglądasz, zanim opuści telefon.",
+  "bugReportPrivacyBody": "Nigdy klucz API, hasło ani tekst, który wpisujesz. Adres serwera zostaje sprowadzony do kształtu: http czy https, nazwa czy IP, i port. Z tego, co idzie do serwera i wraca, zostają nazwy pól, liczby i daty — tablice rejestracyjne, notatki i wszystko, co wpisujesz, zastępuje ich długość. Zapisuje też model telefonu i wersję Androida oraz Twoje ustawienia jednostek i formatu daty, bo zwykle od nich zależy poprawka. Wszystko przeglądasz, zanim opuści telefon.",
   "bugReportStart": "Rozpocznij nagrywanie",
   "bugReportRecordingHeader": "Nagrywanie trwa",
   "bugReportRecordingBody": "Wróć do aplikacji i odtwórz problem. Pasek nagrywania zostaje z Tobą — przesuń go albo zwiń, jeśli zasłania. Oznacz nim moment awarii i zakończ nagrywanie.",

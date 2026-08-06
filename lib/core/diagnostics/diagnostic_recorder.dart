@@ -133,6 +133,12 @@ class DiagnosticRecorder {
     // to keep in sync across isolates.
     await settings.saveDiagnosticsSession(session);
     store.add(LogSource.app, 'recording_started');
+    // How the app is configured to display what follows. A record rather than a
+    // header field: the user can change any of it mid-session, and each change
+    // writes its own `setting` record from the same source.
+    if (facts.settings.isNotEmpty) {
+      store.add(LogSource.app, 'settings', fields: facts.settings);
+    }
     // Where the session starts. The navigation probe reports changes, so without
     // this the first screen would be named only once the user leaves it.
     final screen = NavigationProbe.screen;

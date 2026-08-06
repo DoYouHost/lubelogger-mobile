@@ -140,9 +140,26 @@ void main() {
 
       expect(sample['licensePlate'], '<str:8>');
       expect(sample['notes'], '<str:34>');
-      // A single word of letters passes as an enum-ish token; that is the
-      // deliberate edge of the rule and it costs a make, not a sentence.
-      expect(sample['make'], 'Volkswagen');
+      expect(sample['make'], '<str:10>');
+    });
+
+    test('a one-word note is the user, not an enum', () {
+      // The shape rule cannot tell `Warsztat` from `Gasoline`, so on the fields
+      // the user writes into it does not get to try.
+      final sample = redactor.scrubSample({
+        'notes': 'Warsztat',
+        'fuelType': 'Gasoline',
+      }) as Map<String, Object?>;
+
+      expect(sample['notes'], '<str:8>');
+      expect(sample['fuelType'], 'Gasoline');
+    });
+
+    test('every entry of a free-text list is measured, not just the field', () {
+      final sample = redactor.scrubSample({
+        'tags': ['winter', 'Anna'],
+      }) as Map<String, Object?>;
+      expect(sample['tags'], ['<str:6>', '<str:4>']);
     });
 
     test('an empty string stays empty — that the field is set is a signal', () {
@@ -163,6 +180,20 @@ void main() {
       expect(extra['value'], '<str:15>');
     });
 
+    test('a one-word extra field is masked on both halves', () {
+      // The user invents the key here as well as the content, so neither half
+      // can be argued to be the schema's.
+      final sample = redactor.scrubSample({
+        'extraFields': [
+          {'name': 'Insurer', 'value': 'Warta'},
+        ],
+      }) as Map<String, Object?>;
+
+      final extra = (sample['extraFields'] as List).first as Map;
+      expect(extra['name'], '<str:7>');
+      expect(extra['value'], '<str:5>');
+    });
+
     test('only the head of a nested list is kept', () {
       final sample = redactor.scrubSample({
         'files': [
@@ -173,6 +204,22 @@ void main() {
         ],
       }) as Map<String, Object?>;
       expect((sample['files'] as List).length, 3);
+    });
+
+    test("the server's own format settings are kept verbatim", () {
+      // `/api/info` is the answer to every "my dates/amounts look wrong", and
+      // none of these three survives the shape rule on its own.
+      final sample = redactor.scrubSample({
+        'dateFormat': 'MM/dd/yyyy',
+        'decimalSeparator': ',',
+        'currencySymbol': 'zł',
+      }) as Map<String, Object?>;
+
+      expect(sample, {
+        'dateFormat': 'MM/dd/yyyy',
+        'decimalSeparator': ',',
+        'currencySymbol': 'zł',
+      });
     });
 
     test('a secret-named field is redacted, not measured', () {

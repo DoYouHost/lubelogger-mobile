@@ -20,9 +20,16 @@ import 'log_store.dart';
 /// pays for one clock reading per request and nothing else.
 ///
 /// What deliberately never enters a record: headers (the API key lives there),
-/// the query string except `vehicleId`, and the host (the user's private
+/// the query string except its two numeric ids, and the host (the user's private
 /// network — the session header carries scheme, port and whether it was a name
 /// or an IP).
+///
+/// ## What a write contributes
+///
+/// Its body, scrubbed — see [_requestSample]. Reading and writing are not
+/// symmetric here: an answer is sampled only on the endpoints that carry
+/// content, while every request body is kept, because a request body is
+/// something this app built.
 ///
 /// ## What a successful answer contributes
 ///
@@ -86,8 +93,9 @@ class HttpProbe extends Interceptor {
     // back stands out as a response missing from the traffic around it, but "did
     // my save even leave the phone" has no other witness — and that is the
     // request whose answer goes missing when the app dies mid-call.
-    if (!_isRead(options.method)) {
-      DiagnosticRecorder.active?.add(
+    final store = DiagnosticRecorder.active;
+    if (store != null && !_isRead(options.method)) {
+      store.add(
         LogSource.http,
         'request',
         lvl: LogLevel.debug,
@@ -95,10 +103,56 @@ class HttpProbe extends Interceptor {
           'method': options.method,
           'path': _pathOf(options),
           'vid': _vehicleIdOf(options),
+          'rid': _recordIdOf(options),
+          'body': _requestSample(store, options.data),
         },
       );
     }
     handler.next(options);
+  }
+
+  /// What the app is asking the server to store, with the user's own text taken
+  /// out of it — the same treatment the sampled response gets, for the same
+  /// reason and with the same rule (`LogRedactor.scrubSample`).
+  ///
+  /// The outgoing body is the more valuable of the two: it is the app's own
+  /// construction, so it is the thing under suspicion. "I saved a fuel-up and the
+  /// date came back a day early" is answered by what left the phone — every write
+  /// in this app goes out as strings the app formatted itself, and whether the
+  /// mistake is in the formatting, in the server, or in the reading back is not
+  /// decidable from the response alone.
+  ///
+  /// Not sampled by path, unlike responses: everything the app *sends* is
+  /// something the app built, so there is no endpoint here whose body belongs to
+  /// somebody else.
+  static Object? _requestSample(LogStore store, Object? data) {
+    if (data == null) return null;
+    if (data is FormData) return _uploadSummary(data);
+    final sample = store.redactor.scrubSample(data);
+    final encoded = _encoded(sample);
+    return encoded.length > _maxSampleChars
+        ? '${encoded.substring(0, _maxClippedChars)}…'
+        : sample;
+  }
+
+  /// A multipart upload, described rather than sampled: the parts *are* the
+  /// user's files. Field names are the API's (`documents`), the count and the
+  /// byte total say whether the phone even had the file, and the extensions are
+  /// what decides whether the server accepts it. Names never appear.
+  static Map<String, Object?> _uploadSummary(FormData data) => {
+    if (data.fields.isNotEmpty)
+      'fields': [for (final f in data.fields) f.key],
+    'files': data.files.length,
+    'bytes': data.files.fold<int>(0, (sum, f) => sum + f.value.length),
+    'exts': [
+      for (final f in data.files) _extensionOf(f.value.filename) ?? '?',
+    ],
+  };
+
+  static String? _extensionOf(String? filename) {
+    final dot = filename?.lastIndexOf('.') ?? -1;
+    if (filename == null || dot < 0 || dot == filename.length - 1) return null;
+    return filename.substring(dot + 1).toLowerCase();
   }
 
   @override
@@ -121,6 +175,7 @@ class HttpProbe extends Interceptor {
           'method': response.requestOptions.method,
           'path': _pathOf(response.requestOptions),
           'vid': _vehicleIdOf(response.requestOptions),
+          'rid': _recordIdOf(response.requestOptions),
           'status': status,
           'ms': _elapsedMs(response.requestOptions),
           // How many records a list endpoint answered with. "This vehicle has no
@@ -200,6 +255,7 @@ class HttpProbe extends Interceptor {
         'method': err.requestOptions.method,
         'path': _pathOf(err.requestOptions),
         'vid': _vehicleIdOf(err.requestOptions),
+        'rid': _recordIdOf(err.requestOptions),
         'type': err.type.name,
         'status': status,
         'ms': _elapsedMs(err.requestOptions),
@@ -260,6 +316,13 @@ class HttpProbe extends Interceptor {
   /// which vehicle any of them was for. An internal row id names nobody.
   static int? _vehicleIdOf(RequestOptions options) =>
       int.tryParse(options.uri.queryParameters['vehicleId'] ?? '');
+
+  /// The other query parameter worth keeping: `?id=` is how every delete names
+  /// its target, and without it the log says a record was deleted but not which
+  /// one — so "it removed the wrong entry" cannot be told from "it removed the
+  /// one I picked". An internal row id names nobody.
+  static int? _recordIdOf(RequestOptions options) =>
+      int.tryParse(options.uri.queryParameters['id'] ?? '');
 
   static int? _elapsedMs(RequestOptions options) {
     final startedAt = options.extra[_startedAtKey];

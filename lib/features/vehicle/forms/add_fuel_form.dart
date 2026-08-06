@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/diagnostics/log_form.dart';
 import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
@@ -287,7 +288,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!validateAndLog(context, _formKey)) return;
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     setState(() {

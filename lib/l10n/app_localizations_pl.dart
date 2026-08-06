@@ -715,7 +715,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bugReportPrivacyBody =>
-      'Nigdy klucz API, hasło ani tekst, który wpisujesz. Adres serwera zostaje sprowadzony do kształtu: http czy https, nazwa czy IP, i port. Z rekordów zwróconych przez serwer zostają nazwy pól, liczby i daty — tablice rejestracyjne, notatki i wszystko, co wpisałeś, zastępuje ich długość. Wszystko przeglądasz, zanim opuści telefon.';
+      'Nigdy klucz API, hasło ani tekst, który wpisujesz. Adres serwera zostaje sprowadzony do kształtu: http czy https, nazwa czy IP, i port. Z tego, co idzie do serwera i wraca, zostają nazwy pól, liczby i daty — tablice rejestracyjne, notatki i wszystko, co wpisujesz, zastępuje ich długość. Zapisuje też model telefonu i wersję Androida oraz Twoje ustawienia jednostek i formatu daty, bo zwykle od nich zależy poprawka. Wszystko przeglądasz, zanim opuści telefon.';
 
   @override
   String get bugReportStart => 'Rozpocznij nagrywanie';

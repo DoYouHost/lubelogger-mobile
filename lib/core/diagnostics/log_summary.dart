@@ -96,6 +96,17 @@ class LogSummary {
 
   bool get isEmpty => lines.isEmpty;
 
+  /// The header as something to read: everything that describes the session,
+  /// minus the two fields that describe the *file*.
+  ///
+  /// `v` is the schema number and `session` is 32 random hex characters; neither
+  /// tells the reviewer anything, and the second is long enough to hide the rest
+  /// behind itself.
+  Map<String, Object?> get sessionFacts => {
+    for (final e in header.entries)
+      if (e.key != 'v' && e.key != 'session') e.key: e.value,
+  };
+
   /// Sources in [LogSource] order, skipping the ones this session never used.
   List<MapEntry<String, int>> get sourceCounts => [
     for (final source in LogSource.values)

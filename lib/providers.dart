@@ -283,6 +283,7 @@ final diagnosticRecorderProvider = Provider<DiagnosticRecorder>(
     loadFacts: () => loadSessionFacts(
       profile: ref.read(serverProfileProvider),
       credentials: ref.read(credentialsStoreProvider),
+      settings: ref.read(settingsRepositoryProvider),
       // Read through the repository only when a profile exists: without one
       // [apiClientProvider] throws by design, and a recording started from the
       // setup screen has no server to ask anyway.

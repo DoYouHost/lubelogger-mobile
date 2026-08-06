@@ -10,6 +10,7 @@ import 'app.dart';
 import 'core/app_localizations_loader.dart';
 import 'core/diagnostics/diagnostic_recorder.dart';
 import 'core/diagnostics/log_event.dart';
+import 'core/diagnostics/session_facts.dart';
 import 'core/format/formatters.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/reminder_worker.dart';
@@ -65,6 +66,7 @@ void _openVehicleFromNotification(String? payload) {
 }
 
 Future<void> main() async {
+  AppStart.at = DateTime.now();
   WidgetsFlutterBinding.ensureInitialized();
   _registerFontLicenses();
   // Numbers and money follow the device's regional format (separators, and

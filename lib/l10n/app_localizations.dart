@@ -1367,7 +1367,7 @@ abstract class AppLocalizations {
   /// No description provided for @bugReportPrivacyBody.
   ///
   /// In en, this message translates to:
-  /// **'Never your API key, your password or the text you type. Your server address is reduced to its shape: http or https, a name or an IP, and the port. Records the server sends back are kept as field names, numbers and dates — plates, notes and anything you wrote are replaced by their length. You review everything before it leaves the phone.'**
+  /// **'Never your API key, your password or the text you type. Your server address is reduced to its shape: http or https, a name or an IP, and the port. What goes to the server and comes back keeps its field names, numbers and dates — plates, notes and anything you wrote are replaced by their length. It also notes your phone\'s model and Android version, and how you set units and date format, because a fix usually turns on one of those. You review everything before it leaves the phone.'**
   String get bugReportPrivacyBody;
 
   /// No description provided for @bugReportStart.

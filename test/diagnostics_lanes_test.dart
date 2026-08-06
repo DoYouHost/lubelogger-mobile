@@ -6,10 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/api/api_exceptions.dart';
 import 'package:lubelogger_mobile/core/diagnostics/diagnostic_recorder.dart';
 import 'package:lubelogger_mobile/core/diagnostics/image_probe.dart';
+import 'package:lubelogger_mobile/core/diagnostics/log_form.dart';
 import 'package:lubelogger_mobile/core/diagnostics/log_tag.dart';
 import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
 import 'package:lubelogger_mobile/core/settings/settings_repository.dart';
 import 'package:lubelogger_mobile/features/common/state_views.dart';
+import 'package:lubelogger_mobile/features/vehicle/forms/record_form_scaffold.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The lanes that exist so a failure the user *sees* is not invisible in the
@@ -162,6 +165,84 @@ void main() {
       expect(records.where((r) => r['evt'] == 'image_failed').length, 1);
       expect(only(records, 'image_failed')['type'],
           'NetworkImageLoadException');
+    });
+  });
+
+  group('form submit', () {
+    /// A form the shared shell owns, with one field that always refuses.
+    Widget refusingForm(GlobalKey<FormState> key, VoidCallback onSubmit) =>
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: logSurface(
+            'form.fuel',
+            Scaffold(
+              body: RecordFormScaffold(
+                formKey: key,
+                title: 'Fuel',
+                isEditing: false,
+                submitting: false,
+                onCancel: () {},
+                onSubmit: onSubmit,
+                onDelete: null,
+                error: null,
+                fields: [
+                  TextFormField(validator: (_) => 'required'),
+                ],
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('a submit the form refuses leaves a record', (tester) async {
+      await recorder.start();
+      var submitted = false;
+      await tester.pumpWidget(
+        refusingForm(GlobalKey<FormState>(), () => submitted = true),
+      );
+      await tester.tap(find.byType(FilledButton));
+      await tester.pump();
+
+      final record = only(await stopAndRead(), 'submit');
+      expect(record['id'], 'form.fuel');
+      expect(record['reason'], 'invalid');
+      expect(record['lvl'], 'warn');
+      // The shell holds the submit back, so the caller's own guard never runs
+      // and the refusal is recorded exactly once.
+      expect(submitted, isFalse);
+    });
+
+    testWidgets('an accepted submit is recorded too', (tester) async {
+      await recorder.start();
+      final key = GlobalKey<FormState>();
+      var submitted = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: logSurface(
+            'form.note',
+            Scaffold(
+              body: Builder(
+                builder: (context) => Form(
+                  key: key,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (validateAndLog(context, key)) submitted = true;
+                    },
+                    child: const Text('Save'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pump();
+
+      final record = only(await stopAndRead(), 'submit');
+      expect(record['id'], 'form.note');
+      expect(record.containsKey('reason'), isFalse);
+      expect(submitted, isTrue);
     });
   });
 }

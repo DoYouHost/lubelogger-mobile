@@ -677,7 +677,25 @@ class VehiclesRepository {
   /// `GET /api/whoami` → the authenticated account (username, email, roles).
   Future<WhoAmI> whoAmI() => guard(() async {
         final res = await _dio.get<Map<String, dynamic>>(Endpoints.whoami);
-        return WhoAmI.fromJson(res.data ?? const {});
+        final me = WhoAmI.fromJson(res.data ?? const {});
+        // The privilege level only, never who it belongs to — which is also why
+        // this endpoint is the one the HTTP probe refuses to sample. LubeLogger
+        // answers 401 both for a bad key and for a valid key without the scope,
+        // so the account's rank is what separates "the app is broken" from "this
+        // account may not do that", and it is the difference between a report
+        // about a missing button and a report about a missing permission.
+        DiagnosticRecorder.active?.add(
+          LogSource.http,
+          'account',
+          fields: {
+            'role': me.isRoot
+                ? 'root'
+                : me.isAdmin
+                    ? 'admin'
+                    : 'user',
+          },
+        );
+        return me;
       });
 
   /// `GET /api/version?checkForUpdate=1` → running vs. latest release version.

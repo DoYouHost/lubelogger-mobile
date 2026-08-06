@@ -162,13 +162,18 @@ void main() {
     expect(record.containsKey('first'), isFalse);
   });
 
-  test('a write is recorded on its way out, without its body', () async {
+  test('a write is recorded on its way out, with the shape it sent', () async {
     dio.httpClientAdapter = _FakeAdapter((_) => _json({'ok': true}));
     await recorder.start();
     await dio.post<dynamic>(
       '/api/vehicle/gasrecords/add',
       queryParameters: {'vehicleId': 3},
-      data: {'notes': 'private'},
+      data: {
+        'date': '01/15/2024',
+        'odometer': '148230',
+        'isFillToFull': 'True',
+        'notes': 'private',
+      },
     );
 
     final records = httpOnly(await stopAndRead());
@@ -177,7 +182,45 @@ void main() {
     expect(request['lvl'], 'debug');
     expect(request['method'], 'POST');
     expect(request['vid'], 3);
-    expect(request.toString(), isNot(contains('private')));
+    // What the app formatted is the thing under suspicion, so it is kept…
+    expect(request['body'], {
+      'date': '01/15/2024',
+      'odometer': '148230',
+      'isFillToFull': 'True',
+      // …and what the user typed is not.
+      'notes': '<str:7>',
+    });
+  });
+
+  test('a delete names the record it is deleting', () async {
+    dio.httpClientAdapter = _FakeAdapter((_) => _json({'ok': true}));
+    await recorder.start();
+    await dio.delete<dynamic>(
+      '/api/vehicle/gasrecords/delete',
+      queryParameters: {'id': 91},
+    );
+
+    expect(httpOnly(await stopAndRead()).first['rid'], 91);
+  });
+
+  test('an upload is described, never sampled', () async {
+    dio.httpClientAdapter = _FakeAdapter((_) => _json([]));
+    await recorder.start();
+    final form = FormData();
+    form.files.add(
+      MapEntry(
+        'documents',
+        MultipartFile.fromBytes([1, 2, 3, 4], filename: 'Anna receipt.PDF'),
+      ),
+    );
+    await dio.post<dynamic>('/api/documents/upload', data: form);
+
+    final body = httpOnly(await stopAndRead()).first['body'] as Map;
+    expect(body['fields'], isNull);
+    expect(body['files'], 1);
+    expect(body['bytes'], 4);
+    expect(body['exts'], ['pdf']);
+    expect(body.toString(), isNot(contains('Anna')));
   });
 
   test('a 200 with an empty body on a read is called out', () async {
