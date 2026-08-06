@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import '../auth/credentials_store.dart';
 import '../demo/demo_http_adapter.dart';
+import '../diagnostics/http_probe.dart';
 import '../settings/server_profile.dart';
 
 /// Header LubeLogger uses to return culture-invariant payloads: typed JSON and
@@ -12,13 +13,17 @@ const String kCultureInvariantHeader = 'culture-invariant';
 
 /// Bare Dio for calls without auth and as the base for [ApiClient]. Single place
 /// for timeouts.
+///
+/// [HttpProbe] goes on here rather than in [ApiClient] so it also covers the
+/// login probe (which runs before there is a profile) and the reminder worker's
+/// own client. It writes nothing unless a diagnostic recording is running.
 Dio createBareDio() => Dio(
       BaseOptions(
         connectTimeout: const Duration(seconds: 8),
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),
       ),
-    );
+    )..interceptors.add(HttpProbe());
 
 /// Authenticated HTTP client for a single [ServerProfile].
 class ApiClient {

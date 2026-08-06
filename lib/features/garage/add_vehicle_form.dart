@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/diagnostics/log_tag.dart';
 import '../../core/layout/responsive.dart';
+import '../common/confirm_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,7 +29,8 @@ Future<int?> showVehicleForm(BuildContext context, {Vehicle? existing}) {
     constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _VehicleForm(existing: existing),
+    builder: (_) =>
+        logSurface('form.vehicle', _VehicleForm(existing: existing)),
   );
 }
 
@@ -213,34 +216,23 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
     return (raw == null || raw.trim().isEmpty) ? l10n.validationRequired : null;
   }
 
-  /// A single destructive confirmation dialog: [Cancel] and a red [confirmLabel]
-  /// button. Resolves `true` only when the user taps confirm.
+  /// A single destructive confirmation step, through the app's shared dialog.
+  /// [step] names it in the log — a vehicle delete asks twice, and which of the
+  /// two the user backed out of is the difference between "it would not delete"
+  /// and "I changed my mind".
   Future<bool> _confirmDeletion({
+    required String step,
     required String title,
     required String message,
     required String confirmLabel,
-  }) async {
-    final l10n = AppLocalizations.of(context);
-    final t = DashTokens.of(context);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(confirmLabel, style: TextStyle(color: t.danger)),
-          ),
-        ],
-      ),
-    );
-    return result == true;
-  }
+  }) =>
+      confirmDelete(
+        context,
+        what: step,
+        title: title,
+        message: message,
+        confirmLabel: confirmLabel,
+      );
 
   /// Confirms twice, then deletes the vehicle and all its records (irreversible
   /// server-side cascade). On success, refreshes the garage and closes the form.
@@ -281,6 +273,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
     // Double confirmation: a vehicle delete wipes every record for it, so ask
     // twice, the second time naming the vehicle as a final safeguard.
     final firstOk = await _confirmDeletion(
+      step: 'vehicle',
       title: l10n.confirmDeleteVehicleTitle,
       message: l10n.confirmDeleteVehicleMessage,
       confirmLabel: l10n.actionDelete,
@@ -288,6 +281,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
     if (!firstOk || !mounted) return;
 
     final finalOk = await _confirmDeletion(
+      step: 'vehicle_final',
       title: l10n.confirmDeleteVehicleFinalTitle(existing.makeModel),
       message: l10n.confirmDeleteVehicleFinalMessage,
       confirmLabel: l10n.actionDeletePermanently,

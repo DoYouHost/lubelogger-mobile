@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/demo/demo_config.dart';
+import '../../core/diagnostics/log_tag.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import 'providers.dart';
@@ -51,33 +52,36 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final t = DashTokens.of(context);
     final state = ref.watch(setupControllerProvider);
 
-    return DashBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: dashAppBar(context, title: l10n.connectToServer),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(bottom: 4, left: 2),
-                child: LubeLoggerWordmark(fontSize: 30),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(2, 4, 2, 18),
-                child: Text(
-                  l10n.setupIntro,
-                  style: TextStyle(
-                    fontFamily: DashTokens.fontUi,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w500,
-                    color: t.textSecondary,
+    return logSurface(
+      'setup',
+      DashBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: dashAppBar(context, title: l10n.connectToServer),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 4, left: 2),
+                  child: LubeLoggerWordmark(fontSize: 30),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(2, 4, 2, 18),
+                  child: Text(
+                    l10n.setupIntro,
+                    style: TextStyle(
+                      fontFamily: DashTokens.fontUi,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w500,
+                      color: t.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              _card(t, l10n, state),
-            ],
+                _card(t, l10n, state),
+              ],
+            ),
           ),
         ),
       ),
@@ -152,11 +156,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               child: state.busy
                   ? _busyLabel(l10n.connecting)
                   : Text(l10n.connect),
-            ),
+            ).tagged('setup.connect'),
             const SizedBox(height: 4),
             Center(
               child: TextButton.icon(
                 onPressed: state.busy ? null : _fillDemo,
+                // Named because it is the store reviewer's way in, and a demo
+                // session that goes wrong is reported like any other.
                 icon: Icon(
                   Icons.play_circle_outline,
                   size: 18,
@@ -171,7 +177,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
+              ).tagged('setup.demo'),
             ),
             if (state.error != null)
               Padding(

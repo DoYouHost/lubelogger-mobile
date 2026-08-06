@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/layout/responsive.dart';
+import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -26,7 +28,10 @@ Future<bool?> showAddNoteForm(
     constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _AddNoteForm(vehicleId: vehicleId, existing: existing),
+    builder: (_) => logSurface(
+      'form.note',
+      _AddNoteForm(vehicleId: vehicleId, existing: existing),
+    ),
   );
 }
 
@@ -193,25 +198,8 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
 
   Future<void> _confirmDelete() async {
     final l10n = AppLocalizations.of(context);
-    final t = DashTokens.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.actionDelete, style: TextStyle(color: t.danger)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+    final confirmed = await confirmDelete(context, what: 'record');
+    if (!confirmed || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     setState(() {

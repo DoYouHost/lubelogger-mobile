@@ -2,6 +2,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/diagnostics/diagnostic_recorder.dart';
+import '../../../core/diagnostics/log_event.dart';
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -40,14 +43,29 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
 
   bool get _busy => _uploading || !widget.enabled;
 
+  /// Counts and outcomes only — a file name is the user's (`invoice-anna.pdf`),
+  /// and the picker is a platform channel whose failures are invisible from
+  /// anywhere else.
+  void _log(
+    String evt, {
+    LogLevel lvl = LogLevel.info,
+    Map<String, Object?> fields = const {},
+  }) =>
+      DiagnosticRecorder.active?.add(LogSource.ui, evt, lvl: lvl, fields: fields);
+
   Future<void> _pick() async {
     final l10n = AppLocalizations.of(context);
     setState(() => _error = null);
     FilePickerResult? result;
     try {
       result = await FilePicker.platform.pickFiles(allowMultiple: true);
-    } on Object {
+    } on Object catch (error) {
       if (mounted) setState(() => _error = l10n.attachmentUploadError);
+      _log(
+        'attachment_pick_failed',
+        lvl: LogLevel.error,
+        fields: {'type': error.runtimeType.toString()},
+      );
       return;
     }
     if (result == null) return; // user cancelled
@@ -56,20 +74,36 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
       for (final f in result.files)
         if (f.path != null) (path: f.path!, name: f.name),
     ];
-    if (picked.isEmpty) return;
+    // A picker that answers with files the app cannot read (no path — a cloud
+    // provider's stream) looks exactly like a cancelled pick from the outside.
+    if (picked.isEmpty) {
+      _log(
+        'attachment_pick_empty',
+        lvl: result.files.isEmpty ? LogLevel.info : LogLevel.warn,
+        fields: {'n': result.files.length},
+      );
+      return;
+    }
+    _log('attachment_pick', fields: {'n': picked.length});
 
     setState(() => _uploading = true);
     try {
       final uploaded = await ref
           .read(vehiclesRepositoryProvider)
           .uploadDocuments(picked);
+      _log('attachment_uploaded', fields: {'n': uploaded.length});
       if (!mounted) return;
       setState(() {
         _files = [..._files, ...uploaded];
         _uploading = false;
       });
       widget.onChanged(_files);
-    } on Object {
+    } on Object catch (error) {
+      _log(
+        'attachment_upload_failed',
+        lvl: LogLevel.error,
+        fields: {'n': picked.length, 'type': error.runtimeType.toString()},
+      );
       if (!mounted) return;
       setState(() {
         _uploading = false;
@@ -80,6 +114,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
 
   void _remove(Attachment file) {
     setState(() => _files = [..._files]..remove(file));
+    _log('attachment_removed', fields: {'n': _files.length});
     widget.onChanged(_files);
   }
 
@@ -87,49 +122,54 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.attachmentsLabel,
-          style: TextStyle(
-            fontFamily: DashTokens.fontUi,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: t.textSecondary,
-          ),
-        ),
-        if (_files.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [for (final f in _files) _chip(t, f)],
-          ),
-        ],
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: OutlinedButton.icon(
-            onPressed: _busy ? null : _pick,
-            icon: _uploading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.attach_file, size: 18),
-            label: Text(l10n.attachmentAddButton),
-          ),
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: 8),
+    // One surface for the whole field: the add button, the chips and their
+    // remove buttons all report as `form.attachments` without a tag each.
+    return logSurface(
+      'form.attachments',
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            _error!,
-            style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+            l10n.attachmentsLabel,
+            style: TextStyle(
+              fontFamily: DashTokens.fontUi,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: t.textSecondary,
+            ),
           ),
+          if (_files.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [for (final f in _files) _chip(t, f)],
+            ),
+          ],
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: _busy ? null : _pick,
+              icon: _uploading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.attach_file, size: 18),
+              label: Text(l10n.attachmentAddButton),
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _error!,
+              style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 

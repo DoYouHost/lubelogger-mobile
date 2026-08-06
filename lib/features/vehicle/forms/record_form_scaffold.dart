@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -63,15 +64,18 @@ class RecordFormScaffold extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // The chrome names itself here, once, for every form that
+                  // uses this shell — the fields inside stay unnamed and report
+                  // as the form's own surface (`form.fuel`, `form.note`, …).
                   if (isEditing && onDelete != null)
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: t.danger),
                       onPressed: submitting ? null : onDelete,
-                    ),
+                    ).tagged('form.delete'),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: submitting ? null : onCancel,
-                  ),
+                  ).tagged('form.close'),
                 ],
               ),
               const SizedBox(height: 8),
@@ -93,7 +97,7 @@ class RecordFormScaffold extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: submitting ? null : onCancel,
                       child: Text(l10n.actionCancel),
-                    ),
+                    ).tagged('form.cancel'),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -106,7 +110,7 @@ class RecordFormScaffold extends StatelessWidget {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(isEditing ? l10n.actionSave : l10n.actionAdd),
-                    ),
+                    ).tagged('form.submit'),
                   ),
                 ],
               ),

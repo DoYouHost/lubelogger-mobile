@@ -16,6 +16,7 @@ class SettingsRepository {
   static const _visibleTabsKey = 'visible_tabs';
   static const _tabOrderKey = 'tab_order';
   static const _remindersEnabledKey = 'reminder_notifications_enabled';
+  static const _diagnosticsSessionKey = 'diagnostics_session';
 
   final SharedPreferences _prefs;
 
@@ -97,4 +98,20 @@ class SettingsRepository {
 
   Future<void> saveRemindersEnabled(bool enabled) =>
       _prefs.setBool(_remindersEnabledKey, enabled);
+
+  /// Id of the diagnostic recording in progress, or null when nothing is being
+  /// recorded — the id doubles as the flag. Written by the UI isolate and read
+  /// by the WorkManager one, which is how a recording started in the app reaches
+  /// an isolate that shares no Dart state with it.
+  ///
+  /// A leftover id at startup means the app died mid-recording; the bug-report
+  /// controller clears it and offers the salvaged files.
+  String? loadDiagnosticsSession() {
+    final id = _prefs.getString(_diagnosticsSessionKey);
+    return (id == null || id.isEmpty) ? null : id;
+  }
+
+  Future<void> saveDiagnosticsSession(String? session) => session == null
+      ? _prefs.remove(_diagnosticsSessionKey)
+      : _prefs.setString(_diagnosticsSessionKey, session);
 }

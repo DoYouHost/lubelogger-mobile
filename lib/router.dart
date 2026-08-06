@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/diagnostics/navigation_probe.dart';
+import 'features/bug_report/bug_report_screen.dart';
+import 'features/bug_report/recording_banner.dart';
 import 'features/garage/garage_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/setup/setup_screen.dart';
@@ -16,10 +19,19 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final routerProvider = Provider<GoRouter>((ref) {
   final hasProfile =
       ref.watch(serverProfileProvider.select((p) => p != null));
+  // Diagnostic log: the probe follows the location, the observer catches what
+  // never touches it (sheets, dialogs, dropdowns). Both write through
+  // `DiagnosticRecorder.active`, which is null unless a recording runs.
+  final probe = NavigationProbe();
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
+    observers: [ModalObserver()],
     initialLocation: hasProfile ? '/' : '/setup',
     redirect: (context, state) {
+      // The bug report stays reachable without a profile: a setup that fails is
+      // exactly the thing worth recording, and bouncing the user to /setup would
+      // take the log away with the screen.
+      if (state.matchedLocation == bugReportRoute) return null;
       if (!hasProfile && state.matchedLocation != '/setup') {
         return '/setup';
       }
@@ -38,10 +50,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: bugReportRoute, builder: (_, _) => const BugReportScreen()),
     ],
   );
+  probe.watch(router);
   // "Change server" (profile set→null→set) rebuilds a new GoRouter — dispose
   // the old one so its listeners don't leak.
-  ref.onDispose(router.dispose);
+  ref.onDispose(() {
+    probe.unwatch();
+    router.dispose();
+  });
   return router;
 });

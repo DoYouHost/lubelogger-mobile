@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../common/state_views.dart';
@@ -50,85 +51,90 @@ class RecordCard extends StatelessWidget {
           borderRadius: radius,
           border: Border.all(color: t.subCardBorder),
         ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        date,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: DashTokens.fontUi,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          color: t.textPrimary,
+        // Named here rather than by each tab: a row is a row in every tab, and
+        // the enclosing tab surface already says which list it belongs to.
+        child: logTag(
+          'record.card',
+          InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          date,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: DashTokens.fontUi,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: t.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
+                      Text(
+                        headline,
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontMono,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: headlineColor ?? t.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (description != null) ...[
+                    const SizedBox(height: 4),
                     Text(
-                      headline,
+                      description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: DashTokens.fontMono,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: headlineColor ?? t.textPrimary,
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: t.textSecondary,
                       ),
                     ),
                   ],
-                ),
-                if (description != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    description!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: DashTokens.fontUi,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: t.textSecondary,
-                    ),
-                  ),
-                ],
-                if (meta.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 14,
-                    runSpacing: 4,
-                    children: [
-                      for (final m in meta)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(m.icon, size: 14, color: t.textTertiary),
-                            const SizedBox(width: 4),
-                            Text(
-                              m.value,
-                              style: TextStyle(
-                                fontFamily: DashTokens.fontMono,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: t.textTertiary,
+                  if (meta.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 4,
+                      children: [
+                        for (final m in meta)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(m.icon, size: 14, color: t.textTertiary),
+                              const SizedBox(width: 4),
+                              Text(
+                                m.value,
+                                style: TextStyle(
+                                  fontFamily: DashTokens.fontMono,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: t.textTertiary,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

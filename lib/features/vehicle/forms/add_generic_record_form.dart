@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/layout/responsive.dart';
+import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -32,10 +34,13 @@ Future<bool?> showGenericRecordForm(
     constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _AddGenericRecordForm(
-      vehicleId: vehicleId,
-      kind: kind,
-      existing: existing,
+    builder: (_) => logSurface(
+      'form.${kind.name}',
+      _AddGenericRecordForm(
+        vehicleId: vehicleId,
+        kind: kind,
+        existing: existing,
+      ),
     ),
   );
 }
@@ -154,13 +159,13 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: t.danger),
                       onPressed: _submitting ? null : _confirmDelete,
-                    ),
+                    ).tagged('form.delete'),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: _submitting
                         ? null
                         : () => Navigator.pop(context),
-                  ),
+                  ).tagged('form.close'),
                 ],
               ),
               const SizedBox(height: 8),
@@ -239,7 +244,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                           ? null
                           : () => Navigator.pop(context),
                       child: Text(l10n.actionCancel),
-                    ),
+                    ).tagged('form.cancel'),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -252,7 +257,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(_isEditing ? l10n.actionSave : l10n.actionAdd),
-                    ),
+                    ).tagged('form.submit'),
                   ),
                 ],
               ),
@@ -373,25 +378,8 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
 
   Future<void> _confirmDelete() async {
     final l10n = AppLocalizations.of(context);
-    final t = DashTokens.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.actionDelete, style: TextStyle(color: t.danger)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+    final confirmed = await confirmDelete(context, what: 'record');
+    if (!confirmed || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     setState(() {

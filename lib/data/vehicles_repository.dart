@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
+import '../core/diagnostics/diagnostic_recorder.dart';
+import '../core/diagnostics/log_event.dart';
 import '../core/auth/whoami.dart';
 import '../core/models/attachment.dart';
 import '../core/models/dated_cost.dart';
@@ -132,10 +134,7 @@ class VehiclesRepository {
           Endpoints.gasRecords,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return [
-          for (final e in res.data ?? const [])
-            if (e is Map<String, dynamic>) GasRecord.fromJson(e),
-        ];
+        return _parseAll(res.data, GasRecord.fromJson, Endpoints.gasRecords);
       });
 
   /// `POST /api/vehicle/gasrecords/add?vehicleId=` → add a refuel. All fields go
@@ -231,10 +230,7 @@ class VehiclesRepository {
           endpoint,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return [
-          for (final e in res.data ?? const [])
-            if (e is Map<String, dynamic>) DatedCost.fromJson(e),
-        ];
+        return _parseAll(res.data, DatedCost.fromJson, endpoint);
       });
 
   /// Full records for one vehicle from a generic (date + cost) record [kind]
@@ -246,10 +242,7 @@ class VehiclesRepository {
           kind.endpoint,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return [
-          for (final e in res.data ?? const [])
-            if (e is Map<String, dynamic>) VehicleRecord.fromJson(e),
-        ];
+        return _parseAll(res.data, VehicleRecord.fromJson, kind.endpoint);
       });
 
   /// `POST {kind}/add?vehicleId=` → add a generic (service / repair / upgrade /
@@ -500,10 +493,11 @@ class VehiclesRepository {
           Endpoints.odometerRecords,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return [
-          for (final e in res.data ?? const [])
-            if (e is Map<String, dynamic>) OdometerRecord.fromJson(e),
-        ];
+        return _parseAll(
+          res.data,
+          OdometerRecord.fromJson,
+          Endpoints.odometerRecords,
+        );
       });
 
   /// `POST /api/vehicle/odometerrecords/add?vehicleId=` → add an odometer
@@ -604,10 +598,7 @@ class VehiclesRepository {
           endpoint,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return [
-          for (final e in res.data ?? const [])
-            if (e is Map<String, dynamic>) fromJson(e),
-        ];
+        return _parseAll(res.data, fromJson, endpoint);
       });
 
   /// `POST {endpoint}?vehicleId=` with a JSON [body] → add a record. Shared by
@@ -705,10 +696,40 @@ class VehiclesRepository {
         return res.data ?? '';
       });
 
-  List<Vehicle> _parseVehicles(List<dynamic>? data) => [
-        for (final e in data ?? const [])
-          if (e is Map<String, dynamic>) Vehicle.fromJson(e),
-      ];
+  List<Vehicle> _parseVehicles(List<dynamic>? data) =>
+      _parseAll(data, Vehicle.fromJson, Endpoints.vehicles);
+
+  /// Turns a list endpoint's body into typed records, skipping any element that
+  /// is not a JSON object — and saying so in the diagnostic log when it does.
+  ///
+  /// A dropped element is the quietest failure the app has: the screen renders
+  /// the records that did parse, so "three of my fuel-ups are missing" arrives
+  /// as a screenshot of a working list. The HTTP probe reports how many the
+  /// server sent; only this knows how many survived.
+  List<T> _parseAll<T>(
+    List<dynamic>? data,
+    T Function(Map<String, dynamic>) fromJson,
+    String endpoint,
+  ) {
+    final received = data ?? const [];
+    final parsed = [
+      for (final e in received)
+        if (e is Map<String, dynamic>) fromJson(e),
+    ];
+    if (parsed.length != received.length) {
+      DiagnosticRecorder.active?.add(
+        LogSource.http,
+        'records_dropped',
+        lvl: LogLevel.warn,
+        fields: {
+          'path': endpoint,
+          'n': received.length,
+          'kept': parsed.length,
+        },
+      );
+    }
+    return parsed;
+  }
 
   /// Shared field set for a gas record write (add or update); all values go out
   /// as strings, per the server's string-parsed export model.

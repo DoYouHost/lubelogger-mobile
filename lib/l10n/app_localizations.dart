@@ -1327,6 +1327,378 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{vehicle}: {description}'**
   String notifReminderBody(String vehicle, String description);
+
+  /// No description provided for @settingsDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics'**
+  String get settingsDiagnostics;
+
+  /// No description provided for @settingsDiagnosticsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Record what the app does while you reproduce a problem, then review the log and save it or report it.'**
+  String get settingsDiagnosticsNote;
+
+  /// No description provided for @bugReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report a bug'**
+  String get bugReportTitle;
+
+  /// No description provided for @bugReportIntroHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get bugReportIntroHeader;
+
+  /// No description provided for @bugReportIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording, reproduce the problem, then come back and finish. The app writes down what it does — screens you open, buttons you press, requests to the server and errors — so the report says more than “it does not work”.'**
+  String get bugReportIntroBody;
+
+  /// No description provided for @bugReportPrivacyHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'What ends up in the log'**
+  String get bugReportPrivacyHeader;
+
+  /// No description provided for @bugReportPrivacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Never your API key, your password or the text you type. Your server address is reduced to its shape: http or https, a name or an IP, and the port. Records the server sends back are kept as field names, numbers and dates — plates, notes and anything you wrote are replaced by their length. You review everything before it leaves the phone.'**
+  String get bugReportPrivacyBody;
+
+  /// No description provided for @bugReportStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording'**
+  String get bugReportStart;
+
+  /// No description provided for @bugReportRecordingHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get bugReportRecordingHeader;
+
+  /// No description provided for @bugReportRecordingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Go back to the app and reproduce the problem. The recording bar stays with you — drag it aside or collapse it if it gets in the way, and use it to mark the moment it breaks and to finish.'**
+  String get bugReportRecordingBody;
+
+  /// No description provided for @bugReportLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'A recording stops by itself after {minutes} minutes.'**
+  String bugReportLimit(int minutes);
+
+  /// No description provided for @bugReportLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording finished — the {minutes} minute limit was reached.'**
+  String bugReportLimitReached(int minutes);
+
+  /// No description provided for @bugReportSizeLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording finished — the log reached its {megabytes} MB limit.'**
+  String bugReportSizeLimitReached(int megabytes);
+
+  /// No description provided for @bugReportMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark the moment'**
+  String get bugReportMark;
+
+  /// No description provided for @bugReportMarked.
+  ///
+  /// In en, this message translates to:
+  /// **'Moment marked'**
+  String get bugReportMarked;
+
+  /// No description provided for @bugReportStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish recording'**
+  String get bugReportStop;
+
+  /// No description provided for @bugReportStopShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get bugReportStopShort;
+
+  /// No description provided for @bugReportShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get bugReportShow;
+
+  /// No description provided for @bugReportBannerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get bugReportBannerLabel;
+
+  /// No description provided for @bugReportBarMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the recording bar'**
+  String get bugReportBarMove;
+
+  /// No description provided for @bugReportBarCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse the recording bar'**
+  String get bugReportBarCollapse;
+
+  /// No description provided for @bugReportBarExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand the recording bar'**
+  String get bugReportBarExpand;
+
+  /// No description provided for @bugReportRecoveredHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'A recording survived a crash'**
+  String get bugReportRecoveredHeader;
+
+  /// No description provided for @bugReportRecoveredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app closed while it was recording. What it had written down is still on the phone — look at it, or throw it away.'**
+  String get bugReportRecoveredBody;
+
+  /// No description provided for @bugReportReviewHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Review before sending'**
+  String get bugReportReviewHeader;
+
+  /// No description provided for @bugReportReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is everything that was recorded. Read it through — below you choose whether it stays on the phone or goes out as a public issue.'**
+  String get bugReportReviewBody;
+
+  /// No description provided for @bugReportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{records} records · {errors} errors · {warnings} warnings'**
+  String bugReportSummary(int records, int errors, int warnings);
+
+  /// No description provided for @bugReportMarkers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 marked moment} other{{count} marked moments}}'**
+  String bugReportMarkers(int count);
+
+  /// No description provided for @bugReportTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'The session was long — the oldest records were dropped.'**
+  String get bugReportTruncated;
+
+  /// No description provided for @bugReportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was recorded.'**
+  String get bugReportEmpty;
+
+  /// No description provided for @bugReportShowRaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Show raw log'**
+  String get bugReportShowRaw;
+
+  /// No description provided for @bugReportHideRaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide raw log'**
+  String get bugReportHideRaw;
+
+  /// No description provided for @bugReportRawClipped.
+  ///
+  /// In en, this message translates to:
+  /// **'The first {kb} kB are not shown here. The file you save holds the whole session.'**
+  String bugReportRawClipped(int kb);
+
+  /// No description provided for @bugReportDestinationFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to a file'**
+  String get bugReportDestinationFile;
+
+  /// No description provided for @bugReportDestinationIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Report on GitHub'**
+  String get bugReportDestinationIssue;
+
+  /// No description provided for @bugReportDestinationFileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The log is saved where you choose and stays on your phone. You decide whether to send it anywhere.'**
+  String get bugReportDestinationFileBody;
+
+  /// No description provided for @bugReportDestinationIssueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The log and your description are posted as a public issue on GitHub, where anyone can read them and they stay for good. Go through the log below first.'**
+  String get bugReportDestinationIssueBody;
+
+  /// No description provided for @bugReportDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What went wrong?'**
+  String get bugReportDescriptionLabel;
+
+  /// No description provided for @bugReportDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What you were doing, what you expected, what happened instead.'**
+  String get bugReportDescriptionHint;
+
+  /// No description provided for @bugReportDescriptionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what went wrong — a log with no description is nearly unusable.'**
+  String get bugReportDescriptionRequired;
+
+  /// No description provided for @bugReportSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to a file'**
+  String get bugReportSave;
+
+  /// No description provided for @bugReportSaveShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get bugReportSaveShort;
+
+  /// No description provided for @bugReportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Log saved to the file'**
+  String get bugReportSaved;
+
+  /// No description provided for @bugReportSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The log could not be saved.'**
+  String get bugReportSaveFailed;
+
+  /// No description provided for @bugReportSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get bugReportSend;
+
+  /// No description provided for @bugReportSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get bugReportSending;
+
+  /// No description provided for @bugReportSendWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending in {clock}'**
+  String bugReportSendWaiting(String clock);
+
+  /// No description provided for @bugReportSendWaitingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay spaces reports out. You can leave this screen — it goes on its own.'**
+  String get bugReportSendWaitingBody;
+
+  /// No description provided for @bugReportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent'**
+  String get bugReportSent;
+
+  /// No description provided for @bugReportSentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. The issue is open and the log is attached to it.'**
+  String get bugReportSentBody;
+
+  /// No description provided for @bugReportOpenIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the issue'**
+  String get bugReportOpenIssue;
+
+  /// No description provided for @bugReportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get bugReportDone;
+
+  /// No description provided for @bugReportSendFailedNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay is not accepting reports right now. Try again later, or save the log to a file.'**
+  String get bugReportSendFailedNotYet;
+
+  /// No description provided for @bugReportSendFailedRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay refused this report. Save the log to a file and attach it yourself.'**
+  String get bugReportSendFailedRefused;
+
+  /// No description provided for @bugReportSendFailedDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'This one has already been reported.'**
+  String get bugReportSendFailedDuplicate;
+
+  /// No description provided for @bugReportSendFailedUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the relay. Check the connection, or save the log to a file.'**
+  String get bugReportSendFailedUnreachable;
+
+  /// No description provided for @bugReportSendFailedRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay rejected this report. Save the log to a file and attach it yourself.'**
+  String get bugReportSendFailedRejected;
+
+  /// No description provided for @bugReportSendFailedDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode does not publish reports. Save the log to a file instead.'**
+  String get bugReportSendFailedDemo;
+
+  /// No description provided for @bugReportDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get bugReportDiscard;
+
+  /// No description provided for @bugReportDiscardQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard this recording?'**
+  String get bugReportDiscardQuestion;
+
+  /// No description provided for @bugReportDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The log will be deleted from the phone.'**
+  String get bugReportDiscardBody;
+
+  /// No description provided for @bugReportDiscardBodyQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'The log will be deleted from the phone and the queued report cancelled.'**
+  String get bugReportDiscardBodyQueued;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,13 @@ import 'core/app_localizations_loader.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/whoami.dart';
 import 'core/auth/credentials_store.dart';
+import 'core/diagnostics/diagnostic_recorder.dart';
+import 'core/diagnostics/log_event.dart';
+import 'core/diagnostics/relay_client.dart';
+import 'core/diagnostics/relay_identity.dart';
+import 'core/diagnostics/report_outbox.dart';
+import 'core/diagnostics/report_sender.dart';
+import 'core/diagnostics/session_facts.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
@@ -207,6 +214,15 @@ class ReminderNotificationsNotifier extends Notifier<bool> {
     final settings = ref.read(settingsRepositoryProvider);
     if (enabled) {
       final granted = await NotificationService().requestPermission();
+      // "The app never notifies me" starts here as often as it starts in the
+      // worker: a permission the system refused leaves the feature switched
+      // off, and nothing else in the log would say why.
+      DiagnosticRecorder.active?.add(
+        LogSource.notif,
+        'permission',
+        lvl: granted ? LogLevel.info : LogLevel.warn,
+        fields: {'reason': granted ? 'granted' : 'denied'},
+      );
       if (!granted) return false;
       await settings.saveRemindersEnabled(true);
       state = true;
@@ -257,6 +273,54 @@ final apiKeyProvider = FutureProvider<String?>(
 /// App name/version/build number, for the Settings "About" section.
 final packageInfoProvider =
     FutureProvider<PackageInfo>((ref) => PackageInfo.fromPlatform());
+
+/// Bug-report log recorder. Holding it in a provider keeps one instance per
+/// app, which matters: [DiagnosticRecorder.active] is process-wide state and
+/// two recorders would fight over it.
+final diagnosticRecorderProvider = Provider<DiagnosticRecorder>(
+  (ref) => DiagnosticRecorder(
+    settings: ref.watch(settingsRepositoryProvider),
+    loadFacts: () => loadSessionFacts(
+      profile: ref.read(serverProfileProvider),
+      credentials: ref.read(credentialsStoreProvider),
+      // Read through the repository only when a profile exists: without one
+      // [apiClientProvider] throws by design, and a recording started from the
+      // setup screen has no server to ask anyway.
+      readServerVersion: ref.read(serverProfileProvider) == null
+          ? null
+          : () async =>
+              (await ref.read(vehiclesRepositoryProvider).serverVersion())
+                  .currentVersion,
+    ),
+  ),
+);
+
+/// Sends bug reports to the relay.
+///
+/// On the bare Dio on purpose: the relay is not the LubeLogger server, so it
+/// must see none of the auth interceptors, none of the credentials and none of
+/// the base URL the user configured.
+final relayClientProvider = Provider<RelayClient>(
+  (ref) => RelayClient(ref.watch(bareDioProvider)),
+);
+
+final reportOutboxProvider =
+    Provider<ReportOutbox>((ref) => const ReportOutbox());
+
+/// One per app: it owns the single outbox slot and a timer, and two of them
+/// would race each other over both.
+final reportSenderProvider = Provider<ReportSender>((ref) {
+  final sender = ReportSender(
+    client: ref.watch(relayClientProvider),
+    outbox: ref.watch(reportOutboxProvider),
+    installId: () => installId(ref.read(sharedPreferencesProvider)),
+    // Read, not watched: rebuilding this provider on a profile change would
+    // hand out a second sender over the same outbox slot.
+    demoMode: () => ref.read(serverProfileProvider)?.isDemo ?? false,
+  );
+  ref.onDispose(sender.dispose);
+  return sender;
+});
 
 final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
   (ref) => VehiclesRepository(ref.watch(apiClientProvider).dio),

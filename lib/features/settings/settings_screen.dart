@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/diagnostics/log_tag.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
+import '../bug_report/recording_banner.dart' show bugReportRoute;
 import '../common/vehicle_tab_ui.dart';
 
 /// Basic settings: display units (currency / distance / fuel economy) and the
@@ -41,6 +44,7 @@ class SettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
               _Section(
+                id: 'units',
                 title: l10n.settingsUnits,
                 footnote: l10n.settingsUnitsMetricNote,
                 children: [
@@ -121,6 +125,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               _Section(
+                id: 'tabs',
                 title: l10n.settingsVisibleTabs,
                 footnote: l10n.settingsVisibleTabsNote,
                 children: [
@@ -148,6 +153,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               _Section(
+                id: 'notifications',
                 title: l10n.settingsNotifications,
                 footnote: l10n.settingsNotificationsNote,
                 children: [
@@ -168,6 +174,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               _Section(
+                id: 'server',
                 title: l10n.settingsServer,
                 children: [
                   if (who?.displayName.isNotEmpty ?? profile?.label != null)
@@ -228,11 +235,24 @@ class SettingsScreen extends ConsumerWidget {
                     label: Text(l10n.logout),
                     onPressed: () =>
                         ref.read(serverProfileProvider.notifier).clear(),
+                  ).tagged('settings.logout'),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                id: 'diagnostics',
+                title: l10n.settingsDiagnostics,
+                footnote: l10n.settingsDiagnosticsNote,
+                children: [
+                  _LinkRow(
+                    label: l10n.bugReportTitle,
+                    onTap: () => context.push(bugReportRoute),
                   ),
                 ],
               ),
               const SizedBox(height: 18),
               _Section(
+                id: 'about',
                 title: l10n.settingsAbout,
                 children: [
                   Text(
@@ -385,7 +405,16 @@ class _BackupButtonState extends ConsumerState<_BackupButton> {
 
 /// A titled card grouping related settings, with an optional footnote caption.
 class _Section extends StatelessWidget {
-  const _Section({required this.title, this.footnote, required this.children});
+  const _Section({
+    required this.id,
+    required this.title,
+    this.footnote,
+    required this.children,
+  });
+
+  /// Unlocalized name for the log; the title is user-facing text. One surface
+  /// per section is what names every control inside it without tagging each.
+  final String id;
 
   final String title;
   final List<Widget> children;
@@ -394,41 +423,44 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: t.cardGradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: t.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: DashTokens.fontUi,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
-              color: t.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...children,
-          if (footnote != null) ...[
-            const SizedBox(height: 12),
+    return logSurface(
+      'settings.$id',
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: t.cardGradient,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: t.cardBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              footnote!,
+              title,
               style: TextStyle(
                 fontFamily: DashTokens.fontUi,
-                fontSize: 11.5,
-                color: t.textTertiary,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+                color: t.textSecondary,
               ),
             ),
+            const SizedBox(height: 12),
+            ...children,
+            if (footnote != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                footnote!,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 11.5,
+                  color: t.textTertiary,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

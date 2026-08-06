@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/layout/responsive.dart';
+import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
@@ -26,7 +28,10 @@ Future<bool?> showAddFuelForm(
     constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _AddFuelForm(vehicleId: vehicleId, existing: existing),
+    builder: (_) => logSurface(
+      'form.fuel',
+      _AddFuelForm(vehicleId: vehicleId, existing: existing),
+    ),
   );
 }
 
@@ -120,13 +125,13 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: t.danger),
                       onPressed: _submitting ? null : _confirmDelete,
-                    ),
+                    ).tagged('form.delete'),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: _submitting
                         ? null
                         : () => Navigator.pop(context),
-                  ),
+                  ).tagged('form.close'),
                 ],
               ),
               const SizedBox(height: 8),
@@ -215,7 +220,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                           ? null
                           : () => Navigator.pop(context),
                       child: Text(l10n.actionCancel),
-                    ),
+                    ).tagged('form.cancel'),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -228,7 +233,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(_isEditing ? l10n.actionSave : l10n.actionAdd),
-                    ),
+                    ).tagged('form.submit'),
                   ),
                 ],
               ),
@@ -349,25 +354,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
 
   Future<void> _confirmDelete() async {
     final l10n = AppLocalizations.of(context);
-    final t = DashTokens.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.confirmDeleteTitle),
-        content: Text(l10n.confirmDeleteMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.actionCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.actionDelete, style: TextStyle(color: t.danger)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+    final confirmed = await confirmDelete(context, what: 'record');
+    if (!confirmed || !mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
     setState(() {

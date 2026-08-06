@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/diagnostics/diagnostic_recorder.dart';
+import '../../core/diagnostics/log_event.dart';
 import '../../core/models/vehicle_info.dart';
 import '../../core/quick_actions_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -45,6 +47,17 @@ class _QuickActionHandlerState extends ConsumerState<QuickActionHandler> {
     super.dispose();
   }
 
+  /// The launcher-shortcut lane. Every branch below ends the flow somewhere the
+  /// user cannot see, which is why each one leaves a record: a shortcut that
+  /// silently does nothing is the report, and from the outside a dropped stale
+  /// tap, an unreachable garage and a cancelled picker look identical.
+  void _log(
+    String evt, {
+    LogLevel lvl = LogLevel.info,
+    Map<String, Object?> fields = const {},
+  }) =>
+      DiagnosticRecorder.active?.add(LogSource.app, evt, lvl: lvl, fields: fields);
+
   void _onPending() {
     final action = pendingQuickAction.value;
     if (action == null || _handling) return;
@@ -52,6 +65,11 @@ class _QuickActionHandlerState extends ConsumerState<QuickActionHandler> {
     // on logout, so this only guards a stale tap).
     if (ref.read(serverProfileProvider) == null) {
       pendingQuickAction.value = null;
+      _log(
+        'quick_action_dropped',
+        lvl: LogLevel.warn,
+        fields: {'action': action, 'reason': 'signedOut'},
+      );
       return;
     }
     pendingQuickAction.value = null;
@@ -61,21 +79,43 @@ class _QuickActionHandlerState extends ConsumerState<QuickActionHandler> {
   }
 
   Future<void> _handle(String action) async {
+    _log('quick_action', fields: {'action': action});
     try {
       final initialCtx = rootNavigatorKey.currentContext;
-      if (initialCtx == null) return;
+      if (initialCtx == null) {
+        _log(
+          'quick_action_dropped',
+          lvl: LogLevel.warn,
+          fields: {'action': action, 'reason': 'noNavigator'},
+        );
+        return;
+      }
       final messenger = ScaffoldMessenger.of(initialCtx);
       final l10n = AppLocalizations.of(initialCtx);
 
       final List<VehicleInfo> vehicles;
       try {
         vehicles = await ref.read(garageProvider.future);
-      } catch (_) {
+      } catch (error) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.garageLoadError)));
+        _log(
+          'quick_action_dropped',
+          lvl: LogLevel.warn,
+          fields: {
+            'action': action,
+            'reason': 'garageFailed',
+            'type': error.runtimeType.toString(),
+          },
+        );
         return;
       }
       if (vehicles.isEmpty) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.garageEmpty)));
+        _log(
+          'quick_action_dropped',
+          lvl: LogLevel.warn,
+          fields: {'action': action, 'reason': 'noVehicles'},
+        );
         return;
       }
 
@@ -87,10 +127,17 @@ class _QuickActionHandlerState extends ConsumerState<QuickActionHandler> {
         if (pickerCtx == null || !pickerCtx.mounted) return;
         vehicleId = await showVehiclePicker(pickerCtx, vehicles);
       }
-      if (vehicleId == null) return; // cancelled
+      if (vehicleId == null) {
+        _log(
+          'quick_action_dropped',
+          fields: {'action': action, 'reason': 'cancelled'},
+        );
+        return;
+      }
 
       final formCtx = rootNavigatorKey.currentContext;
       if (formCtx == null || !formCtx.mounted) return;
+      _log('quick_action_form', fields: {'action': action, 'vid': vehicleId});
       switch (action) {
         case QuickActionsService.addFuel:
           await showAddFuelForm(formCtx, vehicleId);

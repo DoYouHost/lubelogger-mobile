@@ -692,4 +692,230 @@ class AppLocalizationsPl extends AppLocalizations {
   String notifReminderBody(String vehicle, String description) {
     return '$vehicle: $description';
   }
+
+  @override
+  String get settingsDiagnostics => 'Diagnostyka';
+
+  @override
+  String get settingsDiagnosticsNote =>
+      'Nagraj, co robi aplikacja, gdy odtwarzasz problem, a potem przejrzyj log i zapisz go albo zgłoś.';
+
+  @override
+  String get bugReportTitle => 'Zgłoś błąd';
+
+  @override
+  String get bugReportIntroHeader => 'Jak to działa';
+
+  @override
+  String get bugReportIntroBody =>
+      'Włącz nagrywanie, odtwórz problem i wróć tutaj, żeby je zakończyć. Aplikacja zapisuje, co robi — otwierane ekrany, naciskane przyciski, zapytania do serwera i błędy — żeby zgłoszenie mówiło więcej niż „nie działa”.';
+
+  @override
+  String get bugReportPrivacyHeader => 'Co trafia do logu';
+
+  @override
+  String get bugReportPrivacyBody =>
+      'Nigdy klucz API, hasło ani tekst, który wpisujesz. Adres serwera zostaje sprowadzony do kształtu: http czy https, nazwa czy IP, i port. Z rekordów zwróconych przez serwer zostają nazwy pól, liczby i daty — tablice rejestracyjne, notatki i wszystko, co wpisałeś, zastępuje ich długość. Wszystko przeglądasz, zanim opuści telefon.';
+
+  @override
+  String get bugReportStart => 'Rozpocznij nagrywanie';
+
+  @override
+  String get bugReportRecordingHeader => 'Nagrywanie trwa';
+
+  @override
+  String get bugReportRecordingBody =>
+      'Wróć do aplikacji i odtwórz problem. Pasek nagrywania zostaje z Tobą — przesuń go albo zwiń, jeśli zasłania. Oznacz nim moment awarii i zakończ nagrywanie.';
+
+  @override
+  String bugReportLimit(int minutes) {
+    return 'Nagrywanie zatrzyma się samo po $minutes min.';
+  }
+
+  @override
+  String bugReportLimitReached(int minutes) {
+    return 'Nagrywanie zakończone — minął limit $minutes min.';
+  }
+
+  @override
+  String bugReportSizeLimitReached(int megabytes) {
+    return 'Nagrywanie zakończone — log osiągnął limit $megabytes MB.';
+  }
+
+  @override
+  String get bugReportMark => 'Oznacz moment';
+
+  @override
+  String get bugReportMarked => 'Moment oznaczony';
+
+  @override
+  String get bugReportStop => 'Zakończ nagrywanie';
+
+  @override
+  String get bugReportStopShort => 'Zakończ';
+
+  @override
+  String get bugReportShow => 'Pokaż';
+
+  @override
+  String get bugReportBannerLabel => 'Nagrywanie';
+
+  @override
+  String get bugReportBarMove => 'Przesuń pasek nagrywania';
+
+  @override
+  String get bugReportBarCollapse => 'Zwiń pasek nagrywania';
+
+  @override
+  String get bugReportBarExpand => 'Rozwiń pasek nagrywania';
+
+  @override
+  String get bugReportRecoveredHeader => 'Nagranie przetrwało awarię';
+
+  @override
+  String get bugReportRecoveredBody =>
+      'Aplikacja zamknęła się w trakcie nagrywania. To, co zdążyła zapisać, jest nadal w telefonie — obejrzyj albo wyrzuć.';
+
+  @override
+  String get bugReportReviewHeader => 'Przejrzyj przed wysłaniem';
+
+  @override
+  String get bugReportReviewBody =>
+      'To wszystko, co zostało nagrane. Przejrzyj to — poniżej wybierasz, czy log zostaje w telefonie, czy idzie jako publiczne zgłoszenie.';
+
+  @override
+  String bugReportSummary(int records, int errors, int warnings) {
+    return '$records rekordów · $errors błędów · $warnings ostrzeżeń';
+  }
+
+  @override
+  String bugReportMarkers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count oznaczonych momentów',
+      few: '$count oznaczone momenty',
+      one: '1 oznaczony moment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bugReportTruncated =>
+      'Sesja była długa — najstarsze rekordy zostały odrzucone.';
+
+  @override
+  String get bugReportEmpty => 'Nic nie zostało nagrane.';
+
+  @override
+  String get bugReportShowRaw => 'Pokaż surowy log';
+
+  @override
+  String get bugReportHideRaw => 'Ukryj surowy log';
+
+  @override
+  String bugReportRawClipped(int kb) {
+    return 'Pierwsze $kb kB nie są tu pokazane. Zapisany plik zawiera całą sesję.';
+  }
+
+  @override
+  String get bugReportDestinationFile => 'Zapisz do pliku';
+
+  @override
+  String get bugReportDestinationIssue => 'Zgłoś na GitHubie';
+
+  @override
+  String get bugReportDestinationFileBody =>
+      'Log zapisze się tam, gdzie wskażesz, i zostanie w telefonie. Sam decydujesz, czy gdziekolwiek go wyślesz.';
+
+  @override
+  String get bugReportDestinationIssueBody =>
+      'Log i Twój opis trafią jako publiczne zgłoszenie na GitHuba — każdy będzie mógł je przeczytać i zostaną tam na zawsze. Przejrzyj najpierw log poniżej.';
+
+  @override
+  String get bugReportDescriptionLabel => 'Co poszło nie tak?';
+
+  @override
+  String get bugReportDescriptionHint =>
+      'Co robiłeś, czego się spodziewałeś, co stało się zamiast tego.';
+
+  @override
+  String get bugReportDescriptionRequired =>
+      'Napisz, co poszło nie tak — log bez opisu jest prawie bezużyteczny.';
+
+  @override
+  String get bugReportSave => 'Zapisz do pliku';
+
+  @override
+  String get bugReportSaveShort => 'Zapisz';
+
+  @override
+  String get bugReportSaved => 'Log zapisany do pliku';
+
+  @override
+  String get bugReportSaveFailed => 'Nie udało się zapisać logu.';
+
+  @override
+  String get bugReportSend => 'Zgłoś';
+
+  @override
+  String get bugReportSending => 'Wysyłanie…';
+
+  @override
+  String bugReportSendWaiting(String clock) {
+    return 'Wysyłka za $clock';
+  }
+
+  @override
+  String get bugReportSendWaitingBody =>
+      'Relay rozkłada zgłoszenia w czasie. Możesz zamknąć ten ekran — wyśle się samo.';
+
+  @override
+  String get bugReportSent => 'Zgłoszenie wysłane';
+
+  @override
+  String get bugReportSentBody =>
+      'Dzięki. Zgłoszenie jest otwarte, a log do niego dołączony.';
+
+  @override
+  String get bugReportOpenIssue => 'Otwórz zgłoszenie';
+
+  @override
+  String get bugReportDone => 'Gotowe';
+
+  @override
+  String get bugReportSendFailedNotYet =>
+      'Relay w tej chwili nie przyjmuje zgłoszeń. Spróbuj później albo zapisz log do pliku.';
+
+  @override
+  String get bugReportSendFailedRefused =>
+      'Relay odmówił przyjęcia tego zgłoszenia. Zapisz log do pliku i dołącz go sam.';
+
+  @override
+  String get bugReportSendFailedDuplicate => 'To już zostało zgłoszone.';
+
+  @override
+  String get bugReportSendFailedUnreachable =>
+      'Nie udało się połączyć z relayem. Sprawdź połączenie albo zapisz log do pliku.';
+
+  @override
+  String get bugReportSendFailedRejected =>
+      'Relay odrzucił to zgłoszenie. Zapisz log do pliku i dołącz go sam.';
+
+  @override
+  String get bugReportSendFailedDemo =>
+      'Tryb demo nie publikuje zgłoszeń. Zapisz log do pliku.';
+
+  @override
+  String get bugReportDiscard => 'Odrzuć';
+
+  @override
+  String get bugReportDiscardQuestion => 'Odrzucić to nagranie?';
+
+  @override
+  String get bugReportDiscardBody => 'Log zostanie usunięty z telefonu.';
+
+  @override
+  String get bugReportDiscardBodyQueued =>
+      'Log zostanie usunięty z telefonu, a zakolejkowana wysyłka anulowana.';
 }

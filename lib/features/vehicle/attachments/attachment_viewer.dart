@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/diagnostics/diagnostic_recorder.dart';
+import '../../../core/diagnostics/log_event.dart';
+import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/models/attachment.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';
@@ -37,12 +40,23 @@ Future<void> openAttachment(
   WidgetRef ref,
   Attachment file,
 ) async {
+  // The extension, not the name: it decides which of the two paths runs, and it
+  // is the difference between "the picture will not show" and "the PDF will not
+  // open" — two reports with nothing in common. The name is the user's.
+  _log('attachment_open', fields: {'ext': _extension(file.name)});
   if (_isImage(file.name)) {
     await _openImage(context, ref, file);
   } else {
     await _downloadAndOpen(context, ref, file);
   }
 }
+
+void _log(
+  String evt, {
+  LogLevel lvl = LogLevel.info,
+  Map<String, Object?> fields = const {},
+}) =>
+    DiagnosticRecorder.active?.add(LogSource.ui, evt, lvl: lvl, fields: fields);
 
 Future<void> _openImage(
   BuildContext context,
@@ -88,8 +102,13 @@ Future<void> _downloadAndOpen(
           file.location,
           savePath,
         );
-  } on Object {
+  } on Object catch (error) {
     savePath = null;
+    _log(
+      'attachment_download_failed',
+      lvl: LogLevel.error,
+      fields: {'type': error.runtimeType.toString()},
+    );
   }
 
   nav.pop(); // dismiss the spinner
@@ -100,6 +119,14 @@ Future<void> _downloadAndOpen(
   }
   final result = await OpenFilex.open(savePath);
   if (result.type != ResultType.done) {
+    // Which way the handoff failed: no app for the type, a permission, or the
+    // file the download just wrote not being there. `OpenFilex` reports it and
+    // nothing else in the app can.
+    _log(
+      'attachment_open_failed',
+      lvl: LogLevel.warn,
+      fields: {'reason': result.type.name},
+    );
     messenger.showSnackBar(SnackBar(content: Text(l10n.attachmentOpenError)));
   }
 }
@@ -120,30 +147,43 @@ class _ImageViewerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+    return logSurface(
+      'attachment.image',
+      Scaffold(
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title, overflow: TextOverflow.ellipsis),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 1,
-          maxScale: 5,
-          child: Image.network(
-            url,
-            headers: apiKey == null ? null : {'x-api-key': apiKey!},
-            fit: BoxFit.contain,
-            loadingBuilder: (context, child, progress) => progress == null
-                ? child
-                : const CircularProgressIndicator(),
-            errorBuilder: (context, error, stack) => Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                l10n.attachmentOpenError,
-                style: const TextStyle(color: Colors.white70),
-              ),
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          title: Text(title, overflow: TextOverflow.ellipsis),
+        ),
+        body: Center(
+          child: InteractiveViewer(
+            minScale: 1,
+            maxScale: 5,
+            child: Image.network(
+              url,
+              headers: apiKey == null ? null : {'x-api-key': apiKey!},
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, progress) => progress == null
+                  ? child
+                  : const CircularProgressIndicator(),
+              errorBuilder: (context, error, stack) {
+                // This request goes out through `Image.network`, not through dio,
+                // so the HTTP probe never sees it: without this, a picture that
+                // will not load leaves no trace at all.
+                _log(
+                  'attachment_image_failed',
+                  lvl: LogLevel.warn,
+                  fields: {'type': error.runtimeType.toString()},
+                );
+                return Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    l10n.attachmentOpenError,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                );
+              },
             ),
           ),
         ),

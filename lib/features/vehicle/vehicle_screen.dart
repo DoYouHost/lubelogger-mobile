@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/diagnostics/image_probe.dart';
+import '../../core/diagnostics/log_tag.dart';
 import '../../core/models/vehicle.dart';
 import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';
@@ -117,6 +119,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
     ];
     _tabs = <_VehicleTab>[
       _VehicleTab(
+        'dashboard',
         l10n.tabDashboard,
         Icons.dashboard_rounded,
         DashboardTab(vehicleId: vehicleId),
@@ -141,7 +144,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
           onPressed: () =>
               showAddRecordSheet(context, vehicleId, orderedVisible),
           child: const Icon(Icons.add),
-        ),
+        ).tagged('vehicle.add'),
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -175,9 +178,15 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
                       ),
                     ),
                   ],
+                  // One surface per tab, in the loop that already builds them:
+                  // every control and every empty or error view inside a tab is
+                  // named by the tab it is in.
                   body: TabBarView(
                     controller: controller,
-                    children: [for (final t in _tabs) t.content],
+                    children: [
+                      for (final t in _tabs)
+                        logSurface('vehicle.${t.id}', t.content),
+                    ],
                   ),
                 ),
               ),
@@ -241,7 +250,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         (ref) => ref.invalidate(equipmentRecordsProvider(vehicleId)),
       ),
     };
-    return _VehicleTab(tab.label(l10n), tab.icon, content, refresh);
+    return _VehicleTab(tab.name, tab.label(l10n), tab.icon, content, refresh);
   }
 
   /// The generic (date + cost) record tab + its refresh, shared by
@@ -261,7 +270,11 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
 /// A tab's label, icon, content pane, and the quiet background-refresh it
 /// triggers when the user switches to it.
 class _VehicleTab {
-  const _VehicleTab(this.label, this.icon, this.content, this.refresh);
+  const _VehicleTab(this.id, this.label, this.icon, this.content, this.refresh);
+
+  /// Stable, unlocalized name for the log — the enum's own, `dashboard` for the
+  /// one tab that is not a record type.
+  final String id;
 
   final String label;
   final IconData icon;
@@ -298,7 +311,7 @@ class _VehicleHeader extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
-          ),
+          ).tagged('vehicle.back'),
           _Avatar(vehicle: vehicle, baseUrl: baseUrl, apiKey: apiKey),
           const SizedBox(width: 12),
           Expanded(
@@ -372,7 +385,9 @@ class _Avatar extends StatelessWidget {
                 apiKey: apiKey,
               ),
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Center(child: placeholder),
+              errorBuilder: ImageProbe.errorBuilder(
+                Center(child: placeholder),
+              ),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),
             ),
@@ -424,17 +439,20 @@ class _VehicleTabBar extends StatelessWidget {
         ),
         tabs: [
           for (final tab in tabs)
-            Tab(
-              height: 44,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(tab.icon, size: 17),
-                    const SizedBox(width: 7),
-                    Text(tab.label),
-                  ],
+            logTag(
+              'vehicle.tabbar.${tab.id}',
+              Tab(
+                height: 44,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(tab.icon, size: 17),
+                      const SizedBox(width: 7),
+                      Text(tab.label),
+                    ],
+                  ),
                 ),
               ),
             ),

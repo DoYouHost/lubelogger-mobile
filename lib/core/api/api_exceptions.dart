@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
 
+import '../diagnostics/diagnostic_recorder.dart';
+import '../diagnostics/log_event.dart';
+
 /// Error codes for the API/auth layer. The core layer is UI-independent:
 /// translation to text happens at display time (see `lib/l10n/error_messages.dart`).
 enum AppErrorCode {
@@ -72,17 +75,34 @@ Future<T> guard<T>(Future<T> Function() body) async {
 /// Like [guard], but non-auth failures degrade to `null` instead of rethrowing
 /// — for single-entity fetches where one unreachable resource shouldn't break a
 /// composite view. Auth errors still bubble up so the UI can react.
+///
+/// Every swallow leaves a record. This is the one failure the app makes
+/// invisible on purpose: the screen renders without the missing piece and says
+/// nothing, so "the card shows no odometer" reaches a report as a screenshot of
+/// a working app. The HTTP probe sees the failed request but not the decision to
+/// carry on without it — and a `TypeError` from a response the parser could not
+/// read never reaches the probe at all.
 Future<T?> guardOrNull<T>(Future<T?> Function() body) async {
   try {
     return await body();
   } on DioException catch (e) {
     final mapped = mapDioException(e);
     if (mapped is AuthException) throw mapped;
+    _logDegraded(mapped.code.name, mapped.statusCode);
     return null;
-  } on Object {
+  } on Object catch (error) {
+    _logDegraded(error.runtimeType.toString(), null);
     return null;
   }
 }
+
+void _logDegraded(String cause, int? status) =>
+    DiagnosticRecorder.active?.add(
+      LogSource.http,
+      'degraded',
+      lvl: LogLevel.warn,
+      fields: {'cause': cause, 'status': status},
+    );
 
 /// Maps a [DioException] to a typed application exception.
 AppApiException mapDioException(DioException e) {

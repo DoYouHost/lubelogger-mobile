@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/layout/responsive.dart';
 
+import '../../core/diagnostics/log_tag.dart';
 import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';
 import '../../core/theme/dash_theme.dart';
@@ -89,47 +90,50 @@ class _AddRecordGrid extends StatelessWidget {
     // Only the bottom inset (gesture bar) matters here: the sheet is centered
     // via its width constraint, so applying the landscape display-cutout inset
     // on the notch side would shove the grid off-centre.
-    return SafeArea(
-      top: false,
-      left: false,
-      right: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(
-              l10n.addRecordTitle,
-              style: TextStyle(
-                fontFamily: DashTokens.fontUi,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: t.textPrimary,
+    return logSurface(
+      'add_sheet',
+      SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Text(
+                l10n.addRecordTitle,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: t.textPrimary,
+                ),
               ),
             ),
-          ),
-          // Scrolls when the grid is taller than the sheet's max height.
-          Flexible(
-            child: GridView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                mainAxisExtent: 60,
+            // Scrolls when the grid is taller than the sheet's max height.
+            Flexible(
+              child: GridView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  mainAxisExtent: 60,
+                ),
+                children: [
+                  for (final tab in options)
+                    _RecordTypeTile(
+                      tab: tab,
+                      onTap: () => Navigator.pop(context, tab),
+                    ).tagged('add_sheet.${tab.name}'),
+                ],
               ),
-              children: [
-                for (final tab in options)
-                  _RecordTypeTile(
-                    tab: tab,
-                    onTap: () => Navigator.pop(context, tab),
-                  ),
-              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

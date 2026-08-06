@@ -7,6 +7,10 @@ import 'package:flutter/widgets.dart';
 /// render fully offline; real vehicles carry a server-relative path resolved
 /// against [baseUrl] with the api key attached. Real server paths always start
 /// with `/`, so the `assets/` prefix is an unambiguous discriminator.
+///
+/// Pair it with `ImageProbe.errorBuilder`, which is what makes a photo that will
+/// not load visible in a bug report — these requests go out through
+/// `Image.network`, so the HTTP probe never sees them.
 ImageProvider vehicleImageProvider({
   required String imageLocation,
   required String baseUrl,

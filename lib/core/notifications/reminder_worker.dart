@@ -6,6 +6,9 @@ import '../../data/vehicles_repository.dart';
 import '../api/api_client.dart';
 import '../app_localizations_loader.dart';
 import '../auth/credentials_store.dart';
+import '../diagnostics/diagnostic_recorder.dart';
+import '../diagnostics/log_event.dart';
+import '../diagnostics/session_facts.dart';
 import '../models/vehicle.dart';
 import '../settings/settings_repository.dart';
 import 'notification_service.dart';
@@ -68,12 +71,64 @@ Future<void> runReminderCheck() async {
   final prefs = await SharedPreferences.getInstance();
   final settings = SettingsRepository(prefs);
 
+  // Continues a diagnostic recording the app started, if one is running. This
+  // isolate is invisible from the UI, and "the app notified me at 3 a.m." or
+  // "it never notified me" has no other witness. Null when nothing is being
+  // recorded, which is the normal case.
+  final recording = await DiagnosticRecorder.startBackground(
+    settings: settings,
+    stream: LogStream.worker,
+    loadSecrets: () => sessionSecrets(
+      profile: settings.loadProfile(),
+      credentials: SecureCredentialsStore(),
+    ),
+  );
+  try {
+    await _reminderPass(prefs, settings);
+  } on Object catch (error, stack) {
+    // The dispatcher above swallows this so the task never crashes, which means
+    // a check that dies halfway — an unreachable server, a response the parser
+    // choked on — leaves no trace anywhere. Recorded here, where there is still
+    // a stream to write to, then rethrown to the caller that owns the policy.
+    DiagnosticRecorder.active?.add(
+      LogSource.err,
+      'worker_failed',
+      lvl: LogLevel.error,
+      fields: {
+        'type': error.runtimeType.toString(),
+        'msg': error.toString(),
+        'stack': stack.toString(),
+      },
+    );
+    rethrow;
+  } finally {
+    await recording?.stop();
+  }
+}
+
+Future<void> _reminderPass(
+  SharedPreferences prefs,
+  SettingsRepository settings,
+) async {
+  final log = DiagnosticRecorder.active;
+  log?.add(LogSource.app, 'worker_started');
+
   // Nothing to do when logged out or the user hasn't opted in.
   final profile = settings.loadProfile();
-  if (profile == null || !settings.loadRemindersEnabled()) return;
+  if (profile == null || !settings.loadRemindersEnabled()) {
+    log?.add(
+      LogSource.notif,
+      'worker_skipped',
+      fields: {'reason': profile == null ? 'noProfile' : 'disabled'},
+    );
+    return;
+  }
 
   final credentials = SecureCredentialsStore();
-  if (await credentials.readApiKey() == null) return;
+  if (await credentials.readApiKey() == null) {
+    log?.add(LogSource.notif, 'worker_skipped', fields: {'reason': 'noKey'});
+    return;
+  }
 
   final repo = VehiclesRepository(
     ApiClient(profile: profile, credentials: credentials).dio,
@@ -90,14 +145,34 @@ Future<void> runReminderCheck() async {
         final alert = reminderAlertFor(vehicle.id, name, reminder);
         if (alert != null) alerts.add(alert);
       }
-    } on Object {
+    } on Object catch (error) {
       // Skip a vehicle whose reminders can't be fetched; others still notify.
+      // The HTTP probe already recorded the failed call; this says what the
+      // worker did about it, which the call alone does not.
+      log?.add(
+        LogSource.notif,
+        'vehicle_skipped',
+        lvl: LogLevel.warn,
+        fields: {'vid': vehicle.id, 'type': error.runtimeType.toString()},
+      );
       continue;
     }
   }
 
   final store = ReminderNotifiedStore(prefs);
   final plan = planReminderNotifications(alerts, store.load());
+  // Counts, never the reminders themselves: a description is the user's text
+  // and a vehicle name is their car. "Three were past due and none of them
+  // notified" is the whole diagnosis anyway.
+  log?.add(
+    LogSource.notif,
+    'planned',
+    fields: {
+      'due': alerts.length,
+      'notify': plan.toNotify.length,
+      'known': plan.nextNotified.length,
+    },
+  );
 
   if (plan.toNotify.isNotEmpty) {
     final l10n = await loadAppLocalizations();
@@ -115,11 +190,17 @@ Future<void> runReminderCheck() async {
         channelName: l10n.notifReminderChannelName,
         channelDescription: l10n.notifReminderChannelDescription,
       );
+      log?.add(
+        LogSource.notif,
+        'posted',
+        fields: {'vid': alert.vehicleId, 'nid': alert.notificationId},
+      );
     }
   }
 
   // Persist exactly the currently past-due keys — self-pruning (see the plan).
   await store.save(plan.nextNotified);
+  log?.add(LogSource.app, 'worker_finished');
 }
 
 String _vehicleName(Vehicle vehicle) {

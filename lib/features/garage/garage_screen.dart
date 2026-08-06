@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/diagnostics/log_tag.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
@@ -68,87 +69,96 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
     final currency = ref.watch(currencySymbolProvider);
     final units = ref.watch(unitsSettingsProvider);
 
-    return DashBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: dashAppBar(
-          context,
-          titleWidget: const LubeLoggerWordmark(),
-          actions: [
-            IconButton(
-              tooltip: l10n.settingsTitle,
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: _openSettings,
-            ),
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: _refresh,
-          child: garage.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => AsyncErrorView(
-              message: l10n.garageLoadError,
-              onRetry: _refresh,
-              retryLabel: l10n.retry,
-            ),
-            data: (vehicles) {
-              if (vehicles.isEmpty) {
-                return _EmptyGarage(l10n: l10n, onAdd: _openAddVehicle);
-              }
-              // A single scrolling child holds the responsive card grid, so
-              // pull-to-refresh and swipe-auto-close keep working while the
-              // cards flow into 2–3 columns on wider (landscape) screens.
-              // SlidableAutoCloseBehavior closes any open Edit action when
-              // another card is tapped or the list scrolls.
-              return SlidableAutoCloseBehavior(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                  children: [
-                    ResponsiveCardWrap(
-                      spacing: 18,
-                      runSpacing: 18,
-                      children: [
-                        for (final info in vehicles)
-                          // Clip each card to its grid cell so a slid-open card
-                          // stays within its own column instead of bleeding over
-                          // the neighbouring vehicle when swiped.
-                          ClipRect(
-                            child: Slidable(
-                              key: ValueKey(info.vehicle.id),
-                              controller: _controllerFor(info.vehicle.id),
-                              endActionPane: ActionPane(
-                                motion: const DrawerMotion(),
-                                extentRatio: 0.3,
-                                children: [
-                                  _EditVehicleAction(
-                                    onPressed: () => _editVehicle(info.vehicle),
+    // One surface for the screen: every control inside it that does not name
+    // itself reports as `garage`, and the error and empty views know where they
+    // are standing without being told.
+    return logSurface(
+      'garage',
+      DashBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: dashAppBar(
+            context,
+            titleWidget: const LubeLoggerWordmark(),
+            actions: [
+              IconButton(
+                tooltip: l10n.settingsTitle,
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: _openSettings,
+              ).tagged('garage.settings'),
+            ],
+          ),
+          body: RefreshIndicator(
+            onRefresh: _refresh,
+            child: garage.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, _) => AsyncErrorView(
+                message: l10n.garageLoadError,
+                onRetry: _refresh,
+                retryLabel: l10n.retry,
+              ),
+              data: (vehicles) {
+                if (vehicles.isEmpty) {
+                  return _EmptyGarage(l10n: l10n, onAdd: _openAddVehicle);
+                }
+                // A single scrolling child holds the responsive card grid, so
+                // pull-to-refresh and swipe-auto-close keep working while the
+                // cards flow into 2–3 columns on wider (landscape) screens.
+                // SlidableAutoCloseBehavior closes any open Edit action when
+                // another card is tapped or the list scrolls.
+                return SlidableAutoCloseBehavior(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                    children: [
+                      ResponsiveCardWrap(
+                        spacing: 18,
+                        runSpacing: 18,
+                        children: [
+                          for (final info in vehicles)
+                            // Clip each card to its grid cell so a slid-open card
+                            // stays within its own column instead of bleeding over
+                            // the neighbouring vehicle when swiped.
+                            ClipRect(
+                              child: Slidable(
+                                key: ValueKey(info.vehicle.id),
+                                controller: _controllerFor(info.vehicle.id),
+                                endActionPane: ActionPane(
+                                  motion: const DrawerMotion(),
+                                  extentRatio: 0.3,
+                                  children: [
+                                    _EditVehicleAction(
+                                      onPressed: () => _editVehicle(info.vehicle),
+                                    ).tagged('garage.edit'),
+                                  ],
+                                ),
+                                child: logTag(
+                                  'garage.card',
+                                  VehicleCard(
+                                    info: info,
+                                    baseUrl: baseUrl,
+                                    apiKey: apiKey,
+                                    currencySymbol: currency,
+                                    measurementBase: units.base,
+                                    distanceUnit: units.distance,
+                                    onTap: () => context
+                                        .push('/vehicle/${info.vehicle.id}'),
                                   ),
-                                ],
-                              ),
-                              child: VehicleCard(
-                                info: info,
-                                baseUrl: baseUrl,
-                                apiKey: apiKey,
-                                currencySymbol: currency,
-                                measurementBase: units.base,
-                                distanceUnit: units.distance,
-                                onTap: () =>
-                                    context.push('/vehicle/${info.vehicle.id}'),
+                                ),
                               ),
                             ),
-                          ),
-                        AddVehicleTile(onTap: _openAddVehicle),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
+                          AddVehicleTile(onTap: _openAddVehicle),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+                },
+              ),
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
   /// Opens Settings — unless a swipe action is open, in which case the tap just
   /// closes it (consistent with tapping a card while one is open).

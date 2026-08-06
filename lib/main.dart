@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/app_localizations_loader.dart';
+import 'core/diagnostics/diagnostic_recorder.dart';
+import 'core/diagnostics/log_event.dart';
 import 'core/format/formatters.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/reminder_worker.dart';
@@ -40,11 +42,26 @@ void _registerFontLicenses() {
 
 /// Navigate to a vehicle from a tapped reminder notification (payload = vehicle
 /// id). Best-effort: silently ignores a malformed payload or a not-yet-ready
-/// navigator.
+/// navigator — and says so in the diagnostic log, because "I tapped the
+/// notification and nothing opened" is otherwise an event with no trace at all.
 void _openVehicleFromNotification(String? payload) {
   final id = int.tryParse(payload ?? '');
+  final context = rootNavigatorKey.currentContext;
+  DiagnosticRecorder.active?.add(
+    LogSource.notif,
+    'tapped',
+    lvl: id == null || context == null ? LogLevel.warn : LogLevel.info,
+    fields: {
+      'vid': id,
+      'reason': id == null
+          ? 'badPayload'
+          : context == null
+              ? 'noNavigator'
+              : null,
+    },
+  );
   if (id == null) return;
-  rootNavigatorKey.currentContext?.go('/vehicle/$id');
+  context?.go('/vehicle/$id');
 }
 
 Future<void> main() async {

@@ -7,6 +7,8 @@ import '../../core/models/vehicle_info.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
+import '../../core/diagnostics/image_probe.dart';
+import '../../core/diagnostics/log_tag.dart';
 import '../common/vehicle_image.dart';
 
 /// Asks the user which vehicle a quick-action record should be added to.
@@ -38,66 +40,69 @@ class _VehiclePickerSheet extends ConsumerWidget {
 
     // Bottom inset only — the sheet is centered via its width constraint, so a
     // landscape cutout inset on the notch side would push the list off-centre.
-    return SafeArea(
-      top: false,
-      left: false,
-      right: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-            child: Text(
-              l10n.quickActionSelectVehicle,
-              style: TextStyle(
-                fontFamily: DashTokens.fontUi,
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: t.textPrimary,
+    return logSurface(
+      'quick_action.picker',
+      SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              child: Text(
+                l10n.quickActionSelectVehicle,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: t.textPrimary,
+                ),
               ),
             ),
-          ),
-          Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: const EdgeInsets.only(bottom: 8),
-              itemCount: vehicles.length,
-              itemBuilder: (context, i) {
-                final vehicle = vehicles[i].vehicle;
-                return ListTile(
-                  leading: _Avatar(
-                    vehicle: vehicle,
-                    baseUrl: baseUrl,
-                    apiKey: apiKey,
-                  ),
-                  title: Text(
-                    _name(vehicle),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: DashTokens.fontUi,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: t.textPrimary,
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 8),
+                itemCount: vehicles.length,
+                itemBuilder: (context, i) {
+                  final vehicle = vehicles[i].vehicle;
+                  return ListTile(
+                    leading: _Avatar(
+                      vehicle: vehicle,
+                      baseUrl: baseUrl,
+                      apiKey: apiKey,
                     ),
-                  ),
-                  subtitle: vehicle.licensePlate.isEmpty
-                      ? null
-                      : Text(
-                          vehicle.licensePlate,
-                          style: TextStyle(
-                            fontFamily: DashTokens.fontUi,
-                            fontSize: 13,
-                            color: t.textTertiary,
+                    title: Text(
+                      _name(vehicle),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: t.textPrimary,
+                      ),
+                    ),
+                    subtitle: vehicle.licensePlate.isEmpty
+                        ? null
+                        : Text(
+                            vehicle.licensePlate,
+                            style: TextStyle(
+                              fontFamily: DashTokens.fontUi,
+                              fontSize: 13,
+                              color: t.textTertiary,
+                            ),
                           ),
-                        ),
-                  onTap: () => Navigator.of(context).pop(vehicle.id),
-                );
-              },
+                    onTap: () => Navigator.of(context).pop(vehicle.id),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -149,7 +154,9 @@ class _Avatar extends StatelessWidget {
                 apiKey: apiKey,
               ),
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Center(child: placeholder),
+              errorBuilder: ImageProbe.errorBuilder(
+                Center(child: placeholder),
+              ),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),
             ),

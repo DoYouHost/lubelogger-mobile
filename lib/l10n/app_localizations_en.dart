@@ -680,4 +680,230 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifReminderBody(String vehicle, String description) {
     return '$vehicle: $description';
   }
+
+  @override
+  String get settingsDiagnostics => 'Diagnostics';
+
+  @override
+  String get settingsDiagnosticsNote =>
+      'Record what the app does while you reproduce a problem, then review the log and save it or report it.';
+
+  @override
+  String get bugReportTitle => 'Report a bug';
+
+  @override
+  String get bugReportIntroHeader => 'How it works';
+
+  @override
+  String get bugReportIntroBody =>
+      'Start recording, reproduce the problem, then come back and finish. The app writes down what it does — screens you open, buttons you press, requests to the server and errors — so the report says more than “it does not work”.';
+
+  @override
+  String get bugReportPrivacyHeader => 'What ends up in the log';
+
+  @override
+  String get bugReportPrivacyBody =>
+      'Never your API key, your password or the text you type. Your server address is reduced to its shape: http or https, a name or an IP, and the port. Records the server sends back are kept as field names, numbers and dates — plates, notes and anything you wrote are replaced by their length. You review everything before it leaves the phone.';
+
+  @override
+  String get bugReportStart => 'Start recording';
+
+  @override
+  String get bugReportRecordingHeader => 'Recording';
+
+  @override
+  String get bugReportRecordingBody =>
+      'Go back to the app and reproduce the problem. The recording bar stays with you — drag it aside or collapse it if it gets in the way, and use it to mark the moment it breaks and to finish.';
+
+  @override
+  String bugReportLimit(int minutes) {
+    return 'A recording stops by itself after $minutes minutes.';
+  }
+
+  @override
+  String bugReportLimitReached(int minutes) {
+    return 'Recording finished — the $minutes minute limit was reached.';
+  }
+
+  @override
+  String bugReportSizeLimitReached(int megabytes) {
+    return 'Recording finished — the log reached its $megabytes MB limit.';
+  }
+
+  @override
+  String get bugReportMark => 'Mark the moment';
+
+  @override
+  String get bugReportMarked => 'Moment marked';
+
+  @override
+  String get bugReportStop => 'Finish recording';
+
+  @override
+  String get bugReportStopShort => 'Finish';
+
+  @override
+  String get bugReportShow => 'Show';
+
+  @override
+  String get bugReportBannerLabel => 'Recording';
+
+  @override
+  String get bugReportBarMove => 'Move the recording bar';
+
+  @override
+  String get bugReportBarCollapse => 'Collapse the recording bar';
+
+  @override
+  String get bugReportBarExpand => 'Expand the recording bar';
+
+  @override
+  String get bugReportRecoveredHeader => 'A recording survived a crash';
+
+  @override
+  String get bugReportRecoveredBody =>
+      'The app closed while it was recording. What it had written down is still on the phone — look at it, or throw it away.';
+
+  @override
+  String get bugReportReviewHeader => 'Review before sending';
+
+  @override
+  String get bugReportReviewBody =>
+      'This is everything that was recorded. Read it through — below you choose whether it stays on the phone or goes out as a public issue.';
+
+  @override
+  String bugReportSummary(int records, int errors, int warnings) {
+    return '$records records · $errors errors · $warnings warnings';
+  }
+
+  @override
+  String bugReportMarkers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count marked moments',
+      one: '1 marked moment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bugReportTruncated =>
+      'The session was long — the oldest records were dropped.';
+
+  @override
+  String get bugReportEmpty => 'Nothing was recorded.';
+
+  @override
+  String get bugReportShowRaw => 'Show raw log';
+
+  @override
+  String get bugReportHideRaw => 'Hide raw log';
+
+  @override
+  String bugReportRawClipped(int kb) {
+    return 'The first $kb kB are not shown here. The file you save holds the whole session.';
+  }
+
+  @override
+  String get bugReportDestinationFile => 'Save to a file';
+
+  @override
+  String get bugReportDestinationIssue => 'Report on GitHub';
+
+  @override
+  String get bugReportDestinationFileBody =>
+      'The log is saved where you choose and stays on your phone. You decide whether to send it anywhere.';
+
+  @override
+  String get bugReportDestinationIssueBody =>
+      'The log and your description are posted as a public issue on GitHub, where anyone can read them and they stay for good. Go through the log below first.';
+
+  @override
+  String get bugReportDescriptionLabel => 'What went wrong?';
+
+  @override
+  String get bugReportDescriptionHint =>
+      'What you were doing, what you expected, what happened instead.';
+
+  @override
+  String get bugReportDescriptionRequired =>
+      'Say what went wrong — a log with no description is nearly unusable.';
+
+  @override
+  String get bugReportSave => 'Save to a file';
+
+  @override
+  String get bugReportSaveShort => 'Save';
+
+  @override
+  String get bugReportSaved => 'Log saved to the file';
+
+  @override
+  String get bugReportSaveFailed => 'The log could not be saved.';
+
+  @override
+  String get bugReportSend => 'Report';
+
+  @override
+  String get bugReportSending => 'Sending…';
+
+  @override
+  String bugReportSendWaiting(String clock) {
+    return 'Sending in $clock';
+  }
+
+  @override
+  String get bugReportSendWaitingBody =>
+      'The relay spaces reports out. You can leave this screen — it goes on its own.';
+
+  @override
+  String get bugReportSent => 'Report sent';
+
+  @override
+  String get bugReportSentBody =>
+      'Thank you. The issue is open and the log is attached to it.';
+
+  @override
+  String get bugReportOpenIssue => 'Open the issue';
+
+  @override
+  String get bugReportDone => 'Done';
+
+  @override
+  String get bugReportSendFailedNotYet =>
+      'The relay is not accepting reports right now. Try again later, or save the log to a file.';
+
+  @override
+  String get bugReportSendFailedRefused =>
+      'The relay refused this report. Save the log to a file and attach it yourself.';
+
+  @override
+  String get bugReportSendFailedDuplicate =>
+      'This one has already been reported.';
+
+  @override
+  String get bugReportSendFailedUnreachable =>
+      'Could not reach the relay. Check the connection, or save the log to a file.';
+
+  @override
+  String get bugReportSendFailedRejected =>
+      'The relay rejected this report. Save the log to a file and attach it yourself.';
+
+  @override
+  String get bugReportSendFailedDemo =>
+      'Demo mode does not publish reports. Save the log to a file instead.';
+
+  @override
+  String get bugReportDiscard => 'Discard';
+
+  @override
+  String get bugReportDiscardQuestion => 'Discard this recording?';
+
+  @override
+  String get bugReportDiscardBody => 'The log will be deleted from the phone.';
+
+  @override
+  String get bugReportDiscardBodyQueued =>
+      'The log will be deleted from the phone and the queued report cancelled.';
 }
