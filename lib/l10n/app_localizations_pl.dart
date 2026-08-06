@@ -698,10 +698,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsDiagnosticsNote =>
-      'Nagraj, co robi aplikacja, gdy odtwarzasz problem, a potem przejrzyj log i zapisz go albo zgłoś.';
+      'Zgłoś błąd wraz z nagraniem tego, co robiła aplikacja, albo poproś o zmianę lub nową funkcję.';
 
   @override
-  String get bugReportTitle => 'Zgłoś błąd';
+  String get bugReportTitle => 'Zgłoś błąd lub pomysł';
 
   @override
   String get bugReportIntroHeader => 'Jak to działa';
@@ -918,4 +918,61 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get bugReportDiscardBodyQueued =>
       'Log zostanie usunięty z telefonu, a zakolejkowana wysyłka anulowana.';
+
+  @override
+  String get bugReportKindQuestion => 'Co zgłaszasz?';
+
+  @override
+  String get bugReportKindBug => 'Błąd';
+
+  @override
+  String get bugReportKindChange => 'Zmianę';
+
+  @override
+  String get bugReportKindFeature => 'Funkcję';
+
+  @override
+  String get bugReportChangeHeader => 'Prośba o zmianę';
+
+  @override
+  String get bugReportChangeBody =>
+      'Coś działa, ale nie tak, jak powinno. Napisz, co robi teraz, a co powinno robić zamiast tego. Nie ma czego nagrywać — to rozstrzyga się przez przeczytanie.';
+
+  @override
+  String get bugReportFeatureHeader => 'Propozycja funkcji';
+
+  @override
+  String get bugReportFeatureBody =>
+      'Czegoś aplikacja jeszcze nie potrafi. Napisz, co chcesz zrobić i dlaczego obecna droga do tego nie prowadzi. Nie ma czego nagrywać.';
+
+  @override
+  String get bugReportRequestPrivacyHeader => 'Co zostanie wysłane';
+
+  @override
+  String get bugReportRequestPrivacyBody =>
+      'To, co napiszesz, oraz wersja aplikacji i serwera — żeby nikt nie musiał pytać, czy to już jest w nowszym wydaniu. Żadnego loga, nic o Twoich pojazdach, nic o Twoim telefonie. Powstaje z tego publiczne zgłoszenie na GitHubie, które każdy może przeczytać i które zostaje na stałe.';
+
+  @override
+  String get bugReportChangeLabel => 'Co powinno się zmienić?';
+
+  @override
+  String get bugReportChangeHint =>
+      'Co robi teraz, a co powinno robić zamiast tego.';
+
+  @override
+  String get bugReportFeatureLabel => 'Czego brakuje?';
+
+  @override
+  String get bugReportFeatureHint =>
+      'Co chcesz zrobić i dlaczego aplikacja na to nie pozwala.';
+
+  @override
+  String get bugReportRequestRequired =>
+      'Napisz, o co prosisz — z pustego zgłoszenia nic nie wynika.';
+
+  @override
+  String get bugReportRequestSentBody => 'Dziękujemy. Zgłoszenie jest otwarte.';
+
+  @override
+  String get bugReportCancelSend => 'Anuluj wysyłanie';
 }

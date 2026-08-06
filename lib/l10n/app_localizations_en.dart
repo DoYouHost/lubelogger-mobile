@@ -686,10 +686,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDiagnosticsNote =>
-      'Record what the app does while you reproduce a problem, then review the log and save it or report it.';
+      'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.';
 
   @override
-  String get bugReportTitle => 'Report a bug';
+  String get bugReportTitle => 'Report a bug or an idea';
 
   @override
   String get bugReportIntroHeader => 'How it works';
@@ -906,4 +906,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bugReportDiscardBodyQueued =>
       'The log will be deleted from the phone and the queued report cancelled.';
+
+  @override
+  String get bugReportKindQuestion => 'What are you reporting?';
+
+  @override
+  String get bugReportKindBug => 'Bug';
+
+  @override
+  String get bugReportKindChange => 'Change';
+
+  @override
+  String get bugReportKindFeature => 'Feature';
+
+  @override
+  String get bugReportChangeHeader => 'Request a change';
+
+  @override
+  String get bugReportChangeBody =>
+      'Something works, but not the way it should. Say what it does now and what it should do instead. Nothing to record — this one is settled by reading it.';
+
+  @override
+  String get bugReportFeatureHeader => 'Request a feature';
+
+  @override
+  String get bugReportFeatureBody =>
+      'Something the app cannot do yet. Say what you are trying to do and why the current way does not get you there. Nothing to record.';
+
+  @override
+  String get bugReportRequestPrivacyHeader => 'What gets sent';
+
+  @override
+  String get bugReportRequestPrivacyBody =>
+      'What you write, and the app and server version you are on — so nobody asks whether it already exists in a newer build. No log, nothing about your vehicles, nothing about your phone. It becomes a public issue on GitHub that anyone can read and that stays for good.';
+
+  @override
+  String get bugReportChangeLabel => 'What should change?';
+
+  @override
+  String get bugReportChangeHint =>
+      'What it does now, and what it should do instead.';
+
+  @override
+  String get bugReportFeatureLabel => 'What is missing?';
+
+  @override
+  String get bugReportFeatureHint =>
+      'What you want to do, and why the app does not let you.';
+
+  @override
+  String get bugReportRequestRequired =>
+      'Write what you are asking for — an empty request cannot be acted on.';
+
+  @override
+  String get bugReportRequestSentBody => 'Thank you. The issue is open.';
+
+  @override
+  String get bugReportCancelSend => 'Cancel sending';
 }

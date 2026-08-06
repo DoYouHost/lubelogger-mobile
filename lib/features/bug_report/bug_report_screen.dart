@@ -9,6 +9,7 @@ import '../../core/diagnostics/log_store.dart' show recordingLimit;
 import '../../core/diagnostics/log_summary.dart';
 import '../../core/diagnostics/log_tag.dart';
 import '../../core/diagnostics/relay_client.dart';
+import '../../core/diagnostics/report_envelope.dart';
 import '../../core/diagnostics/report_sender.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/theme/dash_theme.dart';
@@ -45,13 +46,45 @@ class BugReportScreen extends ConsumerWidget {
   }
 }
 
-class _IdleView extends ConsumerWidget {
+/// Where all three kinds start. A bug goes on to record; a change or feature
+/// request is written and sent from here, because there is nothing about the app
+/// running that would settle it.
+class _IdleView extends ConsumerStatefulWidget {
   const _IdleView();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_IdleView> createState() => _IdleViewState();
+}
+
+class _IdleViewState extends ConsumerState<_IdleView> {
+  final _description = TextEditingController();
+
+  /// Ticks the countdown while a queued request waits out the relay's delay —
+  /// the same job [_ReviewViewState] does for a bug report.
+  Timer? _tick;
+
+  @override
+  void dispose() {
+    _description.dispose();
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  void _syncTicker(SendPhase phase) {
+    final needed = phase == SendPhase.waiting;
+    if (needed == (_tick != null)) return;
+    _tick?.cancel();
+    _tick = needed
+        ? Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}))
+        : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final recovered = ref.watch(bugReportProvider.select((s) => s.recovered));
+    final state = ref.watch(bugReportProvider);
+    final recovered = state.recovered;
+    _syncTicker(state.send.phase);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -92,25 +125,120 @@ class _IdleView extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
         ],
-        _Card(title: l10n.bugReportIntroHeader, body: l10n.bugReportIntroBody),
+        _KindChoice(
+          kind: state.kind,
+          onChanged: ref.read(bugReportProvider.notifier).chooseKind,
+        ),
         const SizedBox(height: 12),
-        _Card(
-          title: l10n.bugReportPrivacyHeader,
-          body: l10n.bugReportPrivacyBody,
-          icon: Icons.lock_outline_rounded,
-        ),
-        const SizedBox(height: 20),
-        logTag(
-          'bug_report.start',
-          FilledButton.icon(
-            style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
-            icon: const Icon(Icons.fiber_manual_record_rounded, size: 16),
-            label: Text(l10n.bugReportStart),
-            onPressed: () => _start(context, ref),
-          ),
-        ),
+        if (state.kind.needsLog)
+          ..._bugSteps(l10n)
+        else
+          ..._requestForm(l10n, state),
       ],
     );
+  }
+
+  List<Widget> _bugSteps(AppLocalizations l10n) => [
+    _Card(title: l10n.bugReportIntroHeader, body: l10n.bugReportIntroBody),
+    const SizedBox(height: 12),
+    _Card(
+      title: l10n.bugReportPrivacyHeader,
+      body: l10n.bugReportPrivacyBody,
+      icon: Icons.lock_outline_rounded,
+    ),
+    const SizedBox(height: 20),
+    logTag(
+      'bug_report.start',
+      FilledButton.icon(
+        style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
+        icon: const Icon(Icons.fiber_manual_record_rounded, size: 16),
+        label: Text(l10n.bugReportStart),
+        onPressed: () => _start(context, ref),
+      ),
+    ),
+  ];
+
+  List<Widget> _requestForm(AppLocalizations l10n, BugReportState state) {
+    final feature = state.kind == ReportKind.feature;
+    final sent = state.send.phase == SendPhase.sent;
+    return [
+      _Card(
+        title: feature
+            ? l10n.bugReportFeatureHeader
+            : l10n.bugReportChangeHeader,
+        body: feature ? l10n.bugReportFeatureBody : l10n.bugReportChangeBody,
+        icon: feature
+            ? Icons.lightbulb_outline_rounded
+            : Icons.tune_rounded,
+      ),
+      const SizedBox(height: 12),
+      _Card(
+        title: l10n.bugReportRequestPrivacyHeader,
+        body: l10n.bugReportRequestPrivacyBody,
+        icon: Icons.lock_outline_rounded,
+      ),
+      const SizedBox(height: 12),
+      _DescriptionField(
+        controller: _description,
+        // Frozen once the report is queued: what waits on disk is a copy, so
+        // typing on would edit something that is no longer what gets sent.
+        enabled:
+            state.send.phase == SendPhase.idle ||
+            state.send.phase == SendPhase.failed,
+        label: feature
+            ? l10n.bugReportFeatureLabel
+            : l10n.bugReportChangeLabel,
+        hint: feature ? l10n.bugReportFeatureHint : l10n.bugReportChangeHint,
+      ),
+      _SendStatus(send: state.send),
+      const SizedBox(height: 8),
+      if (sent)
+        _SentActions(
+          url: state.send.issueUrl,
+          body: l10n.bugReportRequestSentBody,
+          onDone: _finishRequest,
+        )
+      else ...[
+        _SendButton(send: state.send, onSend: _sendRequest),
+        // Only while something is queued. Before that there is nothing to call
+        // off, and afterwards the relay already has it.
+        if (state.send.phase == SendPhase.waiting) ...[
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: ref.read(bugReportProvider.notifier).cancelSend,
+            child: Text(l10n.bugReportCancelSend),
+          ).tagged('bug_report.cancel_send'),
+        ],
+      ],
+    ];
+  }
+
+  /// Refuses an empty request rather than disabling the button, for the same
+  /// reason the bug flow does: a dead button explains nothing.
+  Future<void> _sendRequest() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final description = _description.text.trim();
+    if (description.isEmpty) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.bugReportRequestRequired)));
+      return;
+    }
+    await ref.read(bugReportProvider.notifier).sendRequest(description);
+  }
+
+  /// Nothing to delete here — a request leaves no recording behind — so this
+  /// only clears the form and hands the user back.
+  void _finishRequest() {
+    final l10n = AppLocalizations.of(context);
+    final home = ref.read(serverProfileProvider) == null ? '/setup' : '/';
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.bugReportSent)));
+    _description.clear();
+    ref.read(bugReportProvider.notifier).reset();
+    GoRouter.of(context).go(home);
   }
 
   /// Hands the app straight back to the user: the bug waits on the screen they
@@ -122,6 +250,65 @@ class _IdleView extends ConsumerWidget {
     final home = ref.read(serverProfileProvider) == null ? '/setup' : '/';
     await ref.read(bugReportProvider.notifier).start();
     if (context.mounted) context.go(home);
+  }
+}
+
+/// The first decision: a bug, which is settled by evidence, or a request, which
+/// is settled by argument. It is what decides whether anything gets recorded at
+/// all.
+class _KindChoice extends StatelessWidget {
+  const _KindChoice({required this.kind, required this.onChanged});
+
+  final ReportKind kind;
+  final ValueChanged<ReportKind> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 8),
+          child: Text(
+            l10n.bugReportKindQuestion,
+            style: TextStyle(
+              fontFamily: DashTokens.fontUi,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: t.textSecondary,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<ReportKind>(
+            segments: [
+              ButtonSegment(
+                value: ReportKind.bug,
+                icon: const Icon(Icons.bug_report_outlined, size: 16),
+                label: Text(l10n.bugReportKindBug),
+              ),
+              ButtonSegment(
+                value: ReportKind.change,
+                icon: const Icon(Icons.tune_rounded, size: 16),
+                label: Text(l10n.bugReportKindChange),
+              ),
+              ButtonSegment(
+                value: ReportKind.feature,
+                icon: const Icon(Icons.lightbulb_outline_rounded, size: 16),
+                label: Text(l10n.bugReportKindFeature),
+              ),
+            ],
+            selected: {kind},
+            showSelectedIcon: false,
+            onSelectionChanged: (picked) => onChanged(picked.first),
+          ),
+        ).tagged('bug_report.kind'),
+      ],
+    );
   }
 }
 
@@ -475,13 +662,23 @@ class _DestinationChoice extends StatelessWidget {
 }
 
 class _DescriptionField extends StatelessWidget {
-  const _DescriptionField({required this.controller, required this.enabled});
+  const _DescriptionField({
+    required this.controller,
+    required this.enabled,
+    this.label,
+    this.hint,
+  });
 
   final TextEditingController controller;
 
   /// False once the report has been handed over. What is queued is a copy, so
   /// carrying on typing would edit something that is no longer what gets sent.
   final bool enabled;
+
+  /// Defaults to the bug wording. A request asks for something that does not
+  /// exist yet, so "what went wrong" would be the wrong question.
+  final String? label;
+  final String? hint;
 
   @override
   Widget build(BuildContext context) {
@@ -499,8 +696,8 @@ class _DescriptionField extends StatelessWidget {
       keyboardType: TextInputType.multiline,
       decoration: dashFieldDecoration(
         t,
-        labelText: l10n.bugReportDescriptionLabel,
-        hintText: l10n.bugReportDescriptionHint,
+        labelText: label ?? l10n.bugReportDescriptionLabel,
+        hintText: hint ?? l10n.bugReportDescriptionHint,
       ),
       // Not tagged with its text: what the user types never reaches the log.
     ).tagged('bug_report.description');
@@ -681,10 +878,14 @@ class _SendButton extends StatelessWidget {
 /// Replaces the actions once the issue exists: the URL is the one thing the user
 /// cannot get back if this screen closes without showing it.
 class _SentActions extends StatelessWidget {
-  const _SentActions({required this.url, required this.onDone});
+  const _SentActions({required this.url, required this.onDone, this.body});
 
   final String? url;
   final VoidCallback onDone;
+
+  /// Defaults to the bug wording, which promises an attached log a request does
+  /// not have.
+  final String? body;
 
   @override
   Widget build(BuildContext context) {
@@ -706,7 +907,7 @@ class _SentActions extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '${l10n.bugReportSent} — ${l10n.bugReportSentBody}',
+                '${l10n.bugReportSent} — ${body ?? l10n.bugReportSentBody}',
                 style: TextStyle(
                   fontFamily: DashTokens.fontUi,
                   fontSize: 12,

@@ -1337,13 +1337,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDiagnosticsNote.
   ///
   /// In en, this message translates to:
-  /// **'Record what the app does while you reproduce a problem, then review the log and save it or report it.'**
+  /// **'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.'**
   String get settingsDiagnosticsNote;
 
   /// No description provided for @bugReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Report a bug'**
+  /// **'Report a bug or an idea'**
   String get bugReportTitle;
 
   /// No description provided for @bugReportIntroHeader.
@@ -1699,6 +1699,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The log will be deleted from the phone and the queued report cancelled.'**
   String get bugReportDiscardBodyQueued;
+
+  /// No description provided for @bugReportKindQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What are you reporting?'**
+  String get bugReportKindQuestion;
+
+  /// No description provided for @bugReportKindBug.
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get bugReportKindBug;
+
+  /// No description provided for @bugReportKindChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get bugReportKindChange;
+
+  /// No description provided for @bugReportKindFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature'**
+  String get bugReportKindFeature;
+
+  /// No description provided for @bugReportChangeHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a change'**
+  String get bugReportChangeHeader;
+
+  /// No description provided for @bugReportChangeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Something works, but not the way it should. Say what it does now and what it should do instead. Nothing to record — this one is settled by reading it.'**
+  String get bugReportChangeBody;
+
+  /// No description provided for @bugReportFeatureHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Request a feature'**
+  String get bugReportFeatureHeader;
+
+  /// No description provided for @bugReportFeatureBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Something the app cannot do yet. Say what you are trying to do and why the current way does not get you there. Nothing to record.'**
+  String get bugReportFeatureBody;
+
+  /// No description provided for @bugReportRequestPrivacyHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'What gets sent'**
+  String get bugReportRequestPrivacyHeader;
+
+  /// No description provided for @bugReportRequestPrivacyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What you write, and the app and server version you are on — so nobody asks whether it already exists in a newer build. No log, nothing about your vehicles, nothing about your phone. It becomes a public issue on GitHub that anyone can read and that stays for good.'**
+  String get bugReportRequestPrivacyBody;
+
+  /// No description provided for @bugReportChangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What should change?'**
+  String get bugReportChangeLabel;
+
+  /// No description provided for @bugReportChangeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What it does now, and what it should do instead.'**
+  String get bugReportChangeHint;
+
+  /// No description provided for @bugReportFeatureLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'What is missing?'**
+  String get bugReportFeatureLabel;
+
+  /// No description provided for @bugReportFeatureHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What you want to do, and why the app does not let you.'**
+  String get bugReportFeatureHint;
+
+  /// No description provided for @bugReportRequestRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write what you are asking for — an empty request cannot be acted on.'**
+  String get bugReportRequestRequired;
+
+  /// No description provided for @bugReportRequestSentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. The issue is open.'**
+  String get bugReportRequestSentBody;
+
+  /// No description provided for @bugReportCancelSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel sending'**
+  String get bugReportCancelSend;
 }
 
 class _AppLocalizationsDelegate

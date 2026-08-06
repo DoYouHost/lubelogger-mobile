@@ -107,7 +107,7 @@ class ReportSender {
     }
   }
 
-  /// Commits the report: it goes to disk first, so closing the app cannot lose
+  /// Commits a bug report: it goes to disk first, so closing the app cannot lose
   /// it.
   ///
   /// The header and the schema are not parameters: they are read out of [log]
@@ -115,6 +115,29 @@ class ReportSender {
   Future<void> submit({
     required String description,
     required String log,
+  }) => _commit(
+    kind: ReportKind.bug,
+    description: description,
+    envelope: reportEnvelope(log),
+    log: log,
+  );
+
+  /// Commits a change or a feature request, which carries no recording.
+  ///
+  /// The envelope is a parameter here because there is no log to derive one
+  /// from — see [requestEnvelope] for the three fields it holds and why it is
+  /// not the header a bug report sends.
+  Future<void> submitRequest({
+    required ReportKind kind,
+    required String description,
+    required ReportEnvelope envelope,
+  }) => _commit(kind: kind, description: description, envelope: envelope);
+
+  Future<void> _commit({
+    required ReportKind kind,
+    required String description,
+    required ReportEnvelope envelope,
+    String? log,
   }) async {
     // Refused here rather than at the tap, so the demo behaves like the real app
     // right up to the point where a public issue would be created: the report is
@@ -136,9 +159,9 @@ class ReportSender {
     }
     final usable = _ticket!;
 
-    final envelope = reportEnvelope(log);
     await _outbox.put(
       id: DateTime.now().microsecondsSinceEpoch.toRadixString(36),
+      kind: kind,
       description: description,
       header: envelope.header,
       logSchema: envelope.logSchema,
@@ -187,12 +210,13 @@ class ReportSender {
         return;
       }
       final log = await _outbox.readLog(pending);
-      if (log == null) {
+      if (pending.hasLog && log == null) {
         _emit(const SendState.failed(RelayFailure.rejected));
         return;
       }
       await _outbox.put(
         id: pending.id,
+        kind: pending.kind,
         description: pending.description,
         header: pending.header,
         logSchema: pending.logSchema,
@@ -211,7 +235,10 @@ class ReportSender {
 
     _emit(const SendState.sending());
     final log = await _outbox.readLog(pending);
-    if (log == null) {
+    // A report that should have a log and does not: the file went missing under
+    // us, and sending the description alone would file it as something the user
+    // did not write.
+    if (pending.hasLog && log == null) {
       await _outbox.clear();
       _emit(const SendState.failed(RelayFailure.rejected));
       return;
@@ -221,6 +248,7 @@ class ReportSender {
       final url = await _client.send(
         installId: await _installId(),
         ticket: pending.ticket,
+        kind: pending.kind,
         description: pending.description,
         header: pending.header,
         logSchema: pending.logSchema,

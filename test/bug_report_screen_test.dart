@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +15,31 @@ import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:lubelogger_mobile/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Answers the relay's challenge without a socket. Choosing a request kind
+/// fetches a ticket straight away, and a test must not depend on DNS for that.
+class _OfflineRelay implements HttpClientAdapter {
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final now = DateTime.now();
+    return ResponseBody.fromString(
+      '{"ticket":"signed","nbf":${now.millisecondsSinceEpoch},'
+      '"exp":${now.add(const Duration(minutes: 10)).millisecondsSinceEpoch},'
+      '"seed":"seed","bits":0}',
+      200,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
 void main() {
   late AppLocalizations l10n;
   late List<({String fileName, String log})> saved;
@@ -23,6 +51,9 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        bareDioProvider.overrideWithValue(
+          Dio()..httpClientAdapter = _OfflineRelay(),
+        ),
         // In-memory recording: no package info, no support directory, no files.
         diagnosticRecorderProvider.overrideWith(
           (ref) => DiagnosticRecorder(
@@ -90,6 +121,60 @@ void main() {
     expect(find.text(l10n.bugReportPrivacyHeader), findsOneWidget);
     expect(find.text(l10n.bugReportStart), findsOneWidget);
     expect(DiagnosticRecorder.isRecording, isFalse);
+  });
+
+  testWidgets('a feature request skips recording entirely', (tester) async {
+    await pumpScreen(tester);
+
+    await tester.tap(find.text(l10n.bugReportKindFeature));
+    await tester.pumpAndSettle();
+
+    // Nothing to reproduce, so nothing to record: the whole recording step is
+    // gone and the form is the report.
+    expect(find.text(l10n.bugReportStart), findsNothing);
+    expect(find.text(l10n.bugReportFeatureHeader), findsOneWidget);
+    expect(find.text(l10n.bugReportFeatureLabel), findsOneWidget);
+    expect(find.text(l10n.bugReportSend), findsOneWidget);
+    // And the promise made is the one a request can keep.
+    expect(find.text(l10n.bugReportRequestPrivacyHeader), findsOneWidget);
+    expect(DiagnosticRecorder.isRecording, isFalse);
+  });
+
+  testWidgets('a change request asks its own question', (tester) async {
+    await pumpScreen(tester);
+
+    await tester.tap(find.text(l10n.bugReportKindChange));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.bugReportChangeLabel), findsOneWidget);
+    // "What went wrong" is the wrong question for something that works.
+    expect(find.text(l10n.bugReportDescriptionLabel), findsNothing);
+  });
+
+  testWidgets('an empty request is refused', (tester) async {
+    await pumpScreen(tester);
+
+    await tester.tap(find.text(l10n.bugReportKindFeature));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text(l10n.bugReportSend));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.bugReportSend));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.bugReportRequestRequired), findsOneWidget);
+  });
+
+  testWidgets('going back to a bug brings the recording step back',
+      (tester) async {
+    await pumpScreen(tester);
+
+    await tester.tap(find.text(l10n.bugReportKindFeature));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.bugReportKindBug));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.bugReportStart), findsOneWidget);
+    expect(find.text(l10n.bugReportFeatureLabel), findsNothing);
   });
 
   testWidgets('a finished recording is reviewed before anything leaves',

@@ -6,8 +6,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/diagnostics/relay_client.dart';
 import 'package:lubelogger_mobile/core/diagnostics/relay_pow.dart';
+import 'package:lubelogger_mobile/core/diagnostics/report_envelope.dart';
 import 'package:lubelogger_mobile/core/diagnostics/report_outbox.dart';
 import 'package:lubelogger_mobile/core/diagnostics/report_sender.dart';
+import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
 
 /// The relay, as far as these tests are concerned: a challenge with no proof of
 /// work to solve, and whatever answer to `/report` the test asks for.
@@ -126,6 +128,87 @@ void main() {
     sender.dispose();
   });
 
+  test('a bug says so on the wire, so the relay can tell them apart', () async {
+    final sender = build();
+    await sender.prepare();
+    await sender.submit(description: 'the garage stays empty', log: _log);
+
+    expect(relay.reports.single['kind'], 'bug');
+    sender.dispose();
+  });
+
+  group('change and feature requests', () {
+    test('a request goes out with no log at all', () async {
+      final sender = build();
+      await sender.prepare();
+      await sender.submitRequest(
+        kind: ReportKind.feature,
+        description: 'let me sort the fuel table by cost',
+        envelope: requestEnvelope(
+          const SessionFacts(app: '0.2.8+208', server: '1.4.9', locale: 'pl'),
+        ),
+      );
+
+      final report = relay.reports.single;
+      expect(report['kind'], 'feature');
+      expect(report['description'], 'let me sort the fuel table by cost');
+      // Absent, not empty: the relay has to be able to tell a request from a
+      // bug report whose recording came out blank.
+      expect(report.containsKey('logGz'), isFalse);
+      expect(report.containsKey('logSchema'), isFalse);
+      sender.dispose();
+    });
+
+    test('the header holds the versions and nothing about the phone', () async {
+      final sender = build();
+      await sender.prepare();
+      await sender.submitRequest(
+        kind: ReportKind.change,
+        description: 'the date picker should open on the last date used',
+        envelope: requestEnvelope(
+          const SessionFacts(
+            app: '0.2.8+208',
+            server: '1.4.9',
+            locale: 'pl',
+            os: 'Android 15',
+            environment: {'device': 'Xiaomi 2201123G', 'tz': '+02:00'},
+          ),
+        ),
+      );
+
+      final header = (relay.reports.single['header']! as Map)
+          .cast<String, Object?>();
+      expect(header['app'], '0.2.8+208');
+      expect(header['server'], '1.4.9');
+      expect(header['locale'], 'pl');
+      // An idea is answered by reading it; whose phone it came from is not part
+      // of the answer, so it does not go into a public issue.
+      expect(header.keys, isNot(contains('device')));
+      expect(header.keys, isNot(contains('tz')));
+      expect(header.keys, isNot(contains('os')));
+      sender.dispose();
+    });
+
+    test('a queued request survives the app without growing a log', () async {
+      relay = _FakeRelay(notBefore: const Duration(minutes: 5));
+      final sender = build();
+      await sender.prepare();
+      await sender.submitRequest(
+        kind: ReportKind.change,
+        description: 'remember the last vehicle',
+        envelope: requestEnvelope(const SessionFacts(app: '0.2.8+208')),
+      );
+
+      final queued = await outbox.peek();
+      expect(queued, isNotNull);
+      expect(queued!.kind, ReportKind.change);
+      expect(queued.hasLog, isFalse);
+      // The missing log must not read as a log that went missing.
+      expect(queued.logPath, isNull);
+      sender.dispose();
+    });
+  });
+
   test('a ticket that is not due yet queues the report to disk', () async {
     relay = _FakeRelay(notBefore: const Duration(minutes: 5));
     final sender = build();
@@ -207,13 +290,14 @@ void main() {
     );
     final pending = await outbox.put(
       id: 'x',
+      kind: ReportKind.bug,
       description: 'd',
       header: const {'app': '0.2.7+207'},
       logSchema: 1,
       ticket: ticket,
       log: _log,
     );
-    File(pending.logPath).deleteSync();
+    File(pending.logPath!).deleteSync();
 
     expect(await outbox.peek(), isNull);
   });
