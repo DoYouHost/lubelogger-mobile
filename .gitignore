@@ -48,6 +48,8 @@ app.*.map.json
 # Miscellaneous
 *.class
 *.lock
+# ...except the one that decides which versions a build gets; see below.
+!pubspec.lock
 *.log
 *.pyc
 *.swp
@@ -171,8 +173,10 @@ app.*.symbols
 .dart_tool/
 .packages
 build/
-# If you're building an application, you may want to check-in your pubspec.lock
-pubspec.lock
+# pubspec.lock is deliberately NOT ignored: this is an application, so the build
+# has to be reproducible. Leaving it out let CI resolve workmanager_android 0.9.3
+# — whose Android plugin class does not match what the generated registrant
+# references — while a developer's older cache kept building fine locally.
 
 # Directory created by dartdoc
 # If you don't generate documentation locally you can remove this line.

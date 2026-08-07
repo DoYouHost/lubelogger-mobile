@@ -46,8 +46,13 @@ jobs:
       - name: Toolchain
         run: flutter --version
 
+      # --enforce-lockfile, so a stale lock fails here instead of quietly
+      # resolving something else. That is the failure this repository already
+      # had: the lock was not committed, CI picked a newer workmanager_android
+      # than any developer had, and the build died in the generated plugin
+      # registrant with a class that does not exist.
       - name: Dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Analyze
         run: flutter analyze
