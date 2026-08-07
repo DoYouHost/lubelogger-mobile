@@ -695,15 +695,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bugReportIntroHeader => 'How it works';
 
   @override
-  String get bugReportIntroBody =>
-      'Start recording, reproduce the problem, then come back and finish. The app writes down what it does — screens you open, buttons you press, requests to the server and errors — so the report says more than “it does not work”.';
-
-  @override
   String get bugReportPrivacyHeader => 'What ends up in the log';
-
-  @override
-  String get bugReportPrivacyBody =>
-      'Never your API key, your password or the text you type. Your server address is reduced to its shape: http or https, a name or an IP, and the port. What goes to the server and comes back keeps its field names, numbers and dates — plates, notes and anything you wrote are replaced by their length. It also notes your phone\'s model and Android version, and how you set units and date format, because a fix usually turns on one of those. You review everything before it leaves the phone.';
 
   @override
   String get bugReportStart => 'Start recording';
@@ -713,7 +705,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bugReportRecordingBody =>
-      'Go back to the app and reproduce the problem. The recording bar stays with you — drag it aside or collapse it if it gets in the way, and use it to mark the moment it breaks and to finish.';
+      'Go back and reproduce it. The bar follows you — use it to mark the moment it breaks, and to finish.';
 
   @override
   String bugReportLimit(int minutes) {
@@ -924,21 +916,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bugReportChangeBody =>
-      'Something works, but not the way it should. Say what it does now and what it should do instead. Nothing to record — this one is settled by reading it.';
+      'Something works, but not the way it should.';
 
   @override
   String get bugReportFeatureHeader => 'Request a feature';
 
   @override
-  String get bugReportFeatureBody =>
-      'Something the app cannot do yet. Say what you are trying to do and why the current way does not get you there. Nothing to record.';
+  String get bugReportFeatureBody => 'Something the app cannot do yet.';
 
   @override
   String get bugReportRequestPrivacyHeader => 'What gets sent';
-
-  @override
-  String get bugReportRequestPrivacyBody =>
-      'What you write, and the app and server version you are on — so nobody asks whether it already exists in a newer build. No log, nothing about your vehicles, nothing about your phone. It becomes a public issue on GitHub that anyone can read and that stays for good.';
 
   @override
   String get bugReportChangeLabel => 'What should change?';
@@ -963,4 +950,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bugReportCancelSend => 'Cancel sending';
+
+  @override
+  String get bugReportStepRecord => 'Start recording';
+
+  @override
+  String get bugReportStepReproduce => 'Reproduce the problem';
+
+  @override
+  String get bugReportStepFinish => 'Come back and finish';
+
+  @override
+  String get bugReportLogScreens => 'Screens you open and buttons you press';
+
+  @override
+  String get bugReportLogRequests => 'Requests to the server and its answers';
+
+  @override
+  String get bugReportLogErrors => 'Errors, including the ones you never see';
+
+  @override
+  String get bugReportLogSetup =>
+      'App and server version, your phone, your units and date format';
+
+  @override
+  String get bugReportLogNoKey => 'Your API key or password';
+
+  @override
+  String get bugReportLogNoTyping => 'The text you type';
+
+  @override
+  String get bugReportLogNoAddress =>
+      'Your server address — only http or https, name or IP, and the port';
+
+  @override
+  String get bugReportLogNoData =>
+      'Plates, notes, your records — only how long they were';
+
+  @override
+  String get bugReportReviewFirst =>
+      'You read all of it before it leaves the phone.';
+
+  @override
+  String get bugReportRequestWhatYouWrite => 'What you write';
+
+  @override
+  String get bugReportRequestVersions => 'App and server version';
+
+  @override
+  String get bugReportRequestNoLog => 'No log, no recording';
+
+  @override
+  String get bugReportRequestNoData =>
+      'Nothing about your vehicles or your phone';
+
+  @override
+  String get bugReportRequestPublic =>
+      'It becomes a public issue on GitHub — anyone can read it, and it stays.';
 }

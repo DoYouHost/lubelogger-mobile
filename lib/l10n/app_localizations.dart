@@ -1352,23 +1352,11 @@ abstract class AppLocalizations {
   /// **'How it works'**
   String get bugReportIntroHeader;
 
-  /// No description provided for @bugReportIntroBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Start recording, reproduce the problem, then come back and finish. The app writes down what it does — screens you open, buttons you press, requests to the server and errors — so the report says more than “it does not work”.'**
-  String get bugReportIntroBody;
-
   /// No description provided for @bugReportPrivacyHeader.
   ///
   /// In en, this message translates to:
   /// **'What ends up in the log'**
   String get bugReportPrivacyHeader;
-
-  /// No description provided for @bugReportPrivacyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Never your API key, your password or the text you type. Your server address is reduced to its shape: http or https, a name or an IP, and the port. What goes to the server and comes back keeps its field names, numbers and dates — plates, notes and anything you wrote are replaced by their length. It also notes your phone\'s model and Android version, and how you set units and date format, because a fix usually turns on one of those. You review everything before it leaves the phone.'**
-  String get bugReportPrivacyBody;
 
   /// No description provided for @bugReportStart.
   ///
@@ -1385,7 +1373,7 @@ abstract class AppLocalizations {
   /// No description provided for @bugReportRecordingBody.
   ///
   /// In en, this message translates to:
-  /// **'Go back to the app and reproduce the problem. The recording bar stays with you — drag it aside or collapse it if it gets in the way, and use it to mark the moment it breaks and to finish.'**
+  /// **'Go back and reproduce it. The bar follows you — use it to mark the moment it breaks, and to finish.'**
   String get bugReportRecordingBody;
 
   /// No description provided for @bugReportLimit.
@@ -1733,7 +1721,7 @@ abstract class AppLocalizations {
   /// No description provided for @bugReportChangeBody.
   ///
   /// In en, this message translates to:
-  /// **'Something works, but not the way it should. Say what it does now and what it should do instead. Nothing to record — this one is settled by reading it.'**
+  /// **'Something works, but not the way it should.'**
   String get bugReportChangeBody;
 
   /// No description provided for @bugReportFeatureHeader.
@@ -1745,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @bugReportFeatureBody.
   ///
   /// In en, this message translates to:
-  /// **'Something the app cannot do yet. Say what you are trying to do and why the current way does not get you there. Nothing to record.'**
+  /// **'Something the app cannot do yet.'**
   String get bugReportFeatureBody;
 
   /// No description provided for @bugReportRequestPrivacyHeader.
@@ -1753,12 +1741,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What gets sent'**
   String get bugReportRequestPrivacyHeader;
-
-  /// No description provided for @bugReportRequestPrivacyBody.
-  ///
-  /// In en, this message translates to:
-  /// **'What you write, and the app and server version you are on — so nobody asks whether it already exists in a newer build. No log, nothing about your vehicles, nothing about your phone. It becomes a public issue on GitHub that anyone can read and that stays for good.'**
-  String get bugReportRequestPrivacyBody;
 
   /// No description provided for @bugReportChangeLabel.
   ///
@@ -1801,6 +1783,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel sending'**
   String get bugReportCancelSend;
+
+  /// No description provided for @bugReportStepRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording'**
+  String get bugReportStepRecord;
+
+  /// No description provided for @bugReportStepReproduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Reproduce the problem'**
+  String get bugReportStepReproduce;
+
+  /// No description provided for @bugReportStepFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Come back and finish'**
+  String get bugReportStepFinish;
+
+  /// No description provided for @bugReportLogScreens.
+  ///
+  /// In en, this message translates to:
+  /// **'Screens you open and buttons you press'**
+  String get bugReportLogScreens;
+
+  /// No description provided for @bugReportLogRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests to the server and its answers'**
+  String get bugReportLogRequests;
+
+  /// No description provided for @bugReportLogErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Errors, including the ones you never see'**
+  String get bugReportLogErrors;
+
+  /// No description provided for @bugReportLogSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'App and server version, your phone, your units and date format'**
+  String get bugReportLogSetup;
+
+  /// No description provided for @bugReportLogNoKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Your API key or password'**
+  String get bugReportLogNoKey;
+
+  /// No description provided for @bugReportLogNoTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'The text you type'**
+  String get bugReportLogNoTyping;
+
+  /// No description provided for @bugReportLogNoAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Your server address — only http or https, name or IP, and the port'**
+  String get bugReportLogNoAddress;
+
+  /// No description provided for @bugReportLogNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Plates, notes, your records — only how long they were'**
+  String get bugReportLogNoData;
+
+  /// No description provided for @bugReportReviewFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'You read all of it before it leaves the phone.'**
+  String get bugReportReviewFirst;
+
+  /// No description provided for @bugReportRequestWhatYouWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'What you write'**
+  String get bugReportRequestWhatYouWrite;
+
+  /// No description provided for @bugReportRequestVersions.
+  ///
+  /// In en, this message translates to:
+  /// **'App and server version'**
+  String get bugReportRequestVersions;
+
+  /// No description provided for @bugReportRequestNoLog.
+  ///
+  /// In en, this message translates to:
+  /// **'No log, no recording'**
+  String get bugReportRequestNoLog;
+
+  /// No description provided for @bugReportRequestNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing about your vehicles or your phone'**
+  String get bugReportRequestNoData;
+
+  /// No description provided for @bugReportRequestPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'It becomes a public issue on GitHub — anyone can read it, and it stays.'**
+  String get bugReportRequestPublic;
 }
 
 class _AppLocalizationsDelegate

@@ -139,12 +139,29 @@ class _IdleViewState extends ConsumerState<_IdleView> {
   }
 
   List<Widget> _bugSteps(AppLocalizations l10n) => [
-    _Card(title: l10n.bugReportIntroHeader, body: l10n.bugReportIntroBody),
+    _Card(
+      title: l10n.bugReportIntroHeader,
+      rows: [
+        _Step(1, l10n.bugReportStepRecord),
+        _Step(2, l10n.bugReportStepReproduce),
+        _Step(3, l10n.bugReportStepFinish),
+      ],
+    ),
     const SizedBox(height: 12),
     _Card(
       title: l10n.bugReportPrivacyHeader,
-      body: l10n.bugReportPrivacyBody,
       icon: Icons.lock_outline_rounded,
+      rows: [
+        _Fact.kept(l10n.bugReportLogScreens),
+        _Fact.kept(l10n.bugReportLogRequests),
+        _Fact.kept(l10n.bugReportLogErrors),
+        _Fact.kept(l10n.bugReportLogSetup),
+        _Fact.never(l10n.bugReportLogNoKey),
+        _Fact.never(l10n.bugReportLogNoTyping),
+        _Fact.never(l10n.bugReportLogNoAddress),
+        _Fact.never(l10n.bugReportLogNoData),
+      ],
+      note: l10n.bugReportReviewFirst,
     ),
     const SizedBox(height: 20),
     logTag(
@@ -174,8 +191,16 @@ class _IdleViewState extends ConsumerState<_IdleView> {
       const SizedBox(height: 12),
       _Card(
         title: l10n.bugReportRequestPrivacyHeader,
-        body: l10n.bugReportRequestPrivacyBody,
         icon: Icons.lock_outline_rounded,
+        rows: [
+          _Fact.kept(l10n.bugReportRequestWhatYouWrite),
+          // Named because it is the one thing about the phone that bears on an
+          // idea: whether it is already done in a build the user does not have.
+          _Fact.kept(l10n.bugReportRequestVersions),
+          _Fact.never(l10n.bugReportRequestNoLog),
+          _Fact.never(l10n.bugReportRequestNoData),
+        ],
+        note: l10n.bugReportRequestPublic,
       ),
       const SizedBox(height: 12),
       _DescriptionField(
@@ -1229,16 +1254,135 @@ class _RawBlock extends StatelessWidget {
   }
 }
 
+/// One line of a card's list, with a mark in front of it.
+///
+/// The marks do the work a sub-heading would otherwise do: a tick is something
+/// the report carries, a cross is something it does not. Both are good news
+/// here, so the cross is grey rather than red — it is not a warning, it is the
+/// half of the promise the reader came for.
+class _Fact extends StatelessWidget {
+  const _Fact(this.text, {required this.included});
+
+  const _Fact.kept(String text) : this(text, included: true);
+  const _Fact.never(String text) : this(text, included: false);
+
+  final String text;
+  final bool included;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(
+              included ? Icons.check_rounded : Icons.close_rounded,
+              size: 15,
+              color: included ? t.accentGoldInk : t.textTertiary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 13,
+                height: 1.35,
+                color: included ? t.textSecondary : t.textTertiary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A numbered step. Three of these replace the paragraph that used to explain
+/// the same three things in prose.
+class _Step extends StatelessWidget {
+  const _Step(this.number, this.text);
+
+  final int number;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: t.cardBorder,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '$number',
+              style: TextStyle(
+                fontFamily: DashTokens.fontMono,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: t.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontFamily: DashTokens.fontUi,
+                  fontSize: 13,
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                  color: t.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Card extends StatelessWidget {
   const _Card({
     required this.title,
-    required this.body,
+    this.body,
+    this.rows = const [],
+    this.note,
     this.icon,
     this.footer,
   });
 
   final String title;
-  final String body;
+
+  /// A short lead. Optional, because most of these cards are better as [rows]:
+  /// a consent notice nobody reads is worse consent than a list of six lines
+  /// somebody skims.
+  final String? body;
+
+  /// The card's content as one scannable line each.
+  final List<Widget> rows;
+
+  /// A closing line under the rows, for the one thing that is not a fact about
+  /// the list above it.
+  final String? note;
+
   final IconData? icon;
 
   /// Buttons belonging to this card, when it asks for a decision.
@@ -1277,16 +1421,32 @@ class _Card extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            body,
-            style: TextStyle(
-              fontFamily: DashTokens.fontUi,
-              fontSize: 13,
-              height: 1.45,
-              color: t.textSecondary,
+          if (body case final String lead) ...[
+            const SizedBox(height: 8),
+            Text(
+              lead,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 13,
+                height: 1.45,
+                color: t.textSecondary,
+              ),
             ),
-          ),
+          ],
+          if (rows.isNotEmpty) ...[const SizedBox(height: 10), ...rows],
+          if (note case final String closing) ...[
+            const SizedBox(height: 10),
+            Text(
+              closing,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 12,
+                height: 1.4,
+                fontWeight: FontWeight.w600,
+                color: t.textTertiary,
+              ),
+            ),
+          ],
           if (footer != null) ...[const SizedBox(height: 14), footer!],
         ],
       ),

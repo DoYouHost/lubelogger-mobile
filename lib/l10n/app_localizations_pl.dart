@@ -707,15 +707,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bugReportIntroHeader => 'Jak to działa';
 
   @override
-  String get bugReportIntroBody =>
-      'Włącz nagrywanie, odtwórz problem i wróć tutaj, żeby je zakończyć. Aplikacja zapisuje, co robi — otwierane ekrany, naciskane przyciski, zapytania do serwera i błędy — żeby zgłoszenie mówiło więcej niż „nie działa”.';
-
-  @override
   String get bugReportPrivacyHeader => 'Co trafia do logu';
-
-  @override
-  String get bugReportPrivacyBody =>
-      'Nigdy klucz API, hasło ani tekst, który wpisujesz. Adres serwera zostaje sprowadzony do kształtu: http czy https, nazwa czy IP, i port. Z tego, co idzie do serwera i wraca, zostają nazwy pól, liczby i daty — tablice rejestracyjne, notatki i wszystko, co wpisujesz, zastępuje ich długość. Zapisuje też model telefonu i wersję Androida oraz Twoje ustawienia jednostek i formatu daty, bo zwykle od nich zależy poprawka. Wszystko przeglądasz, zanim opuści telefon.';
 
   @override
   String get bugReportStart => 'Rozpocznij nagrywanie';
@@ -725,7 +717,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bugReportRecordingBody =>
-      'Wróć do aplikacji i odtwórz problem. Pasek nagrywania zostaje z Tobą — przesuń go albo zwiń, jeśli zasłania. Oznacz nim moment awarii i zakończ nagrywanie.';
+      'Wróć do aplikacji i odtwórz problem. Pasek idzie z Tobą — zaznacz nim moment awarii i zakończ nagrywanie.';
 
   @override
   String bugReportLimit(int minutes) {
@@ -935,22 +927,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bugReportChangeHeader => 'Prośba o zmianę';
 
   @override
-  String get bugReportChangeBody =>
-      'Coś działa, ale nie tak, jak powinno. Napisz, co robi teraz, a co powinno robić zamiast tego. Nie ma czego nagrywać — to rozstrzyga się przez przeczytanie.';
+  String get bugReportChangeBody => 'Coś działa, ale nie tak, jak powinno.';
 
   @override
   String get bugReportFeatureHeader => 'Propozycja funkcji';
 
   @override
-  String get bugReportFeatureBody =>
-      'Czegoś aplikacja jeszcze nie potrafi. Napisz, co chcesz zrobić i dlaczego obecna droga do tego nie prowadzi. Nie ma czego nagrywać.';
+  String get bugReportFeatureBody => 'Czegoś aplikacja jeszcze nie potrafi.';
 
   @override
   String get bugReportRequestPrivacyHeader => 'Co zostanie wysłane';
-
-  @override
-  String get bugReportRequestPrivacyBody =>
-      'To, co napiszesz, oraz wersja aplikacji i serwera — żeby nikt nie musiał pytać, czy to już jest w nowszym wydaniu. Żadnego loga, nic o Twoich pojazdach, nic o Twoim telefonie. Powstaje z tego publiczne zgłoszenie na GitHubie, które każdy może przeczytać i które zostaje na stałe.';
 
   @override
   String get bugReportChangeLabel => 'Co powinno się zmienić?';
@@ -975,4 +961,59 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bugReportCancelSend => 'Anuluj wysyłanie';
+
+  @override
+  String get bugReportStepRecord => 'Włącz nagrywanie';
+
+  @override
+  String get bugReportStepReproduce => 'Odtwórz problem';
+
+  @override
+  String get bugReportStepFinish => 'Wróć tutaj i zakończ';
+
+  @override
+  String get bugReportLogScreens => 'Otwierane ekrany i naciskane przyciski';
+
+  @override
+  String get bugReportLogRequests => 'Zapytania do serwera i jego odpowiedzi';
+
+  @override
+  String get bugReportLogErrors => 'Błędy, także te, których nie widzisz';
+
+  @override
+  String get bugReportLogSetup =>
+      'Wersja aplikacji i serwera, Twój telefon, jednostki i format daty';
+
+  @override
+  String get bugReportLogNoKey => 'Klucz API ani hasło';
+
+  @override
+  String get bugReportLogNoTyping => 'Tekst, który wpisujesz';
+
+  @override
+  String get bugReportLogNoAddress =>
+      'Adres serwera — tylko http albo https, nazwa albo IP, i port';
+
+  @override
+  String get bugReportLogNoData =>
+      'Tablice, notatki, Twoje wpisy — tylko ich długość';
+
+  @override
+  String get bugReportReviewFirst => 'Wszystko czytasz, zanim opuści telefon.';
+
+  @override
+  String get bugReportRequestWhatYouWrite => 'To, co napiszesz';
+
+  @override
+  String get bugReportRequestVersions => 'Wersja aplikacji i serwera';
+
+  @override
+  String get bugReportRequestNoLog => 'Żadnego loga, żadnego nagrania';
+
+  @override
+  String get bugReportRequestNoData => 'Nic o Twoich pojazdach ani telefonie';
+
+  @override
+  String get bugReportRequestPublic =>
+      'Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe.';
 }
