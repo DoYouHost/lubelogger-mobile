@@ -89,7 +89,8 @@ Release builds and GitHub releases go through [`just`](https://github.com/casey/
 ```sh
 just build            # release APK       -> build/dist/
 just build-aab        # Play Store bundle -> build/dist/
-just ship X.Y.Z       # full pipeline: bump + test + build + Codeberg release
+just ship X.Y.Z       # full pipeline: bump + test + build + GitHub release
+just ship-dev         # prerelease of the current commit, for Obtainium testers
 ```
 
 Tests and lint:
