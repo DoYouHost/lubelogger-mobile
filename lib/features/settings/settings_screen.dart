@@ -174,6 +174,18 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 18),
               _Section(
+                id: 'diagnostics',
+                title: l10n.settingsDiagnostics,
+                footnote: l10n.settingsDiagnosticsNote,
+                children: [
+                  _LinkRow(
+                    label: l10n.bugReportTitle,
+                    onTap: () => context.push(bugReportRoute),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
                 id: 'server',
                 title: l10n.settingsServer,
                 children: [
@@ -236,18 +248,6 @@ class SettingsScreen extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(serverProfileProvider.notifier).clear(),
                   ).tagged('settings.logout'),
-                ],
-              ),
-              const SizedBox(height: 18),
-              _Section(
-                id: 'diagnostics',
-                title: l10n.settingsDiagnostics,
-                footnote: l10n.settingsDiagnosticsNote,
-                children: [
-                  _LinkRow(
-                    label: l10n.bugReportTitle,
-                    onTap: () => context.push(bugReportRoute),
-                  ),
                 ],
               ),
               const SizedBox(height: 18),

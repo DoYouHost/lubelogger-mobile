@@ -1331,7 +1331,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDiagnostics.
   ///
   /// In en, this message translates to:
-  /// **'Diagnostics'**
+  /// **'Bugs and ideas'**
   String get settingsDiagnostics;
 
   /// No description provided for @settingsDiagnosticsNote.

@@ -336,7 +336,7 @@
     }
   },
 
-  "settingsDiagnostics": "Diagnostics",
+  "settingsDiagnostics": "Bugs and ideas",
   "settingsDiagnosticsNote": "Report a bug with a recording of what the app was doing, or ask for a change or a new feature.",
   "bugReportTitle": "Report a bug or an idea",
   "bugReportIntroHeader": "How it works",

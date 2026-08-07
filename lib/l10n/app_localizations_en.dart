@@ -682,7 +682,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsDiagnostics => 'Diagnostics';
+  String get settingsDiagnostics => 'Bugs and ideas';
 
   @override
   String get settingsDiagnosticsNote =>

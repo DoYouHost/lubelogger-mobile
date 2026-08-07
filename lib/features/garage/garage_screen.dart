@@ -9,6 +9,7 @@ import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
+import '../bug_report/recording_banner.dart' show bugReportRoute;
 import '../common/state_views.dart';
 import 'add_vehicle_form.dart';
 import 'widgets/vehicle_card.dart';
@@ -81,6 +82,16 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
             context,
             titleWidget: const LubeLoggerWordmark(),
             actions: [
+              // On the home screen rather than only in settings: a bug is
+              // noticed while using the app, and a route that runs through six
+              // preference groups is one the person having the bug does not
+              // take. It also has to be reachable *before* reproducing, since
+              // the recording has to be running by then.
+              IconButton(
+                tooltip: l10n.bugReportTitle,
+                icon: const Icon(Icons.feedback_outlined),
+                onPressed: _openFeedback,
+              ).tagged('garage.feedback'),
               IconButton(
                 tooltip: l10n.settingsTitle,
                 icon: const Icon(Icons.settings_outlined),
@@ -165,6 +176,11 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
   void _openSettings() {
     if (_closeOpenActions()) return;
     context.push('/settings');
+  }
+
+  void _openFeedback() {
+    if (_closeOpenActions()) return;
+    context.push(bugReportRoute);
   }
 
   /// Opens the add-vehicle form and, on success, jumps to the new vehicle. A tap

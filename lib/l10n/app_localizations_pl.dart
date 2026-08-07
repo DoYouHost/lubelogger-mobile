@@ -694,7 +694,7 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get settingsDiagnostics => 'Diagnostyka';
+  String get settingsDiagnostics => 'Błędy i pomysły';
 
   @override
   String get settingsDiagnosticsNote =>

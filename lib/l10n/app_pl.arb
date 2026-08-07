@@ -288,7 +288,7 @@
   "notifReminderTitle": "Przypomnienie po terminie",
   "notifReminderBody": "{vehicle}: {description}",
 
-  "settingsDiagnostics": "Diagnostyka",
+  "settingsDiagnostics": "Błędy i pomysły",
   "settingsDiagnosticsNote": "Zgłoś błąd wraz z nagraniem tego, co robiła aplikacja, albo poproś o zmianę lub nową funkcję.",
   "bugReportTitle": "Zgłoś błąd lub pomysł",
   "bugReportIntroHeader": "Jak to działa",
