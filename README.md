@@ -39,11 +39,11 @@ More in [docs/store-assets/screenshots](docs/store-assets/screenshots) (phone, 7
 
 ## Distribution
 
-- **Codeberg Releases** (for [Obtainium](https://github.com/ImranR98/Obtainium)) —
-  [repository releases](https://codeberg.org/DoYouHost/lubelogger-mobile/releases)
-- **Project page:** https://doyouhost.codeberg.page/lubelogger-mobile/
-- **Privacy policy:** https://doyouhost.codeberg.page/lubelogger-mobile/privacy.html
-  ([source](docs/privacy-policy.md))
+- **GitHub Releases** (for [Obtainium](https://github.com/ImranR98/Obtainium)) —
+  [repository releases](https://github.com/DoYouHost/lubelogger-mobile/releases)
+- **Project page:** https://doyouhost.github.io/lubelogger-mobile/
+- **Privacy policy:** https://doyouhost.github.io/lubelogger-mobile/privacy.html
+  ([source](site/privacy.html))
 
 ## Demo mode
 
@@ -83,7 +83,7 @@ flutter pub get
 flutter run                  # on a connected device or emulator
 ```
 
-Release builds and Codeberg releases go through [`just`](https://github.com/casey/just)
+Release builds and GitHub releases go through [`just`](https://github.com/casey/just)
 (see [justfile](justfile)):
 
 ```sh
