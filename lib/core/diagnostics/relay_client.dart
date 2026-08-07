@@ -13,7 +13,12 @@ import 'report_envelope.dart';
 /// Public by necessity — it ships inside the APK — which is why the relay is
 /// expected to meter every caller (a signed ticket with a not-before delay plus
 /// a proof of work) rather than trust this address to stay unknown.
-const String relayBaseUrl = 'https://relay-lube.morganmlg.com';
+///
+/// The path prefix names this application: one relay serves several, and it
+/// decides which repository a report reaches from the prefix the challenge was
+/// issued under. Both endpoints below hang off it, so this must not end in a
+/// slash.
+const String relayBaseUrl = 'https://app-relay.morganmlg.com/lubelogger';
 
 /// A challenge fetched when the user chooses to file an issue.
 ///

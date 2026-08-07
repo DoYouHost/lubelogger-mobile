@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LubeLogger mobile — Privacy Policy</title>
+  <meta name="description" content="Privacy policy for LubeLogger mobile, an unofficial open-source companion app for a self-hosted LubeLogger vehicle maintenance manager.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="container">
+      <a class="brand" href="index.html">Lube<span class="accent">Logger</span> <span class="sub">mobile</span></a>
+      <div class="links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html" class="active">Privacy</a>
+        <a href="https://github.com/DoYouHost/lubelogger-mobile">Source</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <h1 class="page-title">Privacy Policy</h1>
+      <div class="card">
+        <p class="updated">Last updated: 7 August 2026</p>
+
+        <p>LubeLogger mobile is an unofficial, open-source Android companion app for a
+        <strong>self-hosted LubeLogger server</strong> that manages vehicle maintenance records.
+        It is <strong>not affiliated with, endorsed by, or connected to LubeLogger or Hargata
+        Softworks.</strong></p>
+
+        <p>This policy explains what data the app handles. In short: the app has
+        <strong>no analytics, no advertising and no account you create with the developer</strong>,
+        and everything it does while you use it stays between your device and the LubeLogger server
+        address that <strong>you</strong> configure.</p>
+
+        <p>There is one exception, and only you can trigger it: if you decide to send a report from
+        inside the app, what you write is published as a <strong>public issue on GitHub</strong>.
+        Nothing is sent unless you choose that, and the whole path is described under
+        <a href="#sending-a-report">Sending a report</a>.</p>
+
+        <h2>Who the app talks to</h2>
+        <ul>
+          <li><strong>Your LubeLogger server</strong> — the self-hosted address you enter during
+          setup. While you use the app, this is the only server it talks to. There is no cloud
+          backend, no analytics service and no advertising SDK.</li>
+          <li><strong>The report relay and GitHub</strong> — contacted <strong>only</strong> when
+          you open the report form and choose to publish. The relay
+          (<code>app-relay.morganmlg.com</code>) is a small Cloudflare Worker operated by the
+          developer; it exists so that you can file a report without having a GitHub account. If you
+          never send a report, the app never contacts either of them.</li>
+        </ul>
+
+        <h2>Data stored on your device</h2>
+        <ul>
+          <li><strong>Server address and API key</strong> for your LubeLogger server. The API key is
+          stored in the Android <strong>Keystore-backed encrypted storage</strong> on your device and
+          is never sent anywhere except to your own server, over the connection you configure.</li>
+          <li><strong>App settings and preferences</strong> — such as display units, which record
+          tabs are shown, and notification preferences — stored in local app storage.</li>
+          <li><strong>A random installation identifier</strong> — a UUID the app makes up for itself
+          the first time you open the report form. It is not a device identifier and is not derived
+          from one; its only job is to pace reports, so that whoever keeps sending them waits longer
+          each time. Reinstalling the app replaces it.</li>
+          <li><strong>A diagnostic log</strong>, while a recording is running or waiting for you to
+          decide what to do with it.</li>
+        </ul>
+        <p>This data is removed when you uninstall the app or clear its storage.</p>
+
+        <h2>Permissions and why they are used</h2>
+        <ul>
+          <li><strong>Internet</strong> — to reach the LubeLogger server you configure, and the
+          report relay if you choose to send a report.</li>
+          <li><strong>Notifications</strong> — used only if you opt in to reminder notifications, so
+          the app can alert you when a maintenance reminder is due or overdue.</li>
+          <li><strong>Background scheduling / run at startup</strong> — when reminder notifications are
+          enabled, the app periodically checks your server for due reminders in the background and
+          re-registers that check after a device restart. No data leaves your device beyond the
+          connection to your own server.</li>
+        </ul>
+
+        <h2>Files and attachments</h2>
+        <p>When you attach a document or photo to a record, the file you pick is uploaded to
+        <strong>your</strong> LubeLogger server and attached to that record. When you open an
+        attachment, it is downloaded from your server to your device so it can be viewed. Files are
+        exchanged only with your own server.</p>
+
+        <h2>Diagnostic logs</h2>
+        <p>The app <strong>can</strong> record a diagnostic log, but only when <strong>you</strong>
+        start one yourself from the report form. Nothing is recorded before you press start, and a
+        recording stops by itself after <strong>15 minutes</strong>, or sooner if it reaches
+        <strong>10 MB</strong>.</p>
+        <p>Such a log describes what the app did: screens you opened, controls you pressed, requests
+        to your server and the status codes that came back, what the background reminder check
+        decided, and errors. Before anything is written down it goes through a redaction pass, which
+        removes:</p>
+        <ul>
+          <li>your <strong>API key</strong> and anything else shaped like a token, password,
+          authorization header or cookie;</li>
+          <li><strong>user names and e-mail addresses</strong> — a LubeLogger instance is often
+          shared by a household or a small fleet, and naming the other accounts in a public issue
+          has never been part of a diagnosis;</li>
+          <li>the <strong>host part of your server address</strong>. What is kept is its shape —
+          whether it is http or https, whether the host is a name or an IP address, and the port —
+          because that half is often the diagnosis, while the address itself is yours.</li>
+        </ul>
+        <p>A control you press is recorded under an internal name rather than the label shown on
+        screen, and <strong>text you type into the app is not recorded.</strong></p>
+        <p>You review the whole log on screen, and then you choose one of two destinations:</p>
+        <ul>
+          <li><strong>Save to a file</strong> — the log is written where you pick and stays on your
+          phone. Nothing is uploaded, and whether you ever send that file to anyone is entirely your
+          decision.</li>
+          <li><strong>Report on GitHub</strong> — the log is published, as described in the next
+          section.</li>
+        </ul>
+        <p>Once the log has been saved, published or discarded, the app deletes its own copy.</p>
+
+        <h2 id="sending-a-report">Sending a report</h2>
+        <p>This happens only when you write a description in the report form and send it. It is
+        voluntary from beginning to end: if you do not send a report, nothing described in this
+        section takes place.</p>
+
+        <h3>Three kinds, and only one carries a log</h3>
+        <ul>
+          <li>A <strong>bug report</strong> is about something the app did wrong, so it carries the
+          diagnostic log you have just reviewed.</li>
+          <li>A <strong>change or feature request</strong> is an argument about what the app should
+          do, which no recording settles. These carry <strong>no log at all</strong>, and the
+          information about your setup is cut down to the app version, the LubeLogger version your
+          server reports, and your device's language.</li>
+        </ul>
+
+        <h3>What leaves your phone</h3>
+        <ul>
+          <li><strong>Your description</strong>, exactly as you wrote it, in whatever language you
+          used.</li>
+          <li><strong>The diagnostic log</strong> you have just reviewed, compressed — for a bug
+          report only.</li>
+          <li><strong>A short session header</strong>: the app version, your Android version, your
+          device's language tag (for example <code>pl-PL</code>), the LubeLogger version your server
+          reports, and the <em>shape</em> of your server address as described above.</li>
+          <li><strong>The installation identifier</strong> described above.</li>
+          <li><strong>Your IP address</strong>, which the relay necessarily sees, as does any server
+          you connect to.</li>
+        </ul>
+
+        <h3>Where it goes</h3>
+        <p>The relay checks the report, commits the log file — when there is one — to the
+        <code>bug-report-assets</code> branch of the app's public GitHub repository, and opens a
+        <strong>public issue</strong> that quotes your description and the session header and links
+        to the log. The app then shows you the address of that issue.</p>
+        <p><strong>A public issue is public and permanent by its nature.</strong> Anyone can read it,
+        search engines index it, and other people can copy or quote it. Deleting an issue later
+        cannot undo a copy somebody has already taken. Please treat the description as something you
+        are publishing: do not put your name, e-mail address, home address, licence plate, network
+        details or anything else you would not post publicly into it.</p>
+
+        <h3>What the relay stores</h3>
+        <p>The relay's job is to keep this endpoint from being abused, and it holds as little as it
+        can to do that:</p>
+        <ul>
+          <li>Your installation identifier, your IP address and your description are turned into
+          <strong>keyed hashes (HMAC-SHA-256)</strong> before anything is written down. The relay
+          never stores or logs any of the three in the clear.</li>
+          <li>Those hashes, with timestamps, sit in a small counter database used for the hourly and
+          daily caps, the per-address cap and duplicate detection. Report rows are deleted
+          automatically within <strong>25 hours</strong>, and the rows that pace repeat reporting
+          within <strong>48 hours</strong>.</li>
+          <li>The relay keeps <strong>no copy of your log or your description</strong>. Both are
+          forwarded to GitHub, and from then on they exist there and nowhere else.</li>
+          <li>When a cap is hit, the developer receives an alert over Telegram. It carries counters
+          only — never any part of any report.</li>
+        </ul>
+
+        <h3>Services involved</h3>
+        <ul>
+          <li><strong>Cloudflare</strong> — hosts the relay and filters abusive traffic at the edge.
+          It processes connection metadata, including your IP address, in the course of delivering
+          and protecting the request.</li>
+          <li><strong>GitHub</strong> — hosts the public issue and the log file attached to it.</li>
+          <li><strong>Telegram</strong> — carries the maintainer alerts described above, which
+          contain no report content.</li>
+        </ul>
+
+        <h2>Children</h2>
+        <p>LubeLogger mobile is a utility app for vehicle owners and is not directed at children.</p>
+
+        <h2>Data deletion</h2>
+        <p>No data is collected on any server operated by the developer, apart from the short-lived
+        counters described above, which expire on their own and cannot be traced back to you. To
+        remove all locally stored data, uninstall the app or clear its storage in Android settings.
+        Data held by your LubeLogger server is governed by that server, which you control. If you
+        have published a report and want the issue taken down, write to the address below — bearing
+        in mind that removal cannot reach copies already made.</p>
+
+        <h2>Changes to this policy</h2>
+        <p>Updates to this policy will be published at this page. Material changes will be noted by
+        the "Last updated" date above.</p>
+
+        <h2>Contact</h2>
+        <p>Questions about this policy: <a href="mailto:info.doyouhost@gmail.com">info.doyouhost@gmail.com</a></p>
+        <p>Source code (AGPL-3.0):
+        <a href="https://github.com/DoYouHost/lubelogger-mobile">github.com/DoYouHost/lubelogger-mobile</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      &ldquo;LubeLogger&rdquo; is a project of Hargata Softworks. LubeLogger mobile is an independent,
+      community-built companion app and is not affiliated with or endorsed by the LubeLogger project.
+    </div>
+  </footer>
+</body>
+</html>
