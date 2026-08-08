@@ -123,16 +123,23 @@ class VehicleCard extends StatelessWidget {
       ),
     );
     if (info.vehicle.imageLocation.isEmpty) return placeholder;
-    return Image(
-      image: vehicleImageProvider(
-        imageLocation: info.vehicle.imageLocation,
-        baseUrl: baseUrl,
-        apiKey: apiKey,
+    // The cell width decides how much of the photo is worth decoding, and it
+    // varies with the column count, so it is measured rather than assumed.
+    return LayoutBuilder(
+      builder: (context, constraints) => Image(
+        image: vehicleImageProvider(
+          imageLocation: info.vehicle.imageLocation,
+          baseUrl: baseUrl,
+          apiKey: apiKey,
+          cacheWidth:
+              (constraints.maxWidth * MediaQuery.devicePixelRatioOf(context))
+                  .round(),
+        ),
+        fit: BoxFit.cover,
+        errorBuilder: ImageProbe.errorBuilder(placeholder),
+        loadingBuilder: (context, child, progress) =>
+            progress == null ? child : ColoredBox(color: t.subCard),
       ),
-      fit: BoxFit.cover,
-      errorBuilder: ImageProbe.errorBuilder(placeholder),
-      loadingBuilder: (context, child, progress) =>
-          progress == null ? child : ColoredBox(color: t.subCard),
     );
   }
 

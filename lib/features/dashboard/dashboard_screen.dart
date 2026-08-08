@@ -86,124 +86,139 @@ class _DashboardBody extends ConsumerWidget {
         .watch(monthlyBreakdownProvider(vehicleId))
         .valueOrNull;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: [
-        _StatBlock(info: info, stats: stats, units: units, symbol: symbol),
-        const SizedBox(height: 16),
-        // Charts flow two-up on wider (landscape) screens, single column on
-        // portrait phones.
-        ResponsiveCardWrap(
-          maxColumns: 2,
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            ChartCard(
-              title: l10n.chartExpensesByType,
-              child: DonutChart(
-                emptyLabel: l10n.chartNoData,
-                slices: [
-                  ChartSlice(
-                    label: l10n.catService,
-                    value: info.serviceRecordCost,
-                    color: DashTokens.of(context).accentBlue,
-                    legendValue: Formatters.currency(
-                      info.serviceRecordCost,
-                      symbol,
-                    ),
-                  ),
-                  ChartSlice(
-                    label: l10n.catRepairs,
-                    value: info.repairRecordCost,
-                    color: _repairsColor,
-                    legendValue: Formatters.currency(
-                      info.repairRecordCost,
-                      symbol,
-                    ),
-                  ),
-                  ChartSlice(
-                    label: l10n.catUpgrades,
-                    value: info.upgradeRecordCost,
-                    color: _upgradesColor,
-                    legendValue: Formatters.currency(
-                      info.upgradeRecordCost,
-                      symbol,
-                    ),
-                  ),
-                  ChartSlice(
-                    label: l10n.catFuel,
-                    value: info.gasRecordCost,
-                    color: DashTokens.of(context).accentGold,
-                    legendValue: Formatters.currency(
-                      info.gasRecordCost,
-                      symbol,
-                    ),
-                  ),
-                  ChartSlice(
-                    label: l10n.catTax,
-                    value: info.taxRecordCost,
-                    color: DashTokens.of(context).danger,
-                    legendValue: Formatters.currency(
-                      info.taxRecordCost,
-                      symbol,
-                    ),
-                  ),
-                ],
+    // Charts flow two-up on wider (landscape) screens, single column on
+    // portrait phones. Off-screen ones are left unbuilt: a chart is expensive to
+    // lay out and paint, and on a phone at most two are ever in view.
+    final charts = <Widget>[
+      ChartCard(
+        title: l10n.chartExpensesByType,
+        child: DonutChart(
+          emptyLabel: l10n.chartNoData,
+          slices: [
+            ChartSlice(
+              label: l10n.catService,
+              value: info.serviceRecordCost,
+              color: DashTokens.of(context).accentBlue,
+              legendValue: Formatters.currency(
+                info.serviceRecordCost,
+                symbol,
               ),
             ),
-            ChartCard(
-              title: l10n.chartExpensesDistanceByMonth,
-              child: MonthlyComboChart(
-                currencySymbol: symbol,
-                expensesLegend: l10n.legendExpenses,
-                distanceLegend:
-                    '${l10n.legendDistance} (${units.distanceLabel})',
-                emptyLabel: l10n.chartNoData,
-                months: _comboMonths(context, breakdown, units),
+            ChartSlice(
+              label: l10n.catRepairs,
+              value: info.repairRecordCost,
+              color: _repairsColor,
+              legendValue: Formatters.currency(
+                info.repairRecordCost,
+                symbol,
               ),
             ),
-            ChartCard(
-              title: l10n.chartRemindersByUrgency,
-              child: DonutChart(
-                emptyLabel: l10n.chartNoReminders,
-                slices: [
-                  ChartSlice(
-                    label: l10n.urgencyNotUrgent,
-                    value: info.notUrgentReminderCount.toDouble(),
-                    color: _okGreen,
-                    legendValue: '${info.notUrgentReminderCount}',
-                  ),
-                  ChartSlice(
-                    label: l10n.urgencyUrgent,
-                    value: info.urgentReminderCount.toDouble(),
-                    color: DashTokens.of(context).accentOrange,
-                    legendValue: '${info.urgentReminderCount}',
-                  ),
-                  ChartSlice(
-                    label: l10n.urgencyVeryUrgent,
-                    value: info.veryUrgentReminderCount.toDouble(),
-                    color: DashTokens.of(context).danger,
-                    legendValue: '${info.veryUrgentReminderCount}',
-                  ),
-                  ChartSlice(
-                    label: l10n.urgencyPastDue,
-                    value: info.pastDueReminderCount.toDouble(),
-                    color: DashTokens.of(context).textTertiary,
-                    legendValue: '${info.pastDueReminderCount}',
-                  ),
-                ],
+            ChartSlice(
+              label: l10n.catUpgrades,
+              value: info.upgradeRecordCost,
+              color: _upgradesColor,
+              legendValue: Formatters.currency(
+                info.upgradeRecordCost,
+                symbol,
               ),
             ),
-            ChartCard(
-              title: '${units.isElectric ? l10n.chartConsumptionByMonth : l10n.chartFuelMileageByMonth}'
-                  ' (${units.economyLabel})',
-              child: MonthlyBars(
-                lowerIsBetter: units.lowerIsBetter,
-                emptyLabel: l10n.chartNoData,
-                bars: _monthlyBars(stats, units),
+            ChartSlice(
+              label: l10n.catFuel,
+              value: info.gasRecordCost,
+              color: DashTokens.of(context).accentGold,
+              legendValue: Formatters.currency(
+                info.gasRecordCost,
+                symbol,
+              ),
+            ),
+            ChartSlice(
+              label: l10n.catTax,
+              value: info.taxRecordCost,
+              color: DashTokens.of(context).danger,
+              legendValue: Formatters.currency(
+                info.taxRecordCost,
+                symbol,
               ),
             ),
           ],
+        ),
+      ),
+      ChartCard(
+        title: l10n.chartExpensesDistanceByMonth,
+        child: MonthlyComboChart(
+          currencySymbol: symbol,
+          expensesLegend: l10n.legendExpenses,
+          distanceLegend:
+              '${l10n.legendDistance} (${units.distanceLabel})',
+          emptyLabel: l10n.chartNoData,
+          months: _comboMonths(context, breakdown, units),
+        ),
+      ),
+      ChartCard(
+        title: l10n.chartRemindersByUrgency,
+        child: DonutChart(
+          emptyLabel: l10n.chartNoReminders,
+          slices: [
+            ChartSlice(
+              label: l10n.urgencyNotUrgent,
+              value: info.notUrgentReminderCount.toDouble(),
+              color: _okGreen,
+              legendValue: '${info.notUrgentReminderCount}',
+            ),
+            ChartSlice(
+              label: l10n.urgencyUrgent,
+              value: info.urgentReminderCount.toDouble(),
+              color: DashTokens.of(context).accentOrange,
+              legendValue: '${info.urgentReminderCount}',
+            ),
+            ChartSlice(
+              label: l10n.urgencyVeryUrgent,
+              value: info.veryUrgentReminderCount.toDouble(),
+              color: DashTokens.of(context).danger,
+              legendValue: '${info.veryUrgentReminderCount}',
+            ),
+            ChartSlice(
+              label: l10n.urgencyPastDue,
+              value: info.pastDueReminderCount.toDouble(),
+              color: DashTokens.of(context).textTertiary,
+              legendValue: '${info.pastDueReminderCount}',
+            ),
+          ],
+        ),
+      ),
+      ChartCard(
+        title: '${units.isElectric ? l10n.chartConsumptionByMonth : l10n.chartFuelMileageByMonth}'
+            ' (${units.economyLabel})',
+        child: MonthlyBars(
+          lowerIsBetter: units.lowerIsBetter,
+          emptyLabel: l10n.chartNoData,
+          bars: _monthlyBars(stats, units),
+        ),
+      ),
+    ];
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          sliver: SliverToBoxAdapter(
+            child: _StatBlock(
+              info: info,
+              stats: stats,
+              units: units,
+              symbol: symbol,
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          sliver: SliverResponsiveCards(
+            maxColumns: 2,
+            spacing: 16,
+            runSpacing: 16,
+            itemCount: charts.length,
+            itemBuilder: (context, index) => charts[index],
+          ),
         ),
       ],
     );

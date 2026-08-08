@@ -152,6 +152,8 @@ class _Avatar extends StatelessWidget {
                 imageLocation: image,
                 baseUrl: baseUrl,
                 apiKey: apiKey,
+                cacheWidth: (40 * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
               ),
               fit: BoxFit.cover,
               errorBuilder: ImageProbe.errorBuilder(

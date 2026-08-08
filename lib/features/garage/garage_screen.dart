@@ -114,24 +114,29 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                 if (vehicles.isEmpty) {
                   return _EmptyGarage(l10n: l10n, onAdd: _openAddVehicle);
                 }
-                // A single scrolling child holds the responsive card grid, so
-                // pull-to-refresh and swipe-auto-close keep working while the
-                // cards flow into 2–3 columns on wider (landscape) screens.
-                // SlidableAutoCloseBehavior closes any open Edit action when
-                // another card is tapped or the list scrolls.
+                // The cards flow into 2–3 columns on wider (landscape) screens,
+                // built lazily so an off-screen vehicle costs nothing to scroll
+                // past — its photo included. SlidableAutoCloseBehavior closes
+                // any open Edit action when another card is tapped or the list
+                // scrolls. The add tile rides along as the last cell.
                 return SlidableAutoCloseBehavior(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                    children: [
-                      ResponsiveCardWrap(
-                        spacing: 18,
-                        runSpacing: 18,
-                        children: [
-                          for (final info in vehicles)
-                            // Clip each card to its grid cell so a slid-open card
-                            // stays within its own column instead of bleeding over
-                            // the neighbouring vehicle when swiped.
-                            ClipRect(
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                        sliver: SliverResponsiveCards(
+                          spacing: 18,
+                          runSpacing: 18,
+                          itemCount: vehicles.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == vehicles.length) {
+                              return AddVehicleTile(onTap: _openAddVehicle);
+                            }
+                            final info = vehicles[index];
+                            // Clip each card to its grid cell so a slid-open
+                            // card stays within its own column instead of
+                            // bleeding over the neighbouring vehicle.
+                            return ClipRect(
                               child: Slidable(
                                 key: ValueKey(info.vehicle.id),
                                 controller: _controllerFor(info.vehicle.id),
@@ -157,9 +162,9 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                   ),
                                 ),
                               ),
-                            ),
-                          AddVehicleTile(onTap: _openAddVehicle),
-                        ],
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),

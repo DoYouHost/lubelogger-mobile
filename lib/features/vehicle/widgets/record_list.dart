@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/diagnostics/log_tag.dart';
+import '../../../core/layout/responsive.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../common/state_views.dart';
@@ -143,6 +144,24 @@ class RecordCard extends StatelessWidget {
   }
 }
 
+/// What a record tab shows once its records have loaded: the cards, built one at
+/// a time by index, plus an optional header above them (the fuel tab's summary
+/// pills).
+///
+/// Cards are handed over as a builder rather than a list so the tab body can
+/// keep them lazy — see [SliverResponsiveCards].
+class RecordsContent {
+  const RecordsContent({
+    required this.count,
+    required this.card,
+    this.header,
+  });
+
+  final int count;
+  final IndexedWidgetBuilder card;
+  final Widget? header;
+}
+
 /// Shared record-tab body: pull-to-refresh + loading / error / empty / content
 /// switching over an [AsyncValue] list. [onRefresh] both invalidates and awaits
 /// the provider so the spinner reflects the real reload.
@@ -160,7 +179,7 @@ class RecordsTabBody<T> extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final IconData emptyIcon;
   final String emptyLabel;
-  final Widget Function(List<T> records) builder;
+  final RecordsContent Function(List<T> records) builder;
 
   @override
   Widget build(BuildContext context) {
@@ -176,11 +195,28 @@ class RecordsTabBody<T> extends StatelessWidget {
         ),
         data: (records) => records.isEmpty
             ? EmptyStateView(message: emptyLabel, icon: emptyIcon)
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                children: [builder(records)],
-              ),
+            : _content(builder(records)),
       ),
+    );
+  }
+
+  Widget _content(RecordsContent content) {
+    final header = content.header;
+    return CustomScrollView(
+      slivers: [
+        if (header != null)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            sliver: SliverToBoxAdapter(child: header),
+          ),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(16, header == null ? 8 : 0, 16, 32),
+          sliver: SliverResponsiveCards(
+            itemCount: content.count,
+            itemBuilder: content.card,
+          ),
+        ),
+      ],
     );
   }
 }
