@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format/formatters.dart';
 import '../../../core/format/gas_stats.dart';
-import '../../../core/layout/responsive.dart';
 import '../../../core/models/equipment_record.dart';
 import '../../../core/models/gas_record.dart';
 import '../../../core/models/note_record.dart';
@@ -77,25 +76,23 @@ class OdometerTab extends ConsumerWidget {
           deltas[i] = (previous != null && o > previous) ? o - previous : null;
           previous = o > 0 ? o : previous;
         }
-        return ResponsiveCardWrap(
-          children: [
-            for (var i = ascending.length - 1; i >= 0; i--)
-              RecordCard(
-                date: _date(ascending[i].date, units),
-                headline: _odoUnit(ascending[i].odometer, units),
-                meta: [
-                  RecordMetaItem(
-                    Icons.trending_up,
-                    _odoUnit(deltas[i], units),
-                  ),
-                ],
-                onTap: () => showAddOdometerForm(
-                  context,
-                  vehicleId,
-                  existing: ascending[i],
-                ),
+        return RecordsContent(
+          count: ascending.length,
+          card: (context, index) {
+            final i = ascending.length - 1 - index;
+            return RecordCard(
+              date: _date(ascending[i].date, units),
+              headline: _odoUnit(ascending[i].odometer, units),
+              meta: [
+                RecordMetaItem(Icons.trending_up, _odoUnit(deltas[i], units)),
+              ],
+              onTap: () => showAddOdometerForm(
+                context,
+                vehicleId,
+                existing: ascending[i],
               ),
-          ],
+            );
+          },
         );
       },
     );
@@ -134,33 +131,31 @@ class GenericRecordsTab extends ConsumerWidget {
       builder: (records) {
         final sorted = [...records]
           ..sort((a, b) => _compareDates(b.date, a.date)); // newest first
-        return ResponsiveCardWrap(
-          children: [
-            for (final r in sorted)
-              RecordCard(
-                date: _date(r.date, units),
-                headline: Formatters.currency(r.cost, symbol),
-                headlineColor: t.accentGoldInk,
-                description: r.description.isEmpty
-                    ? _placeholder
-                    : r.description,
-                meta: [
-                  if (kind.hasOdometer)
-                    RecordMetaItem(
-                      Icons.speed,
-                      _odoUnit(r.odometer, units),
-                    ),
-                ],
-                onTap: kind.editable
-                    ? () => showGenericRecordForm(
-                        context,
-                        vehicleId,
-                        kind,
-                        existing: r,
-                      )
-                    : null,
-              ),
-          ],
+        return RecordsContent(
+          count: sorted.length,
+          card: (context, index) {
+            final r = sorted[index];
+            return RecordCard(
+              date: _date(r.date, units),
+              headline: Formatters.currency(r.cost, symbol),
+              headlineColor: t.accentGoldInk,
+              description: r.description.isEmpty
+                  ? _placeholder
+                  : r.description,
+              meta: [
+                if (kind.hasOdometer)
+                  RecordMetaItem(Icons.speed, _odoUnit(r.odometer, units)),
+              ],
+              onTap: kind.editable
+                  ? () => showGenericRecordForm(
+                      context,
+                      vehicleId,
+                      kind,
+                      existing: r,
+                    )
+                  : null,
+            );
+          },
         );
       },
     );
@@ -232,87 +227,83 @@ class FuelTab extends ConsumerWidget {
             ? _placeholder
             : '${Formatters.number(v, decimals: 1)} ${units.economyLabel}';
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SummaryPillRow(
-              pills: [
+        return RecordsContent(
+          count: displayed.length,
+          header: SummaryPillRow(
+            pills: [
+              DashPill(
+                label: l10n.fuelPillRecords(records.length),
+                accent: t.accentGold,
+                accentInk: t.accentGoldInk,
+              ),
+              DashPill(
+                label: l10n.fuelPillAvg(econLabel(avgDisplayed)),
+                accent: t.accentBlue,
+              ),
+              if (economies.isNotEmpty) ...[
                 DashPill(
-                  label: l10n.fuelPillRecords(records.length),
-                  accent: t.accentGold,
-                  accentInk: t.accentGoldInk,
-                ),
-                DashPill(
-                  label: l10n.fuelPillAvg(econLabel(avgDisplayed)),
+                  label: l10n.fuelPillMin(
+                    econLabel(economies.reduce((a, b) => a < b ? a : b)),
+                  ),
                   accent: t.accentBlue,
                 ),
-                if (economies.isNotEmpty) ...[
-                  DashPill(
-                    label: l10n.fuelPillMin(
-                      econLabel(economies.reduce((a, b) => a < b ? a : b)),
-                    ),
-                    accent: t.accentBlue,
-                  ),
-                  DashPill(
-                    label: l10n.fuelPillMax(
-                      econLabel(economies.reduce((a, b) => a > b ? a : b)),
-                    ),
-                    accent: t.accentBlue,
-                  ),
-                ],
-                if (stats != null)
-                  DashPill(
-                    label: l10n.fuelPillDistance(
-                      _odoUnit(stats.distanceSpan, units),
-                    ),
-                    accent: t.accentOrange,
-                  ),
                 DashPill(
-                  label: (units.isElectric ? l10n.fuelPillEnergy : l10n.fuelPillFuel)(
-                    '${Formatters.odometer(totalFuel)} ${units.consumptionLabel}',
+                  label: l10n.fuelPillMax(
+                    econLabel(economies.reduce((a, b) => a > b ? a : b)),
+                  ),
+                  accent: t.accentBlue,
+                ),
+              ],
+              if (stats != null)
+                DashPill(
+                  label: l10n.fuelPillDistance(
+                    _odoUnit(stats.distanceSpan, units),
                   ),
                   accent: t.accentOrange,
                 ),
-                DashPill(
-                  label: l10n.fuelPillCost(
-                    Formatters.currency(totalCost, symbol),
-                  ),
-                  accent: t.accentGold,
-                  accentInk: t.accentGoldInk,
+              DashPill(
+                label: (units.isElectric ? l10n.fuelPillEnergy : l10n.fuelPillFuel)(
+                  '${Formatters.odometer(totalFuel)} ${units.consumptionLabel}',
                 ),
+                accent: t.accentOrange,
+              ),
+              DashPill(
+                label: l10n.fuelPillCost(
+                  Formatters.currency(totalCost, symbol),
+                ),
+                accent: t.accentGold,
+                accentInk: t.accentGoldInk,
+              ),
+            ],
+          ),
+          card: (context, index) {
+            final row = displayed[index];
+            return RecordCard(
+              date: _date(row.record.date, units),
+              headline: Formatters.currency(row.record.cost, symbol),
+              headlineColor: t.accentGoldInk,
+              meta: [
+                RecordMetaItem(
+                  Icons.speed,
+                  _odoUnit(row.record.odometer, units),
+                ),
+                RecordMetaItem(
+                  Icons.trending_up,
+                  _odoUnit(row.rawDelta, units),
+                ),
+                RecordMetaItem(
+                  Icons.local_gas_station,
+                  econMeta(row.rawRatio),
+                ),
+                RecordMetaItem(Icons.sell, priceMeta(row.record)),
               ],
-            ),
-            ResponsiveCardWrap(
-              children: [
-                for (final row in displayed)
-                  RecordCard(
-                    date: _date(row.record.date, units),
-                    headline: Formatters.currency(row.record.cost, symbol),
-                    headlineColor: t.accentGoldInk,
-                    meta: [
-                      RecordMetaItem(
-                        Icons.speed,
-                        _odoUnit(row.record.odometer, units),
-                      ),
-                      RecordMetaItem(
-                        Icons.trending_up,
-                        _odoUnit(row.rawDelta, units),
-                      ),
-                      RecordMetaItem(
-                        Icons.local_gas_station,
-                        econMeta(row.rawRatio),
-                      ),
-                      RecordMetaItem(Icons.sell, priceMeta(row.record)),
-                    ],
-                    onTap: () => showAddFuelForm(
-                      context,
-                      vehicleId,
-                      existing: row.record,
-                    ),
-                  ),
-              ],
-            ),
-          ],
+              onTap: () => showAddFuelForm(
+                context,
+                vehicleId,
+                existing: row.record,
+              ),
+            );
+          },
         );
       },
     );
@@ -345,27 +336,28 @@ class SupplyTab extends ConsumerWidget {
       builder: (records) {
         final sorted = [...records]
           ..sort((a, b) => _compareDates(b.date, a.date)); // newest first
-        return ResponsiveCardWrap(
-          children: [
-            for (final r in sorted)
-              RecordCard(
-                date: _date(r.date, units),
-                headline: Formatters.currency(r.cost, symbol),
-                headlineColor: t.accentGoldInk,
-                description: r.description.isEmpty
-                    ? _placeholder
-                    : r.description,
-                meta: [
-                  if (r.partNumber.isNotEmpty)
-                    RecordMetaItem(Icons.tag, r.partNumber),
-                  if (r.partSupplier.isNotEmpty)
-                    RecordMetaItem(Icons.storefront, r.partSupplier),
-                  if (r.partQuantity.isNotEmpty)
-                    RecordMetaItem(Icons.numbers, r.partQuantity),
-                ],
-                onTap: () => showAddSupplyForm(context, vehicleId, existing: r),
-              ),
-          ],
+        return RecordsContent(
+          count: sorted.length,
+          card: (context, index) {
+            final r = sorted[index];
+            return RecordCard(
+              date: _date(r.date, units),
+              headline: Formatters.currency(r.cost, symbol),
+              headlineColor: t.accentGoldInk,
+              description: r.description.isEmpty
+                  ? _placeholder
+                  : r.description,
+              meta: [
+                if (r.partNumber.isNotEmpty)
+                  RecordMetaItem(Icons.tag, r.partNumber),
+                if (r.partSupplier.isNotEmpty)
+                  RecordMetaItem(Icons.storefront, r.partSupplier),
+                if (r.partQuantity.isNotEmpty)
+                  RecordMetaItem(Icons.numbers, r.partQuantity),
+              ],
+              onTap: () => showAddSupplyForm(context, vehicleId, existing: r),
+            );
+          },
         );
       },
     );
@@ -398,29 +390,30 @@ class PlanTab extends ConsumerWidget {
       builder: (records) {
         final sorted = [...records]
           ..sort((a, b) => _compareDates(b.dateCreated, a.dateCreated));
-        return ResponsiveCardWrap(
-          children: [
-            for (final r in sorted)
-              RecordCard(
-                date: _date(r.dateCreated, units),
-                headline: Formatters.currency(r.cost, symbol),
-                headlineColor: t.accentGoldInk,
-                description: r.description.isEmpty
-                    ? _placeholder
-                    : r.description,
-                meta: [
-                  RecordMetaItem(
-                    Icons.flag_outlined,
-                    _planPriority(r.priority, l10n),
-                  ),
-                  RecordMetaItem(
-                    Icons.timelapse,
-                    _planProgress(r.progress, l10n),
-                  ),
-                ],
-                onTap: () => showAddPlanForm(context, vehicleId, existing: r),
-              ),
-          ],
+        return RecordsContent(
+          count: sorted.length,
+          card: (context, index) {
+            final r = sorted[index];
+            return RecordCard(
+              date: _date(r.dateCreated, units),
+              headline: Formatters.currency(r.cost, symbol),
+              headlineColor: t.accentGoldInk,
+              description: r.description.isEmpty
+                  ? _placeholder
+                  : r.description,
+              meta: [
+                RecordMetaItem(
+                  Icons.flag_outlined,
+                  _planPriority(r.priority, l10n),
+                ),
+                RecordMetaItem(
+                  Icons.timelapse,
+                  _planProgress(r.progress, l10n),
+                ),
+              ],
+              onTap: () => showAddPlanForm(context, vehicleId, existing: r),
+            );
+          },
         );
       },
     );
@@ -456,27 +449,24 @@ class ReminderTab extends ConsumerWidget {
             (a, b) =>
                 _urgencyRank(b.urgency).compareTo(_urgencyRank(a.urgency)),
           );
-        return ResponsiveCardWrap(
-          children: [
-            for (final r in sorted)
-              RecordCard(
-                // Reminders have no date/cost; the description leads instead.
-                date: r.description.isEmpty ? _placeholder : r.description,
-                headline: _urgencyLabel(r.urgency, l10n),
-                headlineColor: _urgencyColor(r.urgency, t),
-                meta: [
-                  if (r.showsDate)
-                    RecordMetaItem(Icons.event, _date(r.dueDate, units)),
-                  if (r.showsOdometer)
-                    RecordMetaItem(
-                      Icons.speed,
-                      _odoUnit(r.dueOdometer, units),
-                    ),
-                ],
-                onTap: () =>
-                    showAddReminderForm(context, vehicleId, existing: r),
-              ),
-          ],
+        return RecordsContent(
+          count: sorted.length,
+          card: (context, index) {
+            final r = sorted[index];
+            return RecordCard(
+              // Reminders have no date/cost; the description leads instead.
+              date: r.description.isEmpty ? _placeholder : r.description,
+              headline: _urgencyLabel(r.urgency, l10n),
+              headlineColor: _urgencyColor(r.urgency, t),
+              meta: [
+                if (r.showsDate)
+                  RecordMetaItem(Icons.event, _date(r.dueDate, units)),
+                if (r.showsOdometer)
+                  RecordMetaItem(Icons.speed, _odoUnit(r.dueOdometer, units)),
+              ],
+              onTap: () => showAddReminderForm(context, vehicleId, existing: r),
+            );
+          },
         );
       },
     );
@@ -507,20 +497,21 @@ class NoteTab extends ConsumerWidget {
         // Pinned first, otherwise keep the server order (a stable sort).
         final sorted = [...records]
           ..sort((a, b) => (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0));
-        return ResponsiveCardWrap(
-          children: [
-            for (final r in sorted)
-              RecordCard(
-                // Notes have no date/cost; the title leads instead.
-                date: r.description.isEmpty ? _placeholder : r.description,
-                headline: '',
-                description: r.noteText.isEmpty ? null : r.noteText,
-                meta: [
-                  if (r.pinned) RecordMetaItem(Icons.push_pin, l10n.notePinned),
-                ],
-                onTap: () => showAddNoteForm(context, vehicleId, existing: r),
-              ),
-          ],
+        return RecordsContent(
+          count: sorted.length,
+          card: (context, index) {
+            final r = sorted[index];
+            return RecordCard(
+              // Notes have no date/cost; the title leads instead.
+              date: r.description.isEmpty ? _placeholder : r.description,
+              headline: '',
+              description: r.noteText.isEmpty ? null : r.noteText,
+              meta: [
+                if (r.pinned) RecordMetaItem(Icons.push_pin, l10n.notePinned),
+              ],
+              onTap: () => showAddNoteForm(context, vehicleId, existing: r),
+            );
+          },
         );
       },
     );
@@ -550,28 +541,28 @@ class EquipmentTab extends ConsumerWidget {
         await ref.read(equipmentRecordsProvider(vehicleId).future);
       },
       builder: (records) {
-        return ResponsiveCardWrap(
-          children: [
-            for (final r in records)
-              RecordCard(
-                // Equipment has no date/cost; the name leads instead.
-                date: r.description.isEmpty ? _placeholder : r.description,
-                headline: r.isEquipped
-                    ? l10n.equipmentEquipped
-                    : l10n.equipmentRemoved,
-                headlineColor: r.isEquipped ? _equippedGreen : t.textTertiary,
-                description: r.notes.isEmpty ? null : r.notes,
-                meta: [
-                  if (r.distanceTraveled != null)
-                    RecordMetaItem(
-                      Icons.route,
-                      _odoUnit(r.distanceTraveled, units),
-                    ),
-                ],
-                onTap: () =>
-                    showAddEquipmentForm(context, vehicleId, existing: r),
-              ),
-          ],
+        return RecordsContent(
+          count: records.length,
+          card: (context, index) {
+            final r = records[index];
+            return RecordCard(
+              // Equipment has no date/cost; the name leads instead.
+              date: r.description.isEmpty ? _placeholder : r.description,
+              headline: r.isEquipped
+                  ? l10n.equipmentEquipped
+                  : l10n.equipmentRemoved,
+              headlineColor: r.isEquipped ? _equippedGreen : t.textTertiary,
+              description: r.notes.isEmpty ? null : r.notes,
+              meta: [
+                if (r.distanceTraveled != null)
+                  RecordMetaItem(
+                    Icons.route,
+                    _odoUnit(r.distanceTraveled, units),
+                  ),
+              ],
+              onTap: () => showAddEquipmentForm(context, vehicleId, existing: r),
+            );
+          },
         );
       },
     );

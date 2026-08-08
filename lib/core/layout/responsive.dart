@@ -31,20 +31,27 @@ extension ResponsiveContext on BuildContext {
   bool get isWideLayout => MediaQuery.sizeOf(this).width >= _wideBreakpoint;
 }
 
-/// Lays [children] out in a responsive number of equal-width columns based on
-/// the available width: one column when narrow (portrait phones), two or three
-/// side by side when there's room. Cells hug their content height, so cards of
+/// Lays cards out in a responsive number of equal-width columns based on the
+/// available width: one column when narrow (portrait phones), two or three side
+/// by side when there's room. Cells hug their content height, so cards of
 /// differing heights sit top-aligned within a row.
-class ResponsiveCardWrap extends StatelessWidget {
-  const ResponsiveCardWrap({
+///
+/// A sliver rather than a box, because the cells are built on demand: the whole
+/// grid used to be one box inside the scroll view, which the viewport can
+/// neither skip nor cull, so a few hundred records were laid out and painted on
+/// every frame they scrolled past.
+class SliverResponsiveCards extends StatelessWidget {
+  const SliverResponsiveCards({
     super.key,
-    required this.children,
+    required this.itemCount,
+    required this.itemBuilder,
     this.spacing = 12,
     this.runSpacing = 0,
     this.maxColumns,
   });
 
-  final List<Widget> children;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
 
   /// Horizontal gap between columns.
   final double spacing;
@@ -53,29 +60,48 @@ class ResponsiveCardWrap extends StatelessWidget {
   /// their own bottom margin (e.g. record cards).
   final double runSpacing;
 
-  /// Caps the computed column count (e.g. charts never go past two-up).
+  /// Caps the computed column count.
   final int? maxColumns;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
+    return SliverLayoutBuilder(
       builder: (context, constraints) {
-        var columns = responsiveColumns(constraints.maxWidth);
+        var columns = responsiveColumns(constraints.crossAxisExtent);
         final cap = maxColumns;
         if (cap != null && columns > cap) columns = cap;
-        // Single column: full-width cells stacked by the Wrap's runSpacing.
-        final cellWidth = columns <= 1
-            ? constraints.maxWidth
-            : (constraints.maxWidth - spacing * (columns - 1)) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: runSpacing,
-          children: [
-            for (final child in children)
-              SizedBox(width: cellWidth, child: child),
-          ],
+        final rows = (itemCount + columns - 1) ~/ columns;
+        return SliverList.builder(
+          itemCount: rows,
+          itemBuilder: (context, row) => Padding(
+            // Like the wrap's runSpacing: between rows only, never trailing.
+            padding: EdgeInsets.only(bottom: row == rows - 1 ? 0 : runSpacing),
+            child: columns == 1
+                ? itemBuilder(context, row)
+                : _row(context, row, columns),
+          ),
         );
       },
+    );
+  }
+
+  /// One row of [columns] equal-width cells, top-aligned so cards of differing
+  /// heights sit flush at the top. The tail of the last row is filled with empty
+  /// cells so the ones before it keep their width.
+  Widget _row(BuildContext context, int row, int columns) {
+    final first = row * columns;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var column = 0; column < columns; column++) ...[
+          if (column > 0) SizedBox(width: spacing),
+          Expanded(
+            child: first + column < itemCount
+                ? itemBuilder(context, first + column)
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -16,18 +16,24 @@ import '../../core/cache/photo_cache.dart';
 /// Pair it with `ImageProbe.errorBuilder`, which is what makes a photo that will
 /// not load visible in a bug report — these requests go out through
 /// [PhotoCache], so the HTTP probe never sees them.
+///
+/// [cacheWidth] is the width the photo is *painted* at, in physical pixels. A
+/// vehicle photo comes off the user's camera, so decoded whole it is a 12 MP,
+/// ~50 MB bitmap being scaled down into a 44px avatar on every frame; give the
+/// widest box it will fill and the decoder scales once instead.
 ImageProvider vehicleImageProvider({
   required String imageLocation,
   required String baseUrl,
   String? apiKey,
+  int? cacheWidth,
 }) {
-  if (imageLocation.startsWith('assets/')) {
-    return AssetImage(imageLocation);
-  }
-  return CachedPhotoImage(
-    path: imageLocation,
-    cache: PhotoCache(baseUrl: baseUrl, apiKey: apiKey),
-  );
+  final ImageProvider provider = imageLocation.startsWith('assets/')
+      ? AssetImage(imageLocation)
+      : CachedPhotoImage(
+          path: imageLocation,
+          cache: PhotoCache(baseUrl: baseUrl, apiKey: apiKey),
+        );
+  return ResizeImage.resizeIfNeeded(cacheWidth, null, provider);
 }
 
 /// A photo painted from [PhotoCache]: off the disk when it is there, off the
