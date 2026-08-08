@@ -122,7 +122,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         l10n.tabDashboard,
         Icons.dashboard_rounded,
         DashboardTab(vehicleId: vehicleId),
-        (ref) => invalidateVehicleData(ref, vehicleId),
+        (ref) => invalidateVehicleData(ref.invalidate, vehicleId),
       ),
       for (final tab in orderedVisible)
         _recordTab(tab, l10n, vehicleId),

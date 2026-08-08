@@ -18,6 +18,7 @@ class SettingsRepository {
   static const _visibleTabsKey = 'visible_tabs';
   static const _tabOrderKey = 'tab_order';
   static const _remindersEnabledKey = 'reminder_notifications_enabled';
+  static const _backgroundRefreshKey = 'background_refresh_enabled';
   static const _diagnosticsSessionKey = 'diagnostics_session';
 
   final SharedPreferences _prefs;
@@ -117,6 +118,19 @@ class SettingsRepository {
   Future<void> saveRemindersEnabled(bool enabled) {
     _logChange('reminders', enabled);
     return _prefs.setBool(_remindersEnabledKey, enabled);
+  }
+
+  /// Whether the background pass may refresh stored data, so the app opens onto
+  /// something current instead of a spinner. Defaults on — unlike the reminder
+  /// check it needs no permission — but it is the app's only unprompted network
+  /// use, which is reason enough for a switch. Also read by the background
+  /// isolate. Queued writes are delivered either way.
+  bool loadBackgroundRefreshEnabled() =>
+      _prefs.getBool(_backgroundRefreshKey) ?? true;
+
+  Future<void> saveBackgroundRefreshEnabled(bool enabled) {
+    _logChange('background_refresh', enabled);
+    return _prefs.setBool(_backgroundRefreshKey, enabled);
   }
 
   /// Id of the diagnostic recording in progress, or null when nothing is being

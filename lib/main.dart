@@ -13,7 +13,7 @@ import 'core/diagnostics/log_event.dart';
 import 'core/diagnostics/session_facts.dart';
 import 'core/format/formatters.dart';
 import 'core/notifications/notification_service.dart';
-import 'core/notifications/reminder_worker.dart';
+import 'core/background/background_worker.dart';
 import 'core/quick_actions_service.dart';
 import 'core/settings/settings_repository.dart';
 import 'features/quick_actions/quick_action_handler.dart';
@@ -81,19 +81,21 @@ Future<void> main() async {
   // below from executing — swallow and log instead of taking the whole app down.
   String? launchPayload;
   try {
-    // Reminder notifications: set up the plugin + background worker, and arm the
-    // periodic check when the user is signed in and has opted in.
+    // Notifications plugin + the recurring background pass (queued writes,
+    // stored data, reminders).
     final l10n = await loadAppLocalizations();
     await notificationService.init(
       channelName: l10n.notifReminderChannelName,
       channelDescription: l10n.notifReminderChannelDescription,
       onTap: _openVehicleFromNotification,
     );
-    await initReminderWorker();
+    await initBackgroundWorker();
     final settings = SettingsRepository(prefs);
     final signedIn = settings.loadProfile() != null;
-    if (signedIn && settings.loadRemindersEnabled()) {
-      await registerReminderWorker();
+    // Armed for anyone signed in, whatever their notification preference: the
+    // same pass is what retries a write the server wasn't there to take.
+    if (signedIn) {
+      await registerBackgroundWorker();
     }
 
     // Launcher quick actions: register the tap handler (it fires now if the app

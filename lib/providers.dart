@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,9 @@ import 'core/app_localizations_loader.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/whoami.dart';
 import 'core/auth/credentials_store.dart';
+import 'core/cache/offline_interceptor.dart';
+import 'core/cache/sync_service.dart';
+import 'core/cache/write_queue.dart';
 import 'core/diagnostics/diagnostic_recorder.dart';
 import 'core/diagnostics/log_event.dart';
 import 'core/diagnostics/relay_client.dart';
@@ -34,7 +39,7 @@ import 'core/models/vehicle_info.dart';
 import 'core/models/vehicle_record.dart';
 import 'core/models/vehicle_tab.dart';
 import 'core/notifications/notification_service.dart';
-import 'core/notifications/reminder_worker.dart';
+import 'core/background/background_worker.dart';
 import 'core/quick_actions_service.dart';
 import 'core/settings/server_profile.dart';
 import 'core/settings/settings_repository.dart';
@@ -173,10 +178,10 @@ class ServerProfileNotifier extends Notifier<ServerProfile?> {
     final settings = ref.read(settingsRepositoryProvider);
     await settings.saveProfile(profile);
     state = profile;
-    // Resume the reminder check for the new session if it was left enabled.
-    if (settings.loadRemindersEnabled()) {
-      await registerReminderWorker();
-    }
+    // Arm the background pass for the new session. Unconditional: even with
+    // reminders and background refresh both off, it is what delivers a write
+    // the server wasn't there to take.
+    await registerBackgroundWorker();
     // Publish the launcher add-record shortcuts for the new session.
     final l10n = await loadAppLocalizations();
     await quickActionsService.setRecordShortcuts(
@@ -185,13 +190,18 @@ class ServerProfileNotifier extends Notifier<ServerProfile?> {
     );
   }
 
-  /// "Log out / change server": clear the profile and every stored secret, stop
-  /// the background reminder check, and remove the launcher shortcuts (none of
-  /// them can work without credentials).
+  /// "Log out / change server": clear the profile and every stored secret, drop
+  /// the offline copies and anything queued for the old server, stop the
+  /// background pass, and remove the launcher shortcuts (none of them can work
+  /// without credentials).
   Future<void> clear() async {
+    // Before the profile goes: the cache is keyed by the server it came from,
+    // and the client that knows which one that is is built from the profile.
+    await ref.read(apiClientProvider).cache.clear();
+    await ref.read(writeQueueProvider).clear();
     await ref.read(settingsRepositoryProvider).clearProfile();
     await ref.read(credentialsStoreProvider).clearAll();
-    await cancelReminderWorker();
+    await cancelBackgroundWorker();
     await quickActionsService.clear();
     state = null;
   }
@@ -227,15 +237,42 @@ class ReminderNotificationsNotifier extends Notifier<bool> {
       if (!granted) return false;
       await settings.saveRemindersEnabled(true);
       state = true;
-      await registerReminderWorker();
+      // The pass is already scheduled while signed in; this only makes sure of
+      // it for a session that predates the background layer.
+      await registerBackgroundWorker();
       return true;
     }
     await settings.saveRemindersEnabled(false);
     state = false;
-    await cancelReminderWorker();
     return true;
   }
 }
+
+/// Whether the background pass may refresh stored data. Independent of the
+/// reminder switch: the pass runs while signed in either way, and this only
+/// says whether it also re-reads the lists.
+final backgroundRefreshProvider =
+    NotifierProvider<BackgroundRefreshNotifier, bool>(
+  BackgroundRefreshNotifier.new,
+);
+
+class BackgroundRefreshNotifier extends Notifier<bool> {
+  @override
+  bool build() =>
+      ref.watch(settingsRepositoryProvider).loadBackgroundRefreshEnabled();
+
+  Future<void> setEnabled(bool enabled) async {
+    await ref
+        .read(settingsRepositoryProvider)
+        .saveBackgroundRefreshEnabled(enabled);
+    state = enabled;
+  }
+}
+
+/// Bytes the offline copy occupies, for the Settings row that offers to drop it.
+final cacheSizeProvider = FutureProvider<int>(
+  (ref) => ref.watch(apiClientProvider).cache.sizeInBytes(),
+);
 
 /// Most recently built client. Survives the transient frame between "change
 /// server" clearing the profile and the router redirecting to /setup, when
@@ -262,8 +299,134 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return _lastApiClient = ApiClient(
     profile: profile,
     credentials: ref.watch(credentialsStoreProvider),
+    queue: ref.watch(writeQueueProvider),
+    status: ref.watch(offlineStatusProvider),
   );
 });
+
+/// Writes the server hasn't taken yet. Held outside [apiClientProvider] so a
+/// client rebuilt on a profile change doesn't drop what is waiting.
+final writeQueueProvider = Provider<WriteQueue>((ref) {
+  final queue = WriteQueue(ref.watch(sharedPreferencesProvider));
+  ref.onDispose(queue.dispose);
+  return queue;
+});
+
+/// Whether the server is answering. Outlives the client for the same reason.
+final offlineStatusProvider = Provider<OfflineStatus>((ref) {
+  final status = OfflineStatus();
+  ref.onDispose(status.dispose);
+  return status;
+});
+
+final syncServiceProvider = Provider<SyncService>(
+  (ref) => SyncService(
+    dio: ref.watch(apiClientProvider).dio,
+    queue: ref.watch(writeQueueProvider),
+    repository: ref.watch(vehiclesRepositoryProvider),
+  ),
+);
+
+/// What the offline layer is holding, and whether the server is answering.
+class SyncState {
+  const SyncState({
+    this.pending = const [],
+    this.rejected = const [],
+    this.offline = false,
+    this.syncing = false,
+    this.lastContact,
+  });
+
+  /// Writes waiting for a server that wasn't there.
+  final List<PendingWrite> pending;
+
+  /// Writes the server refused. They will not be retried; the user reads why
+  /// and dismisses them.
+  final List<PendingWrite> rejected;
+
+  final bool offline;
+  final bool syncing;
+
+  /// When the server last answered anything.
+  final DateTime? lastContact;
+
+  bool get hasWork => pending.isNotEmpty || rejected.isNotEmpty;
+}
+
+final syncStateProvider =
+    NotifierProvider<SyncStateNotifier, SyncState>(SyncStateNotifier.new);
+
+class SyncStateNotifier extends Notifier<SyncState> {
+  @override
+  SyncState build() {
+    final queue = ref.watch(writeQueueProvider);
+    final status = ref.watch(offlineStatusProvider);
+    queue.addListener(_onChanged);
+    status.addListener(_onChanged);
+    ref.onDispose(() {
+      queue.removeListener(_onChanged);
+      status.removeListener(_onChanged);
+    });
+    return _snapshot();
+  }
+
+  void _onChanged() => state = _snapshot(syncing: state.syncing);
+
+  SyncState _snapshot({bool syncing = false}) {
+    final queue = ref.read(writeQueueProvider);
+    final status = ref.read(offlineStatusProvider);
+    return SyncState(
+      pending: queue.pending,
+      rejected: queue.rejected,
+      offline: status.offline,
+      lastContact: status.lastContact,
+      syncing: syncing,
+    );
+  }
+
+  /// Re-reads the queue from disk — the background isolate may have drained
+  /// part of it while the app was away.
+  Future<void> reload() => ref.read(writeQueueProvider).reload();
+
+  /// Delivers what is waiting, then re-reads every list: the server now holds
+  /// records none of the screens know about. The stored copies stay — the
+  /// interceptor already knows they predate the write, so they will be
+  /// refreshed rather than trusted, and they are still what a sudden loss of
+  /// signal would leave the user with.
+  Future<SyncOutcome> syncNow() async {
+    if (state.syncing) {
+      return (delivered: 0, refused: 0, remaining: 0, stopped: false);
+    }
+    state = _snapshot(syncing: true);
+    try {
+      await ref.read(writeQueueProvider).reload();
+      final outcome = await ref.read(syncServiceProvider).drain();
+      if (outcome.delivered > 0) invalidateAllData(ref.invalidate);
+      return outcome;
+    } finally {
+      state = _snapshot();
+    }
+  }
+
+  Future<void> discardRejected([String? id]) =>
+      ref.read(writeQueueProvider).discardRejected(id);
+}
+
+/// Drops every stored read, wholesale — `invalidate` on a family clears all of
+/// its instances. For when the server's contents changed under all of them at
+/// once (a drained queue) rather than one vehicle's worth.
+void invalidateAllData(Invalidate invalidate) {
+  invalidate(garageProvider);
+  invalidate(vehicleInfoProvider);
+  invalidate(gasRecordsProvider);
+  invalidate(odometerRecordsProvider);
+  invalidate(vehicleRecordsProvider);
+  invalidate(supplyRecordsProvider);
+  invalidate(planRecordsProvider);
+  invalidate(remindersProvider);
+  invalidate(notesProvider);
+  invalidate(equipmentRecordsProvider);
+}
 
 /// The active API key, for authenticating image requests (`Image.network`
 /// headers). Read once per profile.
@@ -339,10 +502,51 @@ final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
   (ref) => VehiclesRepository(ref.watch(apiClientProvider).dio),
 );
 
+/// A read that answers from the last stored copy — instantly, without a
+/// request — and asks the server behind that answer. The screen only rebuilds
+/// if the server had something different to say.
+///
+/// This is what lets a launch show records before the network has been touched.
+/// Wherever the offline cache isn't installed (tests, demo mode) the flags are
+/// inert and this is exactly the fetch it wraps, no cache and no second call.
+Future<T> cachedRead<T>(
+  Ref ref,
+  Future<T> Function(VehiclesRepository repo) read,
+) async {
+  // Registered before the first await, while the provider is certainly alive.
+  var disposed = false;
+  ref.onDispose(() => disposed = true);
+
+  final repo = ref.watch(vehiclesRepositoryProvider);
+  final probe = CacheProbe();
+  final stored = await read(repo.withCache(probe, cacheFirst: true));
+  if (probe.shouldRevalidate) {
+    unawaited(_revalidate(ref, repo, read, () => disposed));
+  }
+  return stored;
+}
+
+Future<void> _revalidate<T>(
+  Ref ref,
+  VehiclesRepository repo,
+  Future<T> Function(VehiclesRepository repo) read,
+  bool Function() disposed,
+) async {
+  final probe = CacheProbe();
+  try {
+    await read(repo.withCache(probe, revalidate: true));
+  } on Object {
+    // Unreachable, or refused: the stored copy remains the best answer, and
+    // this refresh was never something the user asked for.
+    return;
+  }
+  if (probe.changed && !disposed()) ref.invalidateSelf();
+}
+
 /// Server metadata (currency, locale, date format). Cached per session; drives
 /// number/date formatting across the app.
 final serverInfoProvider = FutureProvider<ServerInfo>(
-  (ref) => ref.watch(vehiclesRepositoryProvider).serverInfo(),
+  (ref) => cachedRead(ref, (repo) => repo.serverInfo()),
 );
 
 /// The household's custom-field templates, or null when the server didn't
@@ -352,7 +556,7 @@ final serverInfoProvider = FutureProvider<ServerInfo>(
 final extraFieldTemplatesProvider =
     FutureProvider<Map<ExtraFieldRecordType, List<ExtraField>>?>((ref) async {
   try {
-    return await ref.watch(vehiclesRepositoryProvider).extraFieldTemplates();
+    return await cachedRead(ref, (repo) => repo.extraFieldTemplates());
   } on Object catch (error) {
     // The HTTP probe records the failed call; this records that the app chose
     // to carry on without templates, which is why an edit form may show a
@@ -380,23 +584,23 @@ final extraFieldTemplateProvider = Provider.family<AsyncValue<List<ExtraField>?>
 /// The authenticated account (username, email, admin/root). Powers the Settings
 /// "signed in as" line and gates the root-only backup action.
 final whoAmIProvider = FutureProvider<WhoAmI>(
-  (ref) => ref.watch(vehiclesRepositoryProvider).whoAmI(),
+  (ref) => cachedRead(ref, (repo) => repo.whoAmI()),
 );
 
 /// Running vs. latest server version, for the Settings "update available" hint.
 final serverVersionProvider = FutureProvider<ServerVersion>(
-  (ref) => ref.watch(vehiclesRepositoryProvider).serverVersion(),
+  (ref) => cachedRead(ref, (repo) => repo.serverVersion()),
 );
 
 /// Garage contents: every vehicle with its aggregated info, in one request.
 final garageProvider = FutureProvider<List<VehicleInfo>>(
-  (ref) => ref.watch(vehiclesRepositoryProvider).allInfo(),
+  (ref) => cachedRead(ref, (repo) => repo.allInfo()),
 );
 
 /// Aggregated info for one vehicle (odometer, costs, reminders) — powers the
 /// dashboard header, stat block, and both expense/reminder charts.
 final vehicleInfoProvider = FutureProvider.family<VehicleInfo, int>(
-  (ref, vehicleId) => ref.watch(vehiclesRepositoryProvider).info(vehicleId),
+  (ref, vehicleId) => cachedRead(ref, (repo) => repo.info(vehicleId)),
 );
 
 /// Display units for one vehicle. Until the vehicle loads it reports the plain
@@ -435,15 +639,14 @@ final gasStatsProvider = FutureProvider.family<GasStats, int>(
 /// (economy is computed by [fuelRows]). Distinct from [gasStatsProvider], which
 /// aggregates the same records into lifetime/monthly stats.
 final gasRecordsProvider = FutureProvider.family<List<GasRecord>, int>(
-  (ref, vehicleId) =>
-      ref.watch(vehiclesRepositoryProvider).gasRecords(vehicleId),
+  (ref, vehicleId) => cachedRead(ref, (repo) => repo.gasRecords(vehicleId)),
 );
 
 /// Odometer readings for one vehicle, powering the Odometer tab's table.
 final odometerRecordsProvider =
     FutureProvider.family<List<OdometerRecord>, int>(
   (ref, vehicleId) =>
-      ref.watch(vehiclesRepositoryProvider).odometerRecords(vehicleId),
+      cachedRead(ref, (repo) => repo.odometerRecords(vehicleId)),
 );
 
 /// Date of the vehicle's highest-odometer reading among fuel-ups and dedicated
@@ -481,40 +684,36 @@ final lastOdometerDateProvider = FutureProvider.family<DateTime?, int>(
 /// vehicle + [RecordKind] (service / repair / upgrade / tax).
 final vehicleRecordsProvider = FutureProvider.family<List<VehicleRecord>,
     ({int vehicleId, RecordKind kind})>(
-  (ref, key) => ref
-      .watch(vehiclesRepositoryProvider)
-      .records(key.kind, key.vehicleId),
+  (ref, key) =>
+      cachedRead(ref, (repo) => repo.records(key.kind, key.vehicleId)),
 );
 
 /// Supply / part records for one vehicle, powering the Supplies tab.
 final supplyRecordsProvider =
     FutureProvider.family<List<SupplyRecord>, int>(
-  (ref, vehicleId) =>
-      ref.watch(vehiclesRepositoryProvider).supplyRecords(vehicleId),
+  (ref, vehicleId) => cachedRead(ref, (repo) => repo.supplyRecords(vehicleId)),
 );
 
 /// Planner items for one vehicle, powering the Planner tab.
 final planRecordsProvider = FutureProvider.family<List<PlanRecord>, int>(
-  (ref, vehicleId) =>
-      ref.watch(vehiclesRepositoryProvider).planRecords(vehicleId),
+  (ref, vehicleId) => cachedRead(ref, (repo) => repo.planRecords(vehicleId)),
 );
 
 /// Reminders for one vehicle, powering the Reminders tab.
 final remindersProvider = FutureProvider.family<List<ReminderRecord>, int>(
-  (ref, vehicleId) =>
-      ref.watch(vehiclesRepositoryProvider).reminders(vehicleId),
+  (ref, vehicleId) => cachedRead(ref, (repo) => repo.reminders(vehicleId)),
 );
 
 /// Free-text notes for one vehicle, powering the Notes tab.
 final notesProvider = FutureProvider.family<List<NoteRecord>, int>(
-  (ref, vehicleId) => ref.watch(vehiclesRepositoryProvider).notes(vehicleId),
+  (ref, vehicleId) => cachedRead(ref, (repo) => repo.notes(vehicleId)),
 );
 
 /// Equipment items for one vehicle, powering the Equipment tab.
 final equipmentRecordsProvider =
     FutureProvider.family<List<EquipmentRecord>, int>(
   (ref, vehicleId) =>
-      ref.watch(vehiclesRepositoryProvider).equipmentRecords(vehicleId),
+      cachedRead(ref, (repo) => repo.equipmentRecords(vehicleId)),
 );
 
 /// Monthly expense (by category) + distance breakdown for one vehicle,
@@ -570,11 +769,18 @@ final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
 /// The stats and the monthly breakdown derive from these lists rather than
 /// fetching their own copies, so they follow — invalidating *them* would only
 /// recompute from the same cache.
-void invalidateVehicleData(WidgetRef ref, int vehicleId) {
-  ref.invalidate(vehicleInfoProvider(vehicleId));
-  ref.invalidate(gasRecordsProvider(vehicleId));
-  ref.invalidate(odometerRecordsProvider(vehicleId));
+///
+/// Takes the invalidator rather than a ref: `Ref` and `WidgetRef` share no
+/// supertype, and this is called from both a notifier and a widget.
+void invalidateVehicleData(Invalidate invalidate, int vehicleId) {
+  invalidate(vehicleInfoProvider(vehicleId));
+  invalidate(gasRecordsProvider(vehicleId));
+  invalidate(odometerRecordsProvider(vehicleId));
   for (final kind in RecordKind.values) {
-    ref.invalidate(vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)));
+    invalidate(vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)));
   }
 }
+
+/// `ref.invalidate` from either a provider or a widget. See
+/// [invalidateVehicleData].
+typedef Invalidate = void Function(ProviderOrFamily provider);

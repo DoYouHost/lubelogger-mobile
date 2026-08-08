@@ -511,5 +511,59 @@
   "planDoneReadOnly": "This plan is done. LubeLogger's API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.",
   "@planDoneReadOnly": {
     "description": "Warning shown on the plan form when the item's progress is Done"
-  }
+  },
+
+  "syncTitle": "Sync",
+  "syncOffline": "The server isn't answering.",
+  "syncLastContact": "Server last answered {time}.",
+  "@syncLastContact": {
+    "description": "Sync sheet: when the server was last reachable",
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "syncPendingCount": "{count, plural, =1{1 change waiting to be sent} other{{count} changes waiting to be sent}}",
+  "@syncPendingCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "syncNothingPending": "Everything you have saved is on the server.",
+  "syncSendNow": "Send now",
+  "syncSending": "Sending\u2026",
+  "syncSentResult": "{count, plural, =1{1 change sent} other{{count} changes sent}}",
+  "@syncSentResult": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "syncStillOffline": "Still no answer from the server \u2014 they stay queued.",
+  "syncAttempts": "{count, plural, =1{1 attempt} other{{count} attempts}}",
+  "@syncAttempts": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "syncRejectedTitle": "Refused by the server",
+  "syncRejectedExplain": "The server answered and turned these down, so sending them again would only repeat it. Read why, then dismiss.",
+  "syncDiscard": "Discard",
+  "syncDiscardAll": "Discard all",
+  "syncOpAdd": "Add {type}",
+  "@syncOpAdd": {
+    "description": "A queued write, named by what it does; type is a record type",
+    "placeholders": { "type": { "type": "String" } }
+  },
+  "syncOpUpdate": "Edit {type}",
+  "@syncOpUpdate": {
+    "placeholders": { "type": { "type": "String" } }
+  },
+  "syncOpDelete": "Delete {type}",
+  "@syncOpDelete": {
+    "placeholders": { "type": { "type": "String" } }
+  },
+  "syncTypeVehicle": "Vehicle",
+  "syncPendingTooltip": "Changes waiting to be sent",
+  "syncOfflineTooltip": "No connection to the server",
+  "settingsOfflineSection": "Offline",
+  "settingsBackgroundRefresh": "Refresh in the background",
+  "settingsBackgroundRefreshSub": "Keeps the stored copy current, so the app opens on your records instead of a spinner.",
+  "settingsStoredData": "Stored data",
+  "settingsStoredDataSize": "{size} on this phone",
+  "@settingsStoredDataSize": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "settingsClearStoredData": "Clear",
+  "settingsStoredDataCleared": "Stored data cleared."
 }

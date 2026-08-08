@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../bug_report/recording_banner.dart' show bugReportRoute;
 import '../common/state_views.dart';
+import '../sync/sync_sheet.dart';
 import 'add_vehicle_form.dart';
 import 'widgets/vehicle_card.dart';
 
@@ -82,6 +83,7 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
             context,
             titleWidget: const LubeLoggerWordmark(),
             actions: [
+              const SyncStatusAction(),
               // On the home screen rather than only in settings: a bug is
               // noticed while using the app, and a route that runs through six
               // preference groups is one the person having the bug does not

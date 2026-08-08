@@ -1038,4 +1038,123 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get planDoneReadOnly =>
       'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
+
+  @override
+  String get syncTitle => 'Sync';
+
+  @override
+  String get syncOffline => 'The server isn\'t answering.';
+
+  @override
+  String syncLastContact(String time) {
+    return 'Server last answered $time.';
+  }
+
+  @override
+  String syncPendingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes waiting to be sent',
+      one: '1 change waiting to be sent',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncNothingPending =>
+      'Everything you have saved is on the server.';
+
+  @override
+  String get syncSendNow => 'Send now';
+
+  @override
+  String get syncSending => 'Sending…';
+
+  @override
+  String syncSentResult(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes sent',
+      one: '1 change sent',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncStillOffline =>
+      'Still no answer from the server — they stay queued.';
+
+  @override
+  String syncAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts',
+      one: '1 attempt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncRejectedTitle => 'Refused by the server';
+
+  @override
+  String get syncRejectedExplain =>
+      'The server answered and turned these down, so sending them again would only repeat it. Read why, then dismiss.';
+
+  @override
+  String get syncDiscard => 'Discard';
+
+  @override
+  String get syncDiscardAll => 'Discard all';
+
+  @override
+  String syncOpAdd(String type) {
+    return 'Add $type';
+  }
+
+  @override
+  String syncOpUpdate(String type) {
+    return 'Edit $type';
+  }
+
+  @override
+  String syncOpDelete(String type) {
+    return 'Delete $type';
+  }
+
+  @override
+  String get syncTypeVehicle => 'Vehicle';
+
+  @override
+  String get syncPendingTooltip => 'Changes waiting to be sent';
+
+  @override
+  String get syncOfflineTooltip => 'No connection to the server';
+
+  @override
+  String get settingsOfflineSection => 'Offline';
+
+  @override
+  String get settingsBackgroundRefresh => 'Refresh in the background';
+
+  @override
+  String get settingsBackgroundRefreshSub =>
+      'Keeps the stored copy current, so the app opens on your records instead of a spinner.';
+
+  @override
+  String get settingsStoredData => 'Stored data';
+
+  @override
+  String settingsStoredDataSize(String size) {
+    return '$size on this phone';
+  }
+
+  @override
+  String get settingsClearStoredData => 'Clear';
+
+  @override
+  String get settingsStoredDataCleared => 'Stored data cleared.';
 }

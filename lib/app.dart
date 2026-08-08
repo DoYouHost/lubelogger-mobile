@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/dash_theme.dart';
 import 'features/bug_report/recording_banner.dart';
 import 'features/quick_actions/quick_action_handler.dart';
+import 'features/sync/sync_host.dart';
 import 'l10n/app_localizations.dart';
 import 'router.dart';
 
@@ -23,11 +24,14 @@ class LubeLoggerApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
       // Always-mounted hosts: launcher quick actions (see QuickActionHandler),
-      // and the diagnostic recording controls, which have to outlive the report
-      // screen — the bug is reproduced somewhere else in the app.
+      // the offline write queue (see SyncHost), and the diagnostic recording
+      // controls, which have to outlive the report screen — the bug is
+      // reproduced somewhere else in the app.
       builder: (context, child) => QuickActionHandler(
-        child: RecordingBannerScaffold(
-          child: child ?? const SizedBox.shrink(),
+        child: SyncHost(
+          child: RecordingBannerScaffold(
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

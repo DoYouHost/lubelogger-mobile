@@ -28,6 +28,8 @@ class SettingsScreen extends ConsumerWidget {
     final tabOrderCtl = ref.read(tabOrderProvider.notifier);
     final remindersOn = ref.watch(reminderNotificationsProvider);
     final remindersCtl = ref.read(reminderNotificationsProvider.notifier);
+    final backgroundRefresh = ref.watch(backgroundRefreshProvider);
+    final cacheBytes = ref.watch(cacheSizeProvider).valueOrNull;
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
     final profile = ref.watch(serverProfileProvider);
@@ -169,6 +171,41 @@ class SettingsScreen extends ConsumerWidget {
                         );
                       }
                     },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                id: 'offline',
+                title: l10n.settingsOfflineSection,
+                footnote: l10n.settingsBackgroundRefreshSub,
+                children: [
+                  _ToggleRow(
+                    icon: Icons.cloud_sync_outlined,
+                    label: l10n.settingsBackgroundRefresh,
+                    value: backgroundRefresh,
+                    onChanged:
+                        ref.read(backgroundRefreshProvider.notifier).setEnabled,
+                  ),
+                  _SettingRow(
+                    label: l10n.settingsStoredData,
+                    control: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.settingsStoredDataSize(_bytes(cacheBytes ?? 0)),
+                          style: TextStyle(
+                            fontFamily: DashTokens.fontUi,
+                            fontSize: 13,
+                            color: t.textTertiary,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _clearStoredData(context, ref),
+                          child: Text(l10n.settingsClearStoredData),
+                        ).tagged('settings.clearCache'),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -339,6 +376,26 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _divider(DashTokens t) =>
       Divider(height: 20, thickness: 1, color: t.hairline);
+
+  /// Drops the offline copy and everything derived from it, so the next screen
+  /// re-reads from the server. The write queue is untouched — those are the
+  /// user's unsent changes, not a copy of anything.
+  Future<void> _clearStoredData(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(apiClientProvider).cache.clear();
+    invalidateAllData(ref.invalidate);
+    ref.invalidate(cacheSizeProvider);
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.settingsStoredDataCleared)),
+    );
+  }
+
+  static String _bytes(int value) {
+    if (value < 1024) return '$value B';
+    if (value < 1024 * 1024) return '${(value / 1024).round()} kB';
+    return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
 
   /// A small pill labelling an account role (Admin / Root).
   Widget _roleChip(DashTokens t, String label) => Container(
