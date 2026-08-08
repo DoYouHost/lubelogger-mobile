@@ -12,6 +12,7 @@ import 'core/auth/auth_service.dart';
 import 'core/auth/whoami.dart';
 import 'core/auth/credentials_store.dart';
 import 'core/cache/offline_interceptor.dart';
+import 'core/cache/photo_cache.dart';
 import 'core/cache/sync_service.dart';
 import 'core/cache/write_queue.dart';
 import 'core/diagnostics/diagnostic_recorder.dart';
@@ -319,13 +320,20 @@ final offlineStatusProvider = Provider<OfflineStatus>((ref) {
   return status;
 });
 
-final syncServiceProvider = Provider<SyncService>(
-  (ref) => SyncService(
+final syncServiceProvider = Provider<SyncService>((ref) {
+  final profile = ref.watch(serverProfileProvider);
+  return SyncService(
     dio: ref.watch(apiClientProvider).dio,
     queue: ref.watch(writeQueueProvider),
     repository: ref.watch(vehiclesRepositoryProvider),
-  ),
-);
+    photos: profile == null || profile.isDemo
+        ? null
+        : PhotoCache(
+            baseUrl: profile.baseUrl,
+            apiKey: ref.watch(apiKeyProvider).valueOrNull,
+          ),
+  );
+});
 
 /// What the offline layer is holding, and whether the server is answering.
 class SyncState {

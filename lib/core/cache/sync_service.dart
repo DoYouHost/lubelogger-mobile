@@ -5,6 +5,7 @@ import '../diagnostics/diagnostic_recorder.dart';
 import '../diagnostics/log_event.dart';
 import '../models/vehicle_record.dart';
 import 'offline_interceptor.dart';
+import 'photo_cache.dart';
 import 'write_queue.dart';
 
 /// What one pass achieved. [stopped] means the server went away again, so the
@@ -22,11 +23,20 @@ typedef SyncOutcome = ({
 /// WorkManager isolate, which is why it takes its dependencies rather than
 /// reaching for providers.
 class SyncService {
-  SyncService({required this.dio, required this.queue, required this.repository});
+  SyncService({
+    required this.dio,
+    required this.queue,
+    required this.repository,
+    this.photos,
+  });
 
   final Dio dio;
   final WriteQueue queue;
   final VehiclesRepository repository;
+
+  /// Where [warmCache] stores vehicle photos. Null for a profile with no photos
+  /// to fetch (demo mode).
+  final PhotoCache? photos;
 
   /// Sends the queue front to back, stopping at the first write the server
   /// can't take. Order is preserved on purpose: an update that follows an add
@@ -96,9 +106,12 @@ class SyncService {
     }
 
     final List<int> vehicleIds;
+    final List<String> photoPaths;
     try {
       await repository.serverInfo();
-      vehicleIds = [for (final v in await repository.allInfo()) v.vehicle.id];
+      final vehicles = await repository.allInfo();
+      vehicleIds = [for (final v in vehicles) v.vehicle.id];
+      photoPaths = [for (final v in vehicles) v.vehicle.imageLocation];
       refreshed += 2;
     } on Object {
       return refreshed;
@@ -113,7 +126,16 @@ class SyncService {
         await refresh(() => repository.records(kind, id));
       }
     }
-    _log('cache_warmed', {'n': refreshed});
+
+    // Last, and only the ones missing: the garage is the screen the app opens
+    // onto, and a card whose photo has never been fetched is an empty cover
+    // until the server is back.
+    var storedPhotos = 0;
+    for (final path in photoPaths) {
+      if (await photos?.prefetch(path) ?? false) storedPhotos++;
+    }
+
+    _log('cache_warmed', {'n': refreshed, 'photos': storedPhotos});
     return refreshed;
   }
 
