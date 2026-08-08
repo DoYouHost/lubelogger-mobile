@@ -1028,6 +1028,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open the file.'**
   String get attachmentOpenError;
 
+  /// No description provided for @extraFieldsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom fields'**
+  String get extraFieldsLabel;
+
   /// No description provided for @quickActionAddFuel.
   ///
   /// In en, this message translates to:

@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/equipment_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'record_form_scaffold.dart';
 
 /// Opens the add/edit form for an equipment item as a modal bottom sheet. Pass
@@ -53,6 +55,7 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
 
   late bool _isEquipped;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -68,6 +71,7 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
       _notes.text = e.notes;
       _tags.text = e.tags;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -129,6 +133,13 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
         const SizedBox(height: 14),
+        ExtraFieldsField(
+          recordType: ExtraFieldRecordType.equipment,
+          initial: _extraFields,
+          enabled: !_submitting,
+          onChanged: (fields) => _extraFields = fields,
+        ),
+        const SizedBox(height: 14),
         AttachmentsField(
           initial: _files,
           enabled: !_submitting,
@@ -157,6 +168,7 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updateEquipmentRecord(
@@ -166,6 +178,7 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       }
       ref.invalidate(equipmentRecordsProvider(widget.vehicleId));

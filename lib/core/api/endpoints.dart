@@ -22,6 +22,13 @@ abstract final class Endpoints {
   /// dateFormat}`. No auth-sensitive data; useful for a version/locale banner.
   static const info = '$apiPrefix/info';
 
+  /// Custom-field templates, one entry per record type:
+  /// `[{recordType, extraFields:[{name, isRequired, fieldType}]}]`. `recordType`
+  /// is the server's `ImportMode` name and `fieldType` the `ExtraFieldType`
+  /// **name** — records themselves report `fieldType` as the enum's integer
+  /// (see [ExtraField]). Types with no fields configured are omitted entirely.
+  static const extraFields = '$apiPrefix/extrafields';
+
   /// Server version: `{currentVersion, latestVersion}`. Pass `?checkForUpdate=1`
   /// to have the server fetch the latest release tag from GitHub (otherwise
   /// latest == current). Works with the api key.

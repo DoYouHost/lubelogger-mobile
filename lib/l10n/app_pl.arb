@@ -230,6 +230,8 @@
   "attachmentUploadError": "Nie udało się przesłać pliku. Spróbuj ponownie.",
   "attachmentOpenError": "Nie udało się otworzyć pliku.",
 
+  "extraFieldsLabel": "Pola własne",
+
   "quickActionAddFuel": "Dodaj tankowanie",
   "quickActionAddOdometer": "Dodaj licznik",
   "quickActionSelectVehicle": "Wybierz pojazd",

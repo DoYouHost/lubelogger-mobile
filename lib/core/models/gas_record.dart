@@ -1,4 +1,5 @@
 import 'attachment.dart';
+import 'extra_field.dart';
 
 /// One refuel from `GET /api/vehicle/gasrecords?vehicleId=`. Fuel economy is
 /// computed locally (see `GasStats`), not read from the server's `fuelEconomy`
@@ -16,6 +17,7 @@ class GasRecord {
     this.notes = '',
     this.tags = '',
     this.files = const [],
+    this.extraFields = const [],
   });
 
   factory GasRecord.fromJson(Map<String, dynamic> json) => GasRecord(
@@ -29,6 +31,7 @@ class GasRecord {
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -45,6 +48,8 @@ class GasRecord {
   /// them.
   final String notes;
   final String tags;
+
+  final List<ExtraField> extraFields;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

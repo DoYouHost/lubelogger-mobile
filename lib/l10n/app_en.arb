@@ -244,6 +244,8 @@
   "attachmentUploadError": "Couldn't upload the file. Try again.",
   "attachmentOpenError": "Couldn't open the file.",
 
+  "extraFieldsLabel": "Custom fields",
+
   "quickActionAddFuel": "Add fuel",
   "quickActionAddOdometer": "Add odometer",
   "quickActionSelectVehicle": "Select vehicle",

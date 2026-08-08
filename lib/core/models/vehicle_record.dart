@@ -1,5 +1,6 @@
 import '../api/endpoints.dart';
 import 'attachment.dart';
+import 'extra_field.dart';
 
 /// A service / repair / upgrade / tax record from `GET /api/vehicle/X`. These
 /// four share the `GenericRecordExportModel` shape (date, odometer, description,
@@ -15,6 +16,7 @@ class VehicleRecord {
     required this.notes,
     required this.tags,
     this.files = const [],
+    this.extraFields = const [],
   });
 
   factory VehicleRecord.fromJson(Map<String, dynamic> json) => VehicleRecord(
@@ -32,6 +34,7 @@ class VehicleRecord {
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -42,6 +45,7 @@ class VehicleRecord {
   final String notes;
   final String tags;
   final List<Attachment> files;
+  final List<ExtraField> extraFields;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),
@@ -76,6 +80,13 @@ enum RecordKind {
   /// as its form lands (service first); the FAB and record cards only offer
   /// editing when true.
   final bool editable;
+
+  ExtraFieldRecordType get extraFieldType => switch (this) {
+        RecordKind.service => ExtraFieldRecordType.service,
+        RecordKind.repair => ExtraFieldRecordType.repair,
+        RecordKind.upgrade => ExtraFieldRecordType.upgrade,
+        RecordKind.tax => ExtraFieldRecordType.tax,
+      };
 
   // Uniform CRUD paths under the list [endpoint] (see LUBELOGGER-API.md §6):
   // all four types share the same add/update/delete route shape.

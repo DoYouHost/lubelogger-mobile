@@ -8,6 +8,7 @@ import '../core/auth/whoami.dart';
 import '../core/models/attachment.dart';
 import '../core/models/dated_cost.dart';
 import '../core/models/equipment_record.dart';
+import '../core/models/extra_field.dart';
 import '../core/models/gas_record.dart';
 import '../core/models/note_record.dart';
 import '../core/models/odometer_record.dart';
@@ -47,6 +48,7 @@ class VehiclesRepository {
     bool useHours = false,
     bool odometerOptional = false,
     String tags = '',
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -62,7 +64,7 @@ class VehiclesRepository {
             odometerOptional: odometerOptional,
             tags: tags,
             identifier: 'LicensePlate',
-            extraFields: const [],
+            extraFields: extraFields,
           ),
         );
         _ensureSuccess(res.data);
@@ -87,7 +89,7 @@ class VehiclesRepository {
     required String licensePlate,
     required String fuelType,
     required String identifier,
-    required List<Map<String, dynamic>> extraFields,
+    required List<ExtraField> extraFields,
     bool useHours = false,
     bool odometerOptional = false,
     String tags = '',
@@ -152,6 +154,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -168,6 +171,7 @@ class VehiclesRepository {
             notes: notes,
             tags: tags,
             files: files,
+            extraFields: extraFields,
           ),
         );
         _ensureSuccess(res.data);
@@ -189,6 +193,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -207,6 +212,7 @@ class VehiclesRepository {
               notes: notes,
               tags: tags,
               files: files,
+              extraFields: extraFields,
             ),
           },
         );
@@ -260,6 +266,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -274,6 +281,7 @@ class VehiclesRepository {
             notes: notes,
             tags: tags,
             files: files,
+            extraFields: extraFields,
           ),
         );
         _ensureSuccess(res.data);
@@ -291,6 +299,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -306,6 +315,7 @@ class VehiclesRepository {
               notes: notes,
               tags: tags,
               files: files,
+              extraFields: extraFields,
             ),
           },
         );
@@ -335,10 +345,11 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _add(Endpoints.supplyRecordsAdd, vehicleId,
           _supplyBody(date, description, partQuantity, cost, partNumber,
-              partSupplier, notes, tags, files));
+              partSupplier, notes, tags, files, extraFields));
 
   Future<void> updateSupplyRecord({
     required int id,
@@ -351,11 +362,12 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.supplyRecordsUpdate, {
         'id': id.toString(),
         ..._supplyBody(date, description, partQuantity, cost, partNumber,
-            partSupplier, notes, tags, files),
+            partSupplier, notes, tags, files, extraFields),
       });
 
   Future<void> deleteSupplyRecord(int id) =>
@@ -373,9 +385,13 @@ class VehiclesRepository {
     required PlanProgress progress,
     String notes = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
-      _add(Endpoints.planRecordsAdd, vehicleId,
-          _planBody(description, cost, type, priority, progress, notes, files));
+      _add(
+          Endpoints.planRecordsAdd,
+          vehicleId,
+          _planBody(description, cost, type, priority, progress, notes, files,
+              extraFields));
 
   Future<void> updatePlanRecord({
     required int id,
@@ -386,10 +402,12 @@ class VehiclesRepository {
     required PlanProgress progress,
     String notes = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.planRecordsUpdate, {
         'id': id.toString(),
-        ..._planBody(description, cost, type, priority, progress, notes, files),
+        ..._planBody(description, cost, type, priority, progress, notes, files,
+            extraFields),
       });
 
   Future<void> deletePlanRecord(int id) =>
@@ -437,9 +455,10 @@ class VehiclesRepository {
     bool pinned = false,
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _add(Endpoints.notesAdd, vehicleId,
-          _noteBody(description, noteText, pinned, tags, files));
+          _noteBody(description, noteText, pinned, tags, files, extraFields));
 
   Future<void> updateNote({
     required int id,
@@ -448,10 +467,11 @@ class VehiclesRepository {
     bool pinned = false,
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.notesUpdate, {
         'id': id.toString(),
-        ..._noteBody(description, noteText, pinned, tags, files),
+        ..._noteBody(description, noteText, pinned, tags, files, extraFields),
       });
 
   Future<void> deleteNote(int id) => _delete(Endpoints.notesDelete, id);
@@ -465,9 +485,13 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
-      _add(Endpoints.equipmentRecordsAdd, vehicleId,
-          _equipmentBody(description, isEquipped, notes, tags, files));
+      _add(
+          Endpoints.equipmentRecordsAdd,
+          vehicleId,
+          _equipmentBody(
+              description, isEquipped, notes, tags, files, extraFields));
 
   Future<void> updateEquipmentRecord({
     required int id,
@@ -476,10 +500,12 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.equipmentRecordsUpdate, {
         'id': id.toString(),
-        ..._equipmentBody(description, isEquipped, notes, tags, files),
+        ..._equipmentBody(
+            description, isEquipped, notes, tags, files, extraFields),
       });
 
   Future<void> deleteEquipmentRecord(int id) =>
@@ -511,6 +537,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -523,6 +550,7 @@ class VehiclesRepository {
             'notes': notes,
             'tags': tags,
             'files': _filesJson(files),
+            'extraFields': ExtraField.jsonList(extraFields),
           },
         );
         _ensureSuccess(res.data);
@@ -530,7 +558,8 @@ class VehiclesRepository {
 
   /// `PUT /api/vehicle/odometerrecords/update` → update a reading by [id]. The
   /// endpoint requires [initialOdometer], so callers pass the value read back
-  /// from the record to preserve it.
+  /// from the record to preserve it. [equipmentRecordId] likewise: the server
+  /// replaces the reading's equipment link with whatever arrives.
   Future<void> updateOdometerRecord({
     required int id,
     required DateTime date,
@@ -539,6 +568,8 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
+    String equipmentRecordId = '',
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -552,6 +583,8 @@ class VehiclesRepository {
             'notes': notes,
             'tags': tags,
             'files': _filesJson(files),
+            'extraFields': ExtraField.jsonList(extraFields),
+            'equipmentRecordId': equipmentRecordId,
           },
         );
         _ensureSuccess(res.data);
@@ -674,6 +707,22 @@ class VehiclesRepository {
         return ServerInfo.fromJson(res.data ?? const {});
       });
 
+  /// `GET /api/extrafields` → the household's custom-field template per record
+  /// type. Types with nothing configured are absent from the response, so a
+  /// missing key means "no custom fields", not "unknown".
+  Future<Map<ExtraFieldRecordType, List<ExtraField>>> extraFieldTemplates() =>
+      guard(() async {
+        final res = await _dio.get<List<dynamic>>(Endpoints.extraFields);
+        final templates = <ExtraFieldRecordType, List<ExtraField>>{};
+        for (final entry in res.data ?? const []) {
+          if (entry is! Map<String, dynamic>) continue;
+          final type = ExtraFieldRecordType.parse(entry['recordType']);
+          if (type == null) continue;
+          templates[type] = ExtraField.listFrom(entry['extraFields']);
+        }
+        return templates;
+      });
+
   /// `GET /api/whoami` → the authenticated account (username, email, roles).
   Future<WhoAmI> whoAmI() => guard(() async {
         final res = await _dio.get<Map<String, dynamic>>(Endpoints.whoami);
@@ -767,6 +816,7 @@ class VehiclesRepository {
     required String notes,
     required String tags,
     required List<Attachment> files,
+    required List<ExtraField> extraFields,
   }) =>
       {
         'date': _isoDate(date),
@@ -780,6 +830,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Shared field set for a generic record write (add or update). Odometer is
@@ -793,6 +844,7 @@ class VehiclesRepository {
     required String notes,
     required String tags,
     required List<Attachment> files,
+    required List<ExtraField> extraFields,
   }) =>
       {
         'date': _isoDate(date),
@@ -802,6 +854,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Supply write fields. Quantity and cost are decimals; part number/supplier
@@ -816,6 +869,7 @@ class VehiclesRepository {
     String notes,
     String tags,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'date': _isoDate(date),
@@ -827,6 +881,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Plan write fields. Enums go out as their .NET names; there is no
@@ -839,6 +894,7 @@ class VehiclesRepository {
     PlanProgress progress,
     String notes,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'description': description,
@@ -848,6 +904,7 @@ class VehiclesRepository {
         'progress': progress.wireName,
         'notes': notes,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Reminder write fields. Metric goes out as its .NET name; the due date and
@@ -877,6 +934,7 @@ class VehiclesRepository {
     bool pinned,
     String tags,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'description': description,
@@ -884,6 +942,7 @@ class VehiclesRepository {
         'pinned': pinned.toString(),
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Equipment write fields: a name ([description]) + equipped flag.
@@ -893,6 +952,7 @@ class VehiclesRepository {
     String notes,
     String tags,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'description': description,
@@ -900,6 +960,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Shared field set for a vehicle write (add or update). All values go out as
@@ -915,7 +976,7 @@ class VehiclesRepository {
     required bool odometerOptional,
     required String tags,
     required String identifier,
-    required List<Map<String, dynamic>> extraFields,
+    required List<ExtraField> extraFields,
   }) =>
       {
         'year': year.toString(),
@@ -927,7 +988,7 @@ class VehiclesRepository {
         'useEngineHours': useHours.toString(),
         'odometerOptional': odometerOptional.toString(),
         'tags': tags,
-        'extraFields': extraFields,
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Serialize a record's attachments for a write body's `files` field.

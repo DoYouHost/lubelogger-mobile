@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/odometer_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'form_fields.dart';
 
 /// Opens the "Add odometer reading" form as a modal bottom sheet. Pass
@@ -54,6 +56,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
 
   late DateTime _date;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -69,6 +72,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -174,6 +178,13 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 ),
               ),
               const SizedBox(height: 14),
+              ExtraFieldsField(
+                recordType: ExtraFieldRecordType.odometer,
+                initial: _extraFields,
+                enabled: !_submitting,
+                onChanged: (fields) => _extraFields = fields,
+              ),
+              const SizedBox(height: 14),
               AttachmentsField(
                 initial: _files,
                 enabled: !_submitting,
@@ -251,6 +262,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updateOdometerRecord(
@@ -262,6 +274,8 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
+          equipmentRecordId: existing.equipmentRecordId,
         );
       }
       _invalidateOdometerProviders();

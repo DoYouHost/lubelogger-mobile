@@ -1,4 +1,5 @@
 import 'attachment.dart';
+import 'extra_field.dart';
 
 /// A planner item from `GET /api/vehicle/planrecords`. Unlike cost records it
 /// has no service date/odometer — it tracks a creation date, a [type], a
@@ -15,6 +16,7 @@ class PlanRecord {
     required this.progress,
     required this.notes,
     this.files = const [],
+    this.extraFields = const [],
   });
 
   factory PlanRecord.fromJson(Map<String, dynamic> json) => PlanRecord(
@@ -29,6 +31,7 @@ class PlanRecord {
         progress: PlanProgress.parse(json['progress']),
         notes: (json['notes'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -40,6 +43,8 @@ class PlanRecord {
   final PlanProgress progress;
   final String notes;
   final List<Attachment> files;
+
+  final List<ExtraField> extraFields;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

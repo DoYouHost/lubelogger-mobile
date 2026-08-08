@@ -513,6 +513,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentOpenError => 'Couldn\'t open the file.';
 
   @override
+  String get extraFieldsLabel => 'Custom fields';
+
+  @override
   String get quickActionAddFuel => 'Add fuel';
 
   @override

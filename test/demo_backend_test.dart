@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/demo/demo_http_adapter.dart';
+import 'package:lubelogger_mobile/core/models/extra_field.dart';
 import 'package:lubelogger_mobile/core/models/plan_record.dart';
 import 'package:lubelogger_mobile/core/models/reminder_record.dart';
 import 'package:lubelogger_mobile/core/models/vehicle_record.dart';
@@ -134,6 +135,30 @@ void main() {
     final after = await r.list();
     expect(after.any((v) => v.id == id), isFalse);
     expect(await r.records(RecordKind.service, id), isEmpty);
+  });
+
+  test('custom fields survive an edit that does not touch them', () async {
+    final r = repo();
+    final templates = await r.extraFieldTemplates();
+    expect(templates[ExtraFieldRecordType.service], isNotEmpty);
+
+    final before = (await r.records(RecordKind.service, 1)).firstWhere(
+      (rec) => rec.extraFields.isNotEmpty,
+    );
+    await r.updateRecord(
+      kind: RecordKind.service,
+      id: before.id,
+      date: before.date!,
+      description: before.description,
+      cost: before.cost,
+      odometer: before.odometer,
+      extraFields: before.extraFields,
+    );
+
+    final after = (await r.records(RecordKind.service, 1))
+        .firstWhere((rec) => rec.id == before.id);
+    expect(after.extraFields.single.name, before.extraFields.single.name);
+    expect(after.extraFields.single.value, before.extraFields.single.value);
   });
 
   test('server metadata endpoints answer', () async {

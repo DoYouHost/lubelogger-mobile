@@ -1,4 +1,5 @@
 import 'attachment.dart';
+import 'extra_field.dart';
 
 /// A supply / part-inventory record from `GET /api/vehicle/supplyrecords`.
 /// Shares the generic date + cost + description shape (no odometer), plus
@@ -16,6 +17,7 @@ class SupplyRecord {
     required this.notes,
     required this.tags,
     this.files = const [],
+    this.extraFields = const [],
   });
 
   factory SupplyRecord.fromJson(Map<String, dynamic> json) => SupplyRecord(
@@ -33,6 +35,7 @@ class SupplyRecord {
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -45,6 +48,8 @@ class SupplyRecord {
   final String notes;
   final String tags;
   final List<Attachment> files;
+
+  final List<ExtraField> extraFields;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

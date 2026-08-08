@@ -21,6 +21,7 @@ import 'core/format/gas_stats.dart';
 import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
 import 'core/models/equipment_record.dart';
+import 'core/models/extra_field.dart';
 import 'core/models/gas_record.dart';
 import 'core/models/note_record.dart';
 import 'core/models/odometer_record.dart';
@@ -342,6 +343,38 @@ final vehiclesRepositoryProvider = Provider<VehiclesRepository>(
 /// number/date formatting across the app.
 final serverInfoProvider = FutureProvider<ServerInfo>(
   (ref) => ref.watch(vehiclesRepositoryProvider).serverInfo(),
+);
+
+/// The household's custom-field templates, or null when the server didn't
+/// answer — `/api/extrafields` is newer than the record endpoints, and
+/// [mergeExtraFields] treats null as "unknown" and round-trips a record's own
+/// fields rather than clearing them. Cached for the session.
+final extraFieldTemplatesProvider =
+    FutureProvider<Map<ExtraFieldRecordType, List<ExtraField>>?>((ref) async {
+  try {
+    return await ref.watch(vehiclesRepositoryProvider).extraFieldTemplates();
+  } on Object catch (error) {
+    // The HTTP probe records the failed call; this records that the app chose
+    // to carry on without templates, which is why an edit form may show a
+    // record's stale fields instead of the configured ones.
+    DiagnosticRecorder.active?.add(
+      LogSource.http,
+      'extra_fields_unavailable',
+      lvl: LogLevel.warn,
+      fields: {'type': error.runtimeType.toString()},
+    );
+    return null;
+  }
+});
+
+/// One record type's custom-field template: null when unknown, empty when the
+/// server has none configured for it (it omits those types entirely).
+final extraFieldTemplateProvider = Provider.family<AsyncValue<List<ExtraField>?>,
+    ExtraFieldRecordType>(
+  (ref, type) => ref.watch(extraFieldTemplatesProvider).whenData(
+        (templates) =>
+            templates == null ? null : templates[type] ?? const <ExtraField>[],
+      ),
 );
 
 /// The authenticated account (username, email, admin/root). Powers the Settings

@@ -1,4 +1,5 @@
 import 'attachment.dart';
+import 'extra_field.dart';
 
 /// A free-text note from `GET /api/vehicle/notes`. Has no date or cost — just a
 /// title ([description]), a body ([noteText]) and a [pinned] flag. The bool
@@ -11,6 +12,7 @@ class NoteRecord {
     required this.pinned,
     required this.tags,
     this.files = const [],
+    this.extraFields = const [],
   });
 
   factory NoteRecord.fromJson(Map<String, dynamic> json) => NoteRecord(
@@ -20,6 +22,7 @@ class NoteRecord {
         pinned: _toBool(json['pinned']),
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -28,6 +31,8 @@ class NoteRecord {
   final bool pinned;
   final String tags;
   final List<Attachment> files;
+
+  final List<ExtraField> extraFields;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

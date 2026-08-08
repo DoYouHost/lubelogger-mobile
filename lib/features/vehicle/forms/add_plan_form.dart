@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/plan_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
 
@@ -64,6 +66,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
   late PlanPriority _priority;
   late PlanProgress _progress;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -89,6 +92,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
       _cost.text = formatFormNumber(e.cost);
       _notes.text = e.notes;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -175,6 +179,13 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
         const SizedBox(height: 14),
+        ExtraFieldsField(
+          recordType: ExtraFieldRecordType.plan,
+          initial: _extraFields,
+          enabled: !_submitting,
+          onChanged: (fields) => _extraFields = fields,
+        ),
+        const SizedBox(height: 14),
         AttachmentsField(
           initial: _files,
           enabled: !_submitting,
@@ -205,6 +216,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           progress: _progress,
           notes: _notes.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updatePlanRecord(
@@ -216,6 +228,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           progress: _progress,
           notes: _notes.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       }
       ref.invalidate(planRecordsProvider(widget.vehicleId));

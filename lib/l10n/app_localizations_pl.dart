@@ -521,6 +521,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get attachmentOpenError => 'Nie udało się otworzyć pliku.';
 
   @override
+  String get extraFieldsLabel => 'Pola własne';
+
+  @override
   String get quickActionAddFuel => 'Dodaj tankowanie';
 
   @override

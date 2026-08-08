@@ -99,6 +99,8 @@ class DemoBackend {
         return _ok(_whoami);
       case 'info':
         return _ok(_info);
+      case 'extrafields':
+        return _ok(_extraFieldTemplates);
       case 'version':
         return _ok(_version);
       case 'makebackup':
@@ -396,6 +398,24 @@ class DemoBackend {
 
   // 1.7.0: the fake backend implements the 1.7.0 vehicle-delete endpoint, so it
   // reports that version to keep the delete action enabled in the demo.
+  /// `/api/extrafields` shape: `fieldType` as the .NET enum **name** and only
+  /// the types that have fields configured, exactly as the real server answers.
+  List<Map<String, dynamic>> get _extraFieldTemplates => [
+        {
+          'recordType': 'ServiceRecord',
+          'extraFields': [
+            {'name': 'Workshop', 'isRequired': true, 'fieldType': 'Text'},
+            {'name': 'Warranty until', 'isRequired': false, 'fieldType': 'Date'},
+          ],
+        },
+        {
+          'recordType': 'GasRecord',
+          'extraFields': [
+            {'name': 'Station', 'isRequired': false, 'fieldType': 'Text'},
+          ],
+        },
+      ];
+
   Map<String, dynamic> get _info => {
         'currentVersion': '1.7.0',
         'locale': 'en-US',
@@ -483,6 +503,15 @@ class DemoBackend {
         'description': 'Oil & filter change',
         'cost': 58.0,
         'notes': 'Fully synthetic 5W-30.',
+        // Records report `fieldType` as the integer, unlike the template above.
+        'extraFields': [
+          {
+            'name': 'Workshop',
+            'value': 'Demo Motors',
+            'isRequired': true,
+            'fieldType': 0,
+          },
+        ],
       }),
       _rec({
         'date': ago(160),
