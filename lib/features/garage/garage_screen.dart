@@ -222,8 +222,10 @@ class _EditVehicleAction extends StatelessWidget {
     final ink = Theme.of(context).colorScheme.onPrimary;
     // Named on the pill and not around the action: CustomSlidableAction builds
     // an Expanded, and anything wrapped around it lands between that Expanded
-    // and the pane's Row, which throws on the first swipe. The tag still reaches
-    // the log — the probe reads the deepest identifier under the finger.
+    // and the pane's flex layout, which throws on the first swipe. The tag still
+    // reaches the log — the probe reads the deepest identifier under the finger.
+    // SizedBox.expand is load-bearing: the action puts its child in an Align,
+    // which would otherwise shrink the pill to its content.
     return CustomSlidableAction(
       onPressed: (_) => onPressed(),
       backgroundColor: Colors.transparent,

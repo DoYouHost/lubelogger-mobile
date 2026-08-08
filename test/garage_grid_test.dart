@@ -68,15 +68,25 @@ void main() {
   });
 
   // The Edit action used to be wrapped in its log tag, which put a widget
-  // between the pane's Row and the Expanded that CustomSlidableAction builds:
-  // the first swipe threw and left the pane unlaid-out.
-  testWidgets('swiping a card open reveals the Edit action', (tester) async {
+  // between the pane's flex layout and the Expanded that CustomSlidableAction
+  // builds: the first swipe threw and left the pane unlaid-out. The tag then
+  // moved inside the action, so the identifier is asserted too — the placement
+  // is what keeps the tap named in a bug report, and nothing else pins it down.
+  testWidgets('swiping a card open reveals the tagged Edit action', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
     await pumpGarage(tester, [vehicle(1)]);
 
-    await tester.drag(find.byType(VehicleCard).first, const Offset(-150, 0));
+    final card = find.byType(VehicleCard).first;
+    // Half the card clears the pane's 0.3 extentRatio whatever the column count.
+    await tester.drag(card, Offset(-tester.getSize(card).width / 2, 0));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
     expect(find.byIcon(Icons.edit_rounded), findsOneWidget);
+    expect(find.bySemanticsIdentifier('garage.edit'), findsOneWidget);
+
+    semantics.dispose();
   });
 }
