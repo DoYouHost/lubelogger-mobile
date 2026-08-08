@@ -2,6 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../auth/credentials_store.dart';
+import '../cache/http_cache.dart';
+import '../cache/offline_interceptor.dart';
+import '../cache/write_queue.dart';
 import '../demo/demo_http_adapter.dart';
 import '../diagnostics/http_probe.dart';
 import '../settings/server_profile.dart';
@@ -30,8 +33,12 @@ class ApiClient {
   ApiClient({
     required ServerProfile profile,
     required CredentialsStore credentials,
+    WriteQueue? queue,
+    OfflineStatus? status,
     Dio? dio,
-  }) : dio = dio ?? createBareDio() {
+  })  : dio = dio ?? createBareDio(),
+        cache = HttpCache(baseUrl: profile.baseUrl),
+        status = status ?? OfflineStatus() {
     this.dio.options.baseUrl = profile.baseUrl;
     this.dio.interceptors.add(AuthInterceptor(credentials: credentials));
     if (kDebugMode) {
@@ -42,9 +49,25 @@ class ApiClient {
     if (profile.isDemo) {
       this.dio.httpClientAdapter = DemoHttpClientAdapter();
     }
+    // The demo backend cannot fail and its data lives in memory already, so
+    // caching it would only leave a real server's directory shape on disk for a
+    // profile that is not a server.
+    if (queue != null && !profile.isDemo) {
+      this.dio.interceptors.add(OfflineInterceptor(
+        cache: cache,
+        queue: queue,
+        status: this.status,
+      ));
+    }
   }
 
   final Dio dio;
+
+  /// Stored bodies for this profile — exposed so Settings can size and clear it
+  /// and so logging out can delete it.
+  final HttpCache cache;
+
+  final OfflineStatus status;
 }
 
 /// Attaches the `x-api-key` auth header and the culture-invariant header on

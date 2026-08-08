@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
+import '../core/cache/offline_interceptor.dart';
 import '../core/diagnostics/diagnostic_recorder.dart';
 import '../core/diagnostics/log_event.dart';
 import '../core/auth/whoami.dart';
@@ -26,6 +27,29 @@ class VehiclesRepository {
   VehiclesRepository(this._dio);
 
   final Dio _dio;
+
+  /// The same endpoints over a client that tells [probe] what the offline cache
+  /// did with each request, optionally answering from the stored copy without
+  /// asking the server at all.
+  ///
+  /// A flag on the client rather than an argument on forty methods — and inert
+  /// wherever the cache isn't installed (tests, demo mode), where this is just
+  /// another handle on the same Dio.
+  VehiclesRepository withCache(
+    CacheProbe probe, {
+    bool cacheFirst = false,
+    bool revalidate = false,
+  }) =>
+      VehiclesRepository(
+        _dio.clone(
+          options: _dio.options.copyWith(extra: {
+            ..._dio.options.extra,
+            kCacheProbe: probe,
+            if (cacheFirst) kCacheFirst: true,
+            if (revalidate) kRevalidate: true,
+          }),
+        ),
+      );
 
   /// `GET /api/vehicles` → the household's vehicles.
   Future<List<Vehicle>> list() => guard(() async {

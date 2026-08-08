@@ -1933,6 +1933,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
   String get planDoneReadOnly;
+
+  /// No description provided for @syncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get syncTitle;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'The server isn\'t answering.'**
+  String get syncOffline;
+
+  /// Sync sheet: when the server was last reachable
+  ///
+  /// In en, this message translates to:
+  /// **'Server last answered {time}.'**
+  String syncLastContact(String time);
+
+  /// No description provided for @syncPendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change waiting to be sent} other{{count} changes waiting to be sent}}'**
+  String syncPendingCount(int count);
+
+  /// No description provided for @syncNothingPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you have saved is on the server.'**
+  String get syncNothingPending;
+
+  /// No description provided for @syncSendNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send now'**
+  String get syncSendNow;
+
+  /// No description provided for @syncSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get syncSending;
+
+  /// No description provided for @syncSentResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change sent} other{{count} changes sent}}'**
+  String syncSentResult(int count);
+
+  /// No description provided for @syncStillOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Still no answer from the server — they stay queued.'**
+  String get syncStillOffline;
+
+  /// No description provided for @syncAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attempt} other{{count} attempts}}'**
+  String syncAttempts(int count);
+
+  /// No description provided for @syncRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refused by the server'**
+  String get syncRejectedTitle;
+
+  /// No description provided for @syncRejectedExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'The server answered and turned these down, so sending them again would only repeat it. Read why, then dismiss.'**
+  String get syncRejectedExplain;
+
+  /// No description provided for @syncDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get syncDiscard;
+
+  /// No description provided for @syncDiscardAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard all'**
+  String get syncDiscardAll;
+
+  /// A queued write, named by what it does; type is a record type
+  ///
+  /// In en, this message translates to:
+  /// **'Add {type}'**
+  String syncOpAdd(String type);
+
+  /// No description provided for @syncOpUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {type}'**
+  String syncOpUpdate(String type);
+
+  /// No description provided for @syncOpDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {type}'**
+  String syncOpDelete(String type);
+
+  /// No description provided for @syncTypeVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get syncTypeVehicle;
+
+  /// No description provided for @syncPendingTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes waiting to be sent'**
+  String get syncPendingTooltip;
+
+  /// No description provided for @syncOfflineTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server'**
+  String get syncOfflineTooltip;
+
+  /// No description provided for @settingsOfflineSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get settingsOfflineSection;
+
+  /// No description provided for @settingsBackgroundRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh in the background'**
+  String get settingsBackgroundRefresh;
+
+  /// No description provided for @settingsBackgroundRefreshSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the stored copy current, so the app opens on your records instead of a spinner.'**
+  String get settingsBackgroundRefreshSub;
+
+  /// No description provided for @settingsStoredData.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored data'**
+  String get settingsStoredData;
+
+  /// No description provided for @settingsStoredDataSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} on this phone'**
+  String settingsStoredDataSize(String size);
+
+  /// No description provided for @settingsClearStoredData.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get settingsClearStoredData;
+
+  /// No description provided for @settingsStoredDataCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored data cleared.'**
+  String get settingsStoredDataCleared;
 }
 
 class _AppLocalizationsDelegate

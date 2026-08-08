@@ -1047,4 +1047,128 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get planDoneReadOnly =>
       'Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera.';
+
+  @override
+  String get syncTitle => 'Synchronizacja';
+
+  @override
+  String get syncOffline => 'Serwer nie odpowiada.';
+
+  @override
+  String syncLastContact(String time) {
+    return 'Ostatnia odpowiedź serwera: $time.';
+  }
+
+  @override
+  String syncPendingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count zmiany czekają na wysłanie',
+      many: '$count zmian czeka na wysłanie',
+      few: '$count zmiany czekają na wysłanie',
+      one: '1 zmiana czeka na wysłanie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncNothingPending => 'Wszystko, co zapisałeś, jest na serwerze.';
+
+  @override
+  String get syncSendNow => 'Wyślij teraz';
+
+  @override
+  String get syncSending => 'Wysyłanie…';
+
+  @override
+  String syncSentResult(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wysłano $count zmiany',
+      many: 'Wysłano $count zmian',
+      few: 'Wysłano $count zmiany',
+      one: 'Wysłano 1 zmianę',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncStillOffline =>
+      'Serwer nadal nie odpowiada — zostają w kolejce.';
+
+  @override
+  String syncAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count próby',
+      many: '$count prób',
+      few: '$count próby',
+      one: '1 próba',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get syncRejectedTitle => 'Odrzucone przez serwer';
+
+  @override
+  String get syncRejectedExplain =>
+      'Serwer odpowiedział i ich nie przyjął, więc ponowne wysłanie tylko to powtórzy. Przeczytaj powód i odrzuć.';
+
+  @override
+  String get syncDiscard => 'Odrzuć';
+
+  @override
+  String get syncDiscardAll => 'Odrzuć wszystkie';
+
+  @override
+  String syncOpAdd(String type) {
+    return 'Dodanie: $type';
+  }
+
+  @override
+  String syncOpUpdate(String type) {
+    return 'Edycja: $type';
+  }
+
+  @override
+  String syncOpDelete(String type) {
+    return 'Usunięcie: $type';
+  }
+
+  @override
+  String get syncTypeVehicle => 'Pojazd';
+
+  @override
+  String get syncPendingTooltip => 'Zmiany czekające na wysłanie';
+
+  @override
+  String get syncOfflineTooltip => 'Brak połączenia z serwerem';
+
+  @override
+  String get settingsOfflineSection => 'Offline';
+
+  @override
+  String get settingsBackgroundRefresh => 'Odświeżaj w tle';
+
+  @override
+  String get settingsBackgroundRefreshSub =>
+      'Utrzymuje zapisaną kopię aktualną, żeby aplikacja otwierała się na Twoich rekordach, a nie na kółku ładowania.';
+
+  @override
+  String get settingsStoredData => 'Zapisane dane';
+
+  @override
+  String settingsStoredDataSize(String size) {
+    return '$size na tym telefonie';
+  }
+
+  @override
+  String get settingsClearStoredData => 'Wyczyść';
+
+  @override
+  String get settingsStoredDataCleared => 'Zapisane dane wyczyszczone.';
 }
