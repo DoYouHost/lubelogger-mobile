@@ -149,8 +149,7 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                     baseUrl: baseUrl,
                                     apiKey: apiKey,
                                     currencySymbol: currency,
-                                    measurementBase: units.base,
-                                    distanceUnit: units.distance,
+                                    units: units,
                                     onTap: () => context
                                         .push('/vehicle/${info.vehicle.id}'),
                                   ),

@@ -521,6 +521,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get attachmentOpenError => 'Nie udało się otworzyć pliku.';
 
   @override
+  String get extraFieldsLabel => 'Pola własne';
+
+  @override
+  String get formStateOfCharge => 'Stan naładowania';
+
+  @override
+  String formStateOfChargeRange(int start, int end) {
+    return '$start% → $end%';
+  }
+
+  @override
   String get quickActionAddFuel => 'Dodaj tankowanie';
 
   @override
@@ -1016,4 +1027,24 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get bugReportRequestPublic =>
       'Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe.';
+
+  @override
+  String fuelPillEnergy(String value) {
+    return 'Energia $value';
+  }
+
+  @override
+  String formEnergyLabel(String unit) {
+    return 'Pobrana energia ($unit)';
+  }
+
+  @override
+  String get statAvgConsumption => 'Średnie zużycie energii';
+
+  @override
+  String get chartConsumptionByMonth => 'Zużycie energii wg miesiąca';
+
+  @override
+  String get planDoneReadOnly =>
+      'Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera.';
 }

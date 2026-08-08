@@ -6,8 +6,8 @@ import '../core/diagnostics/diagnostic_recorder.dart';
 import '../core/diagnostics/log_event.dart';
 import '../core/auth/whoami.dart';
 import '../core/models/attachment.dart';
-import '../core/models/dated_cost.dart';
 import '../core/models/equipment_record.dart';
+import '../core/models/extra_field.dart';
 import '../core/models/gas_record.dart';
 import '../core/models/note_record.dart';
 import '../core/models/odometer_record.dart';
@@ -47,6 +47,7 @@ class VehiclesRepository {
     bool useHours = false,
     bool odometerOptional = false,
     String tags = '',
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -62,7 +63,7 @@ class VehiclesRepository {
             odometerOptional: odometerOptional,
             tags: tags,
             identifier: 'LicensePlate',
-            extraFields: const [],
+            extraFields: extraFields,
           ),
         );
         _ensureSuccess(res.data);
@@ -87,7 +88,7 @@ class VehiclesRepository {
     required String licensePlate,
     required String fuelType,
     required String identifier,
-    required List<Map<String, dynamic>> extraFields,
+    required List<ExtraField> extraFields,
     bool useHours = false,
     bool odometerOptional = false,
     String tags = '',
@@ -128,6 +129,14 @@ class VehiclesRepository {
         return VehicleInfo.fromJson(list.first as Map<String, dynamic>);
       });
 
+  /// `GET /api/vehicle/info` with no `vehicleId` → the same aggregate for every
+  /// vehicle the key may view. This is the garage in one request; [list] plus
+  /// one [info] per vehicle would return the same thing in 1+N.
+  Future<List<VehicleInfo>> allInfo() => guard(() async {
+        final res = await _dio.get<List<dynamic>>(Endpoints.vehicleInfo);
+        return _parseAll(res.data, VehicleInfo.fromJson, Endpoints.vehicleInfo);
+      });
+
   /// `GET /api/vehicle/gasrecords?vehicleId=` → the vehicle's refuel log.
   Future<List<GasRecord>> gasRecords(int vehicleId) => guard(() async {
         final res = await _dio.get<List<dynamic>>(
@@ -149,9 +158,12 @@ class VehiclesRepository {
     required num cost,
     required bool isFillToFull,
     required bool missedFuelUp,
+    int startingSoc = GasRecord.defaultStartingSoc,
+    int endingSoc = GasRecord.defaultEndingSoc,
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -165,9 +177,12 @@ class VehiclesRepository {
             cost: cost,
             isFillToFull: isFillToFull,
             missedFuelUp: missedFuelUp,
+            startingSoc: startingSoc,
+            endingSoc: endingSoc,
             notes: notes,
             tags: tags,
             files: files,
+            extraFields: extraFields,
           ),
         );
         _ensureSuccess(res.data);
@@ -186,9 +201,12 @@ class VehiclesRepository {
     required num cost,
     required bool isFillToFull,
     required bool missedFuelUp,
+    int startingSoc = GasRecord.defaultStartingSoc,
+    int endingSoc = GasRecord.defaultEndingSoc,
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -204,9 +222,12 @@ class VehiclesRepository {
               cost: cost,
               isFillToFull: isFillToFull,
               missedFuelUp: missedFuelUp,
+              startingSoc: startingSoc,
+              endingSoc: endingSoc,
               notes: notes,
               tags: tags,
               files: files,
+              extraFields: extraFields,
             ),
           },
         );
@@ -222,20 +243,9 @@ class VehiclesRepository {
         _ensureSuccess(res.data);
       });
 
-  /// Date + cost records for one vehicle from any generic-record [endpoint]
-  /// (service / repair / upgrade / tax). Used for the monthly expense chart.
-  Future<List<DatedCost>> datedCosts(String endpoint, int vehicleId) =>
-      guard(() async {
-        final res = await _dio.get<List<dynamic>>(
-          endpoint,
-          queryParameters: {'vehicleId': vehicleId},
-        );
-        return _parseAll(res.data, DatedCost.fromJson, endpoint);
-      });
-
   /// Full records for one vehicle from a generic (date + cost) record [kind]
   /// (service / repair / upgrade / tax) — the source for the per-type record
-  /// tables. See [datedCosts] for the trimmed shape used by the expense chart.
+  /// tables and, trimmed to date + cost, for the monthly expense chart.
   Future<List<VehicleRecord>> records(RecordKind kind, int vehicleId) =>
       guard(() async {
         final res = await _dio.get<List<dynamic>>(
@@ -260,6 +270,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -274,6 +285,7 @@ class VehiclesRepository {
             notes: notes,
             tags: tags,
             files: files,
+            extraFields: extraFields,
           ),
         );
         _ensureSuccess(res.data);
@@ -291,6 +303,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -306,6 +319,7 @@ class VehiclesRepository {
               notes: notes,
               tags: tags,
               files: files,
+              extraFields: extraFields,
             ),
           },
         );
@@ -335,10 +349,11 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _add(Endpoints.supplyRecordsAdd, vehicleId,
           _supplyBody(date, description, partQuantity, cost, partNumber,
-              partSupplier, notes, tags, files));
+              partSupplier, notes, tags, files, extraFields));
 
   Future<void> updateSupplyRecord({
     required int id,
@@ -351,11 +366,12 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.supplyRecordsUpdate, {
         'id': id.toString(),
         ..._supplyBody(date, description, partQuantity, cost, partNumber,
-            partSupplier, notes, tags, files),
+            partSupplier, notes, tags, files, extraFields),
       });
 
   Future<void> deleteSupplyRecord(int id) =>
@@ -373,9 +389,13 @@ class VehiclesRepository {
     required PlanProgress progress,
     String notes = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
-      _add(Endpoints.planRecordsAdd, vehicleId,
-          _planBody(description, cost, type, priority, progress, notes, files));
+      _add(
+          Endpoints.planRecordsAdd,
+          vehicleId,
+          _planBody(description, cost, type, priority, progress, notes, files,
+              extraFields));
 
   Future<void> updatePlanRecord({
     required int id,
@@ -386,10 +406,12 @@ class VehiclesRepository {
     required PlanProgress progress,
     String notes = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.planRecordsUpdate, {
         'id': id.toString(),
-        ..._planBody(description, cost, type, priority, progress, notes, files),
+        ..._planBody(description, cost, type, priority, progress, notes, files,
+            extraFields),
       });
 
   Future<void> deletePlanRecord(int id) =>
@@ -437,9 +459,10 @@ class VehiclesRepository {
     bool pinned = false,
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _add(Endpoints.notesAdd, vehicleId,
-          _noteBody(description, noteText, pinned, tags, files));
+          _noteBody(description, noteText, pinned, tags, files, extraFields));
 
   Future<void> updateNote({
     required int id,
@@ -448,10 +471,11 @@ class VehiclesRepository {
     bool pinned = false,
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.notesUpdate, {
         'id': id.toString(),
-        ..._noteBody(description, noteText, pinned, tags, files),
+        ..._noteBody(description, noteText, pinned, tags, files, extraFields),
       });
 
   Future<void> deleteNote(int id) => _delete(Endpoints.notesDelete, id);
@@ -465,9 +489,13 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
-      _add(Endpoints.equipmentRecordsAdd, vehicleId,
-          _equipmentBody(description, isEquipped, notes, tags, files));
+      _add(
+          Endpoints.equipmentRecordsAdd,
+          vehicleId,
+          _equipmentBody(
+              description, isEquipped, notes, tags, files, extraFields));
 
   Future<void> updateEquipmentRecord({
     required int id,
@@ -476,10 +504,12 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       _update(Endpoints.equipmentRecordsUpdate, {
         'id': id.toString(),
-        ..._equipmentBody(description, isEquipped, notes, tags, files),
+        ..._equipmentBody(
+            description, isEquipped, notes, tags, files, extraFields),
       });
 
   Future<void> deleteEquipmentRecord(int id) =>
@@ -511,6 +541,7 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
   }) =>
       guard(() async {
         final res = await _dio.post<Map<String, dynamic>>(
@@ -523,6 +554,7 @@ class VehiclesRepository {
             'notes': notes,
             'tags': tags,
             'files': _filesJson(files),
+            'extraFields': ExtraField.jsonList(extraFields),
           },
         );
         _ensureSuccess(res.data);
@@ -530,7 +562,8 @@ class VehiclesRepository {
 
   /// `PUT /api/vehicle/odometerrecords/update` → update a reading by [id]. The
   /// endpoint requires [initialOdometer], so callers pass the value read back
-  /// from the record to preserve it.
+  /// from the record to preserve it. [equipmentRecordId] likewise: the server
+  /// replaces the reading's equipment link with whatever arrives.
   Future<void> updateOdometerRecord({
     required int id,
     required DateTime date,
@@ -539,6 +572,8 @@ class VehiclesRepository {
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
+    List<ExtraField> extraFields = const [],
+    String equipmentRecordId = '',
   }) =>
       guard(() async {
         final res = await _dio.put<Map<String, dynamic>>(
@@ -552,6 +587,8 @@ class VehiclesRepository {
             'notes': notes,
             'tags': tags,
             'files': _filesJson(files),
+            'extraFields': ExtraField.jsonList(extraFields),
+            'equipmentRecordId': equipmentRecordId,
           },
         );
         _ensureSuccess(res.data);
@@ -674,6 +711,22 @@ class VehiclesRepository {
         return ServerInfo.fromJson(res.data ?? const {});
       });
 
+  /// `GET /api/extrafields` → the household's custom-field template per record
+  /// type. Types with nothing configured are absent from the response, so a
+  /// missing key means "no custom fields", not "unknown".
+  Future<Map<ExtraFieldRecordType, List<ExtraField>>> extraFieldTemplates() =>
+      guard(() async {
+        final res = await _dio.get<List<dynamic>>(Endpoints.extraFields);
+        final templates = <ExtraFieldRecordType, List<ExtraField>>{};
+        for (final entry in res.data ?? const []) {
+          if (entry is! Map<String, dynamic>) continue;
+          final type = ExtraFieldRecordType.parse(entry['recordType']);
+          if (type == null) continue;
+          templates[type] = ExtraField.listFrom(entry['extraFields']);
+        }
+        return templates;
+      });
+
   /// `GET /api/whoami` → the authenticated account (username, email, roles).
   Future<WhoAmI> whoAmI() => guard(() async {
         final res = await _dio.get<Map<String, dynamic>>(Endpoints.whoami);
@@ -752,11 +805,9 @@ class VehiclesRepository {
   /// Shared field set for a gas record write (add or update); all values go out
   /// as strings, per the server's string-parsed export model.
   ///
-  /// `startingSoc`/`endingSoc` (EV state-of-charge, unused by this app) were
-  /// unconditionally `int.Parse`d server-side with no null/empty guard before
-  /// LubeLogger 1.7.0 — an absent field threw a 500 ("input string '' was not in
-  /// a correct format"). 1.7.0 defaults empty to 20/80, but we still send `"0"`
-  /// so a non-EV write never trips the bug on older servers.
+  /// `startingSoc`/`endingSoc` are always sent, never left empty: before
+  /// LubeLogger 1.7.0 the server `int.Parse`d them with no guard, so an absent
+  /// field threw a 500 ("input string '' was not in a correct format").
   static Map<String, dynamic> _gasRecordBody({
     required DateTime date,
     required num odometer,
@@ -764,9 +815,12 @@ class VehiclesRepository {
     required num cost,
     required bool isFillToFull,
     required bool missedFuelUp,
+    required int startingSoc,
+    required int endingSoc,
     required String notes,
     required String tags,
     required List<Attachment> files,
+    required List<ExtraField> extraFields,
   }) =>
       {
         'date': _isoDate(date),
@@ -775,11 +829,12 @@ class VehiclesRepository {
         'cost': cost.toString(),
         'isFillToFull': isFillToFull.toString(),
         'missedFuelUp': missedFuelUp.toString(),
-        'startingSoc': '0',
-        'endingSoc': '0',
+        'startingSoc': startingSoc.toString(),
+        'endingSoc': endingSoc.toString(),
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Shared field set for a generic record write (add or update). Odometer is
@@ -793,6 +848,7 @@ class VehiclesRepository {
     required String notes,
     required String tags,
     required List<Attachment> files,
+    required List<ExtraField> extraFields,
   }) =>
       {
         'date': _isoDate(date),
@@ -802,6 +858,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Supply write fields. Quantity and cost are decimals; part number/supplier
@@ -816,6 +873,7 @@ class VehiclesRepository {
     String notes,
     String tags,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'date': _isoDate(date),
@@ -827,6 +885,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Plan write fields. Enums go out as their .NET names; there is no
@@ -839,6 +898,7 @@ class VehiclesRepository {
     PlanProgress progress,
     String notes,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'description': description,
@@ -848,6 +908,7 @@ class VehiclesRepository {
         'progress': progress.wireName,
         'notes': notes,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Reminder write fields. Metric goes out as its .NET name; the due date and
@@ -877,6 +938,7 @@ class VehiclesRepository {
     bool pinned,
     String tags,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'description': description,
@@ -884,6 +946,7 @@ class VehiclesRepository {
         'pinned': pinned.toString(),
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Equipment write fields: a name ([description]) + equipped flag.
@@ -893,6 +956,7 @@ class VehiclesRepository {
     String notes,
     String tags,
     List<Attachment> files,
+    List<ExtraField> extraFields,
   ) =>
       {
         'description': description,
@@ -900,6 +964,7 @@ class VehiclesRepository {
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Shared field set for a vehicle write (add or update). All values go out as
@@ -915,7 +980,7 @@ class VehiclesRepository {
     required bool odometerOptional,
     required String tags,
     required String identifier,
-    required List<Map<String, dynamic>> extraFields,
+    required List<ExtraField> extraFields,
   }) =>
       {
         'year': year.toString(),
@@ -927,7 +992,7 @@ class VehiclesRepository {
         'useEngineHours': useHours.toString(),
         'odometerOptional': odometerOptional.toString(),
         'tags': tags,
-        'extraFields': extraFields,
+        'extraFields': ExtraField.jsonList(extraFields),
       };
 
   /// Serialize a record's attachments for a write body's `files` field.

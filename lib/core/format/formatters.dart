@@ -110,6 +110,10 @@ class Formatters {
   static String currencyRounded(double value, String symbol) =>
       _money(symbol, 0).format(value);
 
+  /// Display [unit]s per one stored distance unit.
+  static double distanceFactor(MeasurementSystem base, DistanceUnit unit) =>
+      base.kmPerUnit / unit.kmPerUnit;
+
   /// Raw stored distance [rawValue] (in [base]'s distance unit) converted to the
   /// numeric display [unit] value (unlabelled) — for charts.
   static double distanceValue(
@@ -117,7 +121,15 @@ class Formatters {
     MeasurementSystem base,
     DistanceUnit unit,
   ) =>
-      rawValue * base.kmPerUnit * unit.fromKm;
+      rawValue * distanceFactor(base, unit);
+
+  /// A value the user entered in [unit], back in [base]'s stored unit.
+  static double storedDistance(
+    double displayValue,
+    MeasurementSystem base,
+    DistanceUnit unit,
+  ) =>
+      displayValue / distanceFactor(base, unit);
 
   /// Raw stored distance [rawValue] (in [base]'s distance unit) converted to the
   /// display [unit] and labelled, e.g. `320,775 km` or `199,316 mi`.
@@ -132,24 +144,42 @@ class Formatters {
   /// Fuel-economy value from raw stored distance + volume (each in [base]'s
   /// units), expressed in [unit]. Returns null when inputs can't yield a rate
   /// (zero distance/volume). See [fuelEconomy] for the labelled string.
+  ///
+  /// Engine hours and kWh have no metric/imperial spelling, so [base] leaves
+  /// them alone — and with the volume goes the gallon half of an MPG-style unit,
+  /// leaving distance per kWh.
   static double? fuelEconomyValue(
     double rawDistance,
     double rawVolume,
     MeasurementSystem base,
-    FuelEconomyUnit unit,
-  ) {
-    final km = rawDistance * base.kmPerUnit;
-    final litres = rawVolume * base.litresPerUnit;
-    if (km <= 0 || litres <= 0) return null;
-    return switch (unit) {
-      FuelEconomyUnit.l100km => litres / km * 100,
-      FuelEconomyUnit.kmPerL => km / litres,
-      FuelEconomyUnit.mpg => (km * _miPerKm) / (litres * _usGalPerL),
-      FuelEconomyUnit.mpgUk => (km * _miPerKm) / (litres * _ukGalPerL),
-    };
+    FuelEconomyUnit unit, {
+    bool isElectric = false,
+    bool useHours = false,
+  }) {
+    final travelled = useHours ? rawDistance : rawDistance * base.kmPerUnit;
+    final consumed = isElectric ? rawVolume : rawVolume * base.litresPerUnit;
+    if (travelled <= 0 || consumed <= 0) return null;
+
+    final distance = (useHours || !_measuresMiles(unit))
+        ? travelled
+        : travelled * _miPerKm;
+    final volume = isElectric
+        ? consumed
+        : switch (unit) {
+            FuelEconomyUnit.mpg => consumed * _usGalPerL,
+            FuelEconomyUnit.mpgUk => consumed * _ukGalPerL,
+            _ => consumed,
+          };
+    return unit == FuelEconomyUnit.l100km
+        ? volume / distance * 100
+        : distance / volume;
   }
 
+  static bool _measuresMiles(FuelEconomyUnit unit) =>
+      unit == FuelEconomyUnit.mpg || unit == FuelEconomyUnit.mpgUk;
+
   /// Labelled fuel economy, e.g. `8.0 L/100 km`, or `—` when not computable.
+  /// [VehicleUnits.economy] labels the vehicle-specific variants.
   static String fuelEconomy(
     double rawDistance,
     double rawVolume,

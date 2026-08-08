@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/vehicle_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'form_fields.dart';
 
 /// Opens the add/edit form for a generic (date + cost) record [kind] — service /
@@ -92,6 +94,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
 
   late DateTime _date;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -105,12 +108,17 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     _date = e?.date ?? DateTime.now();
     if (e != null) {
       final o = e.odometer;
-      if (o != null) _odometer.text = formatFormNumber(o);
+      if (o != null) {
+        _odometer.text = formatFormNumber(
+          ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(o),
+        );
+      }
       _description.text = e.description;
       _cost.text = formatFormNumber(e.cost);
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -128,8 +136,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
-    final distanceUnit = units.distance.label;
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
     final titles = _titlesFor(widget.kind, l10n);
 
     return Padding(
@@ -190,7 +197,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 const SizedBox(height: 14),
                 _numberField(
                   controller: _odometer,
-                  label: l10n.formOdometerLabel(distanceUnit),
+                  label: l10n.formOdometerLabel(units.distanceLabel),
                   decimal: false,
                 ),
               ],
@@ -219,6 +226,13 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                   t,
                   labelText: l10n.formNotesOptional,
                 ),
+              ),
+              const SizedBox(height: 14),
+              ExtraFieldsField(
+                recordType: widget.kind.extraFieldType,
+                initial: _extraFields,
+                enabled: !_submitting,
+                onChanged: (fields) => _extraFields = fields,
               ),
               const SizedBox(height: 14),
               AttachmentsField(
@@ -323,7 +337,11 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     final existing = widget.existing;
     // Odometer is only collected (and required by the server) for the
     // odometer-bearing kinds; tax sends none.
-    final odometer = _hasOdometer ? parseFormNumber(_odometer.text)! : null;
+    final odometer = _hasOdometer
+        ? ref
+              .read(vehicleUnitsProvider(widget.vehicleId))
+              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
+        : null;
     try {
       if (existing == null) {
         await repo.addRecord(
@@ -336,6 +354,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updateRecord(
@@ -348,6 +367,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       }
       _invalidateProviders();
@@ -411,13 +431,12 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   }
 
   /// Refreshes every view derived from this record type after a write: its own
-  /// tab list, the vehicle's aggregated info (record counts/costs) and the
-  /// monthly expense breakdown.
+  /// tab list and the vehicle's aggregated info (record counts/costs). The
+  /// monthly expense breakdown watches the tab list, so it follows.
   void _invalidateProviders() {
     ref.invalidate(
       vehicleRecordsProvider((vehicleId: widget.vehicleId, kind: widget.kind)),
     );
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
-    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }
 }

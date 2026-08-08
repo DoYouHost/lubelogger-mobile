@@ -1,4 +1,5 @@
 import 'attachment.dart';
+import 'extra_field.dart';
 
 /// An equipment item from `GET /api/vehicle/equipmentrecords` (read model
 /// `EquipmentRecordAPIExportModel`). Has no date or cost — a description, an
@@ -13,6 +14,7 @@ class EquipmentRecord {
     required this.notes,
     required this.tags,
     this.files = const [],
+    this.extraFields = const [],
   });
 
   factory EquipmentRecord.fromJson(Map<String, dynamic> json) => EquipmentRecord(
@@ -26,6 +28,7 @@ class EquipmentRecord {
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -35,6 +38,8 @@ class EquipmentRecord {
   final String notes;
   final String tags;
   final List<Attachment> files;
+
+  final List<ExtraField> extraFields;
 
   static int _toInt(Object? v) => switch (v) {
         final num n => n.toInt(),

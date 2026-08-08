@@ -1,3 +1,5 @@
+import 'extra_field.dart';
+
 /// A vehicle in the household garage, from `GET /api/vehicles` (also nested as
 /// `vehicleData` inside `GET /api/vehicle/info`).
 ///
@@ -33,7 +35,7 @@ class Vehicle {
         useHours: json['useHours'] == true,
         odometerOptional: json['odometerOptional'] == true,
         identifier: (json['vehicleIdentifier'] as String?) ?? 'LicensePlate',
-        extraFields: _extraFields(json['extraFields']),
+        extraFields: ExtraField.listFrom(json['extraFields']),
       );
 
   final int id;
@@ -61,18 +63,13 @@ class Vehicle {
   /// the update endpoint overwrites it with whatever we send.
   final String identifier;
 
-  /// Custom fields as returned by the server (`{name, value, ...}`), kept as raw
-  /// maps purely to round-trip them on edit (the update endpoint replaces the
-  /// whole list). The app doesn't otherwise read or display them.
-  final List<Map<String, dynamic>> extraFields;
+  /// The vehicle's custom fields. The update endpoint replaces the whole list
+  /// with what it receives, so the edit form merges these with the household
+  /// template (see [mergeExtraFields]) and sends the result back.
+  final List<ExtraField> extraFields;
 
   /// "Make Model" for the card title (year is shown separately).
   String get makeModel => [make, model].where((s) => s.isNotEmpty).join(' ');
-
-  static List<Map<String, dynamic>> _extraFields(Object? raw) {
-    if (raw is! List) return const [];
-    return [for (final e in raw) if (e is Map<String, dynamic>) e];
-  }
 
   static List<String> _stringList(Object? raw) {
     if (raw is! List) return const [];

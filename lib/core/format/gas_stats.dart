@@ -1,5 +1,30 @@
 import '../models/gas_record.dart';
 
+/// Energy drawn from the battery since the previous charge, ported from
+/// LubeLogger's `GasHelper`. An electric record logs the energy put *in*, so the
+/// pack size has to be inferred from the charge this session added before the
+/// drop since the last one can be priced in kWh. A session that adds no
+/// measurable charge sizes no pack, and so contributes nothing.
+double _energyUsedSince(GasRecord record, int previousEndingSoc) {
+  final charged = (record.endingSoc - record.startingSoc) / 100;
+  if (charged <= 0 || previousEndingSoc <= 0) return 0;
+  final packSize = record.fuelConsumed / charged;
+  final used = (previousEndingSoc - record.startingSoc) / 100 * packSize;
+  return used > 0 ? used : 0;
+}
+
+/// The server's ordering, which the running totals below depend on.
+List<GasRecord> _chronological(List<GasRecord> records) => [...records]..sort((
+  a,
+  b,
+) {
+  final da = a.date, db = b.date;
+  final byDate = (da == null || db == null) ? 0 : da.compareTo(db);
+  if (byDate != 0) return byDate;
+  final byOdometer = a.odometer.compareTo(b.odometer);
+  return byOdometer != 0 ? byOdometer : a.endingSoc.compareTo(b.endingSoc);
+});
+
 /// One calendar month's fuel economy, as a raw distance/volume ratio (stored
 /// distance units per stored volume unit). The screen converts it to the user's
 /// chosen unit + measurement base for display.
@@ -51,17 +76,11 @@ class GasStats {
   double? get averageRawRatio =>
       hasEconomy ? totalRawDistance / totalRawVolume : null;
 
-  factory GasStats.from(List<GasRecord> records) {
-    // Ascending by date then odometer, matching the server's ordering.
-    final sorted = [...records]..sort((a, b) {
-        final da = a.date, db = b.date;
-        final byDate = (da == null || db == null)
-            ? 0
-            : da.compareTo(db);
-        return byDate != 0 ? byDate : a.odometer.compareTo(b.odometer);
-      });
+  factory GasStats.from(List<GasRecord> records, {bool isElectric = false}) {
+    final sorted = _chronological(records);
 
     double previousOdometer = 0;
+    int previousEndingSoc = 0;
     double unFactoredVolume = 0;
     double unFactoredDistance = 0;
 
@@ -86,18 +105,25 @@ class GasStats {
       // guard, so the first fill never yields a bogus economy.
       if (i == 0) {
         if (r.odometer > 0) previousOdometer = r.odometer;
+        if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
         continue;
       }
 
       var delta = r.odometer - previousOdometer;
       if (delta < 0) delta = 0;
-      final volume = r.fuelConsumed;
+      final volume = isElectric
+          ? _energyUsedSince(r, previousEndingSoc)
+          : r.fuelConsumed;
       double? ratio;
 
       if (r.missedFuelUp) {
         // Distance since the last full tank is unattributable; drop it.
         unFactoredVolume = 0;
         unFactoredDistance = 0;
+      } else if (isElectric) {
+        // A charge is measured against the previous one, so there is no partial
+        // fill to carry forward and "fill to full" says nothing about a battery.
+        if (volume > 0 && delta > 0 && r.odometer > 0) ratio = delta / volume;
       } else if (r.isFillToFull && r.odometer > 0) {
         final totalVolume = unFactoredVolume + volume;
         final totalDistance = unFactoredDistance + delta;
@@ -127,6 +153,7 @@ class GasStats {
       }
 
       if (r.odometer > 0) previousOdometer = r.odometer;
+      if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
     }
 
     final monthly = [
@@ -157,25 +184,28 @@ class FuelRow {
     required this.record,
     required this.rawDelta,
     required this.rawRatio,
+    required this.rawConsumption,
   });
 
   final GasRecord record;
   final double? rawDelta;
   final double? rawRatio;
+
+  /// Fuel or energy attributed to this row. Equal to the record's own amount for
+  /// a combustion vehicle; for an electric one it is [_energyUsedSince], which
+  /// is what the server shows in the same column and totals underneath it.
+  final double rawConsumption;
 }
 
 /// Per-record fuel rows in chronological order (oldest first), reusing the same
 /// fill-to-full accumulation as [GasStats.from] so per-row economy matches the
 /// server: partial fills accumulate their distance/volume into the next full
 /// tank, and a missed fuel-up drops the unattributable span.
-List<FuelRow> fuelRows(List<GasRecord> records) {
-  final sorted = [...records]..sort((a, b) {
-      final da = a.date, db = b.date;
-      final byDate = (da == null || db == null) ? 0 : da.compareTo(db);
-      return byDate != 0 ? byDate : a.odometer.compareTo(b.odometer);
-    });
+List<FuelRow> fuelRows(List<GasRecord> records, {bool isElectric = false}) {
+  final sorted = _chronological(records);
 
   double previousOdometer = 0;
+  int previousEndingSoc = 0;
   double unFactoredVolume = 0;
   double unFactoredDistance = 0;
   final rows = <FuelRow>[];
@@ -187,18 +217,28 @@ List<FuelRow> fuelRows(List<GasRecord> records) {
     // gets no delta and no economy (matches GasStats' `i == 0` guard).
     if (i == 0) {
       if (r.odometer > 0) previousOdometer = r.odometer;
-      rows.add(FuelRow(record: r, rawDelta: null, rawRatio: null));
+      if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
+      rows.add(FuelRow(
+        record: r,
+        rawDelta: null,
+        rawRatio: null,
+        rawConsumption: r.fuelConsumed,
+      ));
       continue;
     }
 
     var delta = r.odometer - previousOdometer;
     if (delta < 0) delta = 0;
-    final volume = r.fuelConsumed;
+    final volume = isElectric
+        ? _energyUsedSince(r, previousEndingSoc)
+        : r.fuelConsumed;
     double? ratio;
 
     if (r.missedFuelUp) {
       unFactoredVolume = 0;
       unFactoredDistance = 0;
+    } else if (isElectric) {
+      if (volume > 0 && delta > 0 && r.odometer > 0) ratio = delta / volume;
     } else if (r.isFillToFull && r.odometer > 0) {
       final totalVolume = unFactoredVolume + volume;
       final totalDistance = unFactoredDistance + delta;
@@ -216,9 +256,11 @@ List<FuelRow> fuelRows(List<GasRecord> records) {
       record: r,
       rawDelta: r.odometer > 0 ? delta : null,
       rawRatio: (ratio != null && ratio > 0) ? ratio : null,
+      rawConsumption: volume,
     ));
 
     if (r.odometer > 0) previousOdometer = r.odometer;
+    if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
   }
 
   return rows;

@@ -22,6 +22,7 @@ class RecordFormScaffold extends StatelessWidget {
     required this.onDelete,
     required this.error,
     required this.fields,
+    this.notice,
   });
 
   final GlobalKey<FormState> formKey;
@@ -34,6 +35,9 @@ class RecordFormScaffold extends StatelessWidget {
   /// Invoked by the delete icon; only shown when [isEditing].
   final VoidCallback? onDelete;
   final String? error;
+
+  /// Shown above the fields — for a record the server won't let us write back.
+  final Widget? notice;
   final List<Widget> fields;
 
   /// The shell owns the verdict because it owns the [Form] — every caller
@@ -88,6 +92,7 @@ class RecordFormScaffold extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              if (notice != null) ...[notice!, const SizedBox(height: 14)],
               ...fields,
               if (error != null) ...[
                 const SizedBox(height: 12),

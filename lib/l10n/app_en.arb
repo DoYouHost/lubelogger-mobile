@@ -244,6 +244,17 @@
   "attachmentUploadError": "Couldn't upload the file. Try again.",
   "attachmentOpenError": "Couldn't open the file.",
 
+  "extraFieldsLabel": "Custom fields",
+
+  "formStateOfCharge": "State of charge",
+  "formStateOfChargeRange": "{start}% → {end}%",
+  "@formStateOfChargeRange": {
+    "placeholders": {
+      "start": { "type": "int" },
+      "end": { "type": "int" }
+    }
+  },
+
   "quickActionAddFuel": "Add fuel",
   "quickActionAddOdometer": "Add odometer",
   "quickActionSelectVehicle": "Select vehicle",
@@ -484,5 +495,21 @@
   "bugReportRequestVersions": "App and server version",
   "bugReportRequestNoLog": "No log, no recording",
   "bugReportRequestNoData": "Nothing about your vehicles or your phone",
-  "bugReportRequestPublic": "It becomes a public issue on GitHub — anyone can read it, and it stays."
+  "bugReportRequestPublic": "It becomes a public issue on GitHub — anyone can read it, and it stays.",
+  "fuelPillEnergy": "Energy {value}",
+  "@fuelPillEnergy": {
+    "description": "Fuel tab summary pill: total energy drawn from the battery",
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "formEnergyLabel": "Energy charged ({unit})",
+  "@formEnergyLabel": {
+    "description": "Charging-session amount field; unit is kWh",
+    "placeholders": { "unit": { "type": "String" } }
+  },
+  "statAvgConsumption": "Average Consumption",
+  "chartConsumptionByMonth": "Consumption by Month",
+  "planDoneReadOnly": "This plan is done. LubeLogger's API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.",
+  "@planDoneReadOnly": {
+    "description": "Warning shown on the plan form when the item's progress is Done"
+  }
 }

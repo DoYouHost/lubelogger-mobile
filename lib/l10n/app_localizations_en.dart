@@ -513,6 +513,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentOpenError => 'Couldn\'t open the file.';
 
   @override
+  String get extraFieldsLabel => 'Custom fields';
+
+  @override
+  String get formStateOfCharge => 'State of charge';
+
+  @override
+  String formStateOfChargeRange(int start, int end) {
+    return '$start% → $end%';
+  }
+
+  @override
   String get quickActionAddFuel => 'Add fuel';
 
   @override
@@ -1007,4 +1018,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bugReportRequestPublic =>
       'It becomes a public issue on GitHub — anyone can read it, and it stays.';
+
+  @override
+  String fuelPillEnergy(String value) {
+    return 'Energy $value';
+  }
+
+  @override
+  String formEnergyLabel(String unit) {
+    return 'Energy charged ($unit)';
+  }
+
+  @override
+  String get statAvgConsumption => 'Average Consumption';
+
+  @override
+  String get chartConsumptionByMonth => 'Consumption by Month';
+
+  @override
+  String get planDoneReadOnly =>
+      'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
 }

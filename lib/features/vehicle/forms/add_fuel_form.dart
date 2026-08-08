@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/gas_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'form_fields.dart';
 
 /// Opens the "Add fuel record" form as a modal bottom sheet. Pass [existing] to
@@ -55,9 +57,11 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   final _notes = TextEditingController();
 
   late DateTime _date;
+  late RangeValues _soc;
   late bool _fillToFull;
   late bool _missedFuelUp;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -70,13 +74,22 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     _date = e?.date ?? DateTime.now();
     _fillToFull = e?.isFillToFull ?? true;
     _missedFuelUp = e?.missedFuelUp ?? false;
+    _soc = RangeValues(
+      (e?.startingSoc ?? GasRecord.defaultStartingSoc).toDouble(),
+      (e?.endingSoc ?? GasRecord.defaultEndingSoc).toDouble(),
+    );
     if (e != null) {
-      _odometer.text = formatFormNumber(e.odometer);
+      _odometer.text = formatFormNumber(
+        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
+              e.odometer,
+            ),
+      );
       _fuel.text = formatFormNumber(e.fuelConsumed);
       _cost.text = formatFormNumber(e.cost);
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -94,9 +107,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
-    final distanceUnit = units.distance.label;
-    final volumeUnit = units.base.volumeLabel;
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
 
     return Padding(
       // Lift the sheet above the keyboard.
@@ -143,14 +154,26 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               const SizedBox(height: 14),
               _numberField(
                 controller: _odometer,
-                label: l10n.formOdometerLabel(distanceUnit),
+                label: l10n.formOdometerLabel(units.distanceLabel),
                 decimal: false,
               ),
               const SizedBox(height: 14),
               _numberField(
                 controller: _fuel,
-                label: l10n.formFuelLabel(volumeUnit),
+                label: units.isElectric
+                    ? l10n.formEnergyLabel(units.consumptionLabel)
+                    : l10n.formFuelLabel(units.consumptionLabel),
               ),
+              // Electric only, like the web's dual-range slider: the server
+              // reads state of charge for no other kind of vehicle.
+              if (units.isElectric) ...[
+                const SizedBox(height: 14),
+                _SocField(
+                  values: _soc,
+                  enabled: !_submitting,
+                  onChanged: (v) => setState(() => _soc = v),
+                ),
+              ],
               const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -195,6 +218,13 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                   t,
                   labelText: l10n.formNotesOptional,
                 ),
+              ),
+              const SizedBox(height: 14),
+              ExtraFieldsField(
+                recordType: ExtraFieldRecordType.gas,
+                initial: _extraFields,
+                enabled: !_submitting,
+                onChanged: (fields) => _extraFields = fields,
               ),
               const SizedBox(height: 14),
               AttachmentsField(
@@ -296,34 +326,43 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       _error = null;
     });
     final repo = ref.read(vehiclesRepositoryProvider);
+    final odometer = ref
+        .read(vehicleUnitsProvider(widget.vehicleId))
+        .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble());
     final existing = widget.existing;
     try {
       if (existing == null) {
         await repo.addGasRecord(
           vehicleId: widget.vehicleId,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           fuelConsumed: parseFormNumber(_fuel.text)!,
           cost: parseFormNumber(_cost.text)!,
           isFillToFull: _fillToFull,
           missedFuelUp: _missedFuelUp,
+          startingSoc: _soc.start.round(),
+          endingSoc: _soc.end.round(),
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updateGasRecord(
           vehicleId: widget.vehicleId,
           id: existing.id,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           fuelConsumed: parseFormNumber(_fuel.text)!,
           cost: parseFormNumber(_cost.text)!,
           isFillToFull: _fillToFull,
           missedFuelUp: _missedFuelUp,
+          startingSoc: _soc.start.round(),
+          endingSoc: _soc.end.round(),
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       }
       _invalidateFuelProviders();
@@ -387,10 +426,74 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   }
 
   /// Refreshes every view derived from the refuel log after an add/update/delete.
+  /// The fuel statistics and the monthly breakdown watch the log, so dropping it
+  /// is enough for them.
   void _invalidateFuelProviders() {
     ref.invalidate(gasRecordsProvider(widget.vehicleId));
-    ref.invalidate(gasStatsProvider(widget.vehicleId));
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
-    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
+  }
+}
+
+/// Battery charge before and after a charging session, as a percentage range —
+/// the app's take on the web's dual-range slider. Equal ends are allowed, as
+/// they are there, even though the server then derives no battery capacity.
+class _SocField extends StatelessWidget {
+  const _SocField({
+    required this.values,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final RangeValues values;
+  final bool enabled;
+  final ValueChanged<RangeValues> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.formStateOfCharge,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: t.textSecondary,
+              ),
+            ),
+            Text(
+              l10n.formStateOfChargeRange(
+                values.start.round(),
+                values.end.round(),
+              ),
+              style: TextStyle(
+                fontFamily: DashTokens.fontMono,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: t.accentGoldInk,
+              ),
+            ),
+          ],
+        ),
+        RangeSlider(
+          values: values,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          activeColor: t.accentGold,
+          labels: RangeLabels(
+            '${values.start.round()}%',
+            '${values.end.round()}%',
+          ),
+          onChanged: enabled ? onChanged : null,
+        ),
+      ],
+    );
   }
 }

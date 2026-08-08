@@ -230,6 +230,11 @@
   "attachmentUploadError": "Nie udało się przesłać pliku. Spróbuj ponownie.",
   "attachmentOpenError": "Nie udało się otworzyć pliku.",
 
+  "extraFieldsLabel": "Pola własne",
+
+  "formStateOfCharge": "Stan naładowania",
+  "formStateOfChargeRange": "{start}% → {end}%",
+
   "quickActionAddFuel": "Dodaj tankowanie",
   "quickActionAddOdometer": "Dodaj licznik",
   "quickActionSelectVehicle": "Wybierz pojazd",
@@ -381,5 +386,10 @@
   "bugReportRequestVersions": "Wersja aplikacji i serwera",
   "bugReportRequestNoLog": "Żadnego loga, żadnego nagrania",
   "bugReportRequestNoData": "Nic o Twoich pojazdach ani telefonie",
-  "bugReportRequestPublic": "Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe."
+  "bugReportRequestPublic": "Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe.",
+  "fuelPillEnergy": "Energia {value}",
+  "formEnergyLabel": "Pobrana energia ({unit})",
+  "statAvgConsumption": "Średnie zużycie energii",
+  "chartConsumptionByMonth": "Zużycie energii wg miesiąca",
+  "planDoneReadOnly": "Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera."
 }

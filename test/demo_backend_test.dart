@@ -1,6 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/demo/demo_http_adapter.dart';
+import 'package:lubelogger_mobile/core/format/gas_stats.dart';
+import 'package:lubelogger_mobile/core/format/vehicle_units.dart';
+import 'package:lubelogger_mobile/core/settings/units_settings.dart';
+import 'package:lubelogger_mobile/core/models/extra_field.dart';
 import 'package:lubelogger_mobile/core/models/plan_record.dart';
 import 'package:lubelogger_mobile/core/models/reminder_record.dart';
 import 'package:lubelogger_mobile/core/models/vehicle_record.dart';
@@ -134,6 +138,83 @@ void main() {
     final after = await r.list();
     expect(after.any((v) => v.id == id), isFalse);
     expect(await r.records(RecordKind.service, id), isEmpty);
+  });
+
+  test('the electric vehicle charges with a coherent state of charge',
+      () async {
+    final r = repo();
+    expect((await r.list()).firstWhere((v) => v.id == 3).isElectric, isTrue);
+
+    final charges = await r.gasRecords(3);
+    expect(charges, isNotEmpty);
+    for (final c in charges) {
+      expect(c.endingSoc, greaterThan(c.startingSoc));
+      // The pack size the server derives per record; a demo that disagreed with
+      // itself here would show nonsense consumption in the real app.
+      final derivedKwh = c.fuelConsumed / ((c.endingSoc - c.startingSoc) / 100);
+      expect(derivedKwh, closeTo(40, 0.5));
+    }
+  });
+
+  test('the electric vehicle shows a believable kWh economy', () async {
+    // The demo is what the store screenshots are taken from, so its numbers have
+    // to survive being labelled: a Leaf that reads 2 kWh/100 km is worse than
+    // one with no label at all.
+    final charges = await repo().gasRecords(3);
+    final stats = GasStats.from(charges, isElectric: true);
+    final units = const VehicleUnits(UnitsSettings(), isElectric: true);
+
+    expect(units.economyLabel, 'kWh/100 km');
+    expect(
+      units.economyValue(stats.totalRawDistance, stats.totalRawVolume),
+      inInclusiveRange(12, 22),
+    );
+  });
+
+  test('editing a charge keeps its state of charge', () async {
+    final r = repo();
+    final before = (await r.gasRecords(3)).first;
+
+    await r.updateGasRecord(
+      vehicleId: 3,
+      id: before.id,
+      date: before.date!,
+      odometer: before.odometer,
+      fuelConsumed: before.fuelConsumed,
+      cost: before.cost,
+      isFillToFull: before.isFillToFull,
+      missedFuelUp: before.missedFuelUp,
+      startingSoc: before.startingSoc,
+      endingSoc: before.endingSoc,
+    );
+
+    final after = (await r.gasRecords(3)).firstWhere((c) => c.id == before.id);
+    expect(after.startingSoc, before.startingSoc);
+    expect(after.endingSoc, before.endingSoc);
+  });
+
+  test('custom fields survive an edit that does not touch them', () async {
+    final r = repo();
+    final templates = await r.extraFieldTemplates();
+    expect(templates[ExtraFieldRecordType.service], isNotEmpty);
+
+    final before = (await r.records(RecordKind.service, 1)).firstWhere(
+      (rec) => rec.extraFields.isNotEmpty,
+    );
+    await r.updateRecord(
+      kind: RecordKind.service,
+      id: before.id,
+      date: before.date!,
+      description: before.description,
+      cost: before.cost,
+      odometer: before.odometer,
+      extraFields: before.extraFields,
+    );
+
+    final after = (await r.records(RecordKind.service, 1))
+        .firstWhere((rec) => rec.id == before.id);
+    expect(after.extraFields.single.name, before.extraFields.single.name);
+    expect(after.extraFields.single.value, before.extraFields.single.value);
   });
 
   test('server metadata endpoints answer', () async {

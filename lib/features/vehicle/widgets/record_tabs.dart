@@ -12,7 +12,7 @@ import '../../../core/models/plan_record.dart';
 import '../../../core/models/reminder_record.dart';
 import '../../../core/models/supply_record.dart';
 import '../../../core/models/vehicle_record.dart';
-import '../../../core/settings/units_settings.dart';
+import '../../../core/format/vehicle_units.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';
@@ -29,52 +29,33 @@ import 'record_list.dart';
 const _placeholder = '—';
 
 /// Short date in the user's chosen order + separator, or a dash when missing.
-String _date(DateTime? d, UnitsSettings units) =>
+String _date(DateTime? d, VehicleUnits units) =>
     d == null ? _placeholder : units.formatDate(d);
 
 /// Odometer / distance reading in the display unit, bare (no unit suffix).
-/// Engine-hour vehicles show the raw hours instead.
-String _odo(double? raw, UnitsSettings units, {required bool useHours}) {
-  if (raw == null || raw <= 0) return _placeholder;
-  final value = useHours
-      ? raw
-      : Formatters.distanceValue(raw, units.base, units.distance);
-  return Formatters.odometer(value);
-}
-
-String _distanceUnitLabel(UnitsSettings units, {required bool useHours}) =>
-    useHours ? 'h' : units.distance.label;
+String _odo(double? raw, VehicleUnits units) => (raw == null || raw <= 0)
+    ? _placeholder
+    : Formatters.odometer(units.toDisplayDistance(raw));
 
 /// [_odo] with its unit label appended, or just the bare placeholder when
 /// there's no reading — a record card shows "—" alone, never "— km".
-String _odoUnit(
-  double? raw,
-  UnitsSettings units,
-  String unit, {
-  required bool useHours,
-}) {
-  final v = _odo(raw, units, useHours: useHours);
-  return v == _placeholder ? v : '$v $unit';
+String _odoUnit(double? raw, VehicleUnits units) {
+  final v = _odo(raw, units);
+  return v == _placeholder ? v : '$v ${units.distanceLabel}';
 }
 
 /// Odometer readings as a card list: each card headlines the reading, with the
 /// gain since the previous reading (Δ) in the meta row.
 class OdometerTab extends ConsumerWidget {
-  const OdometerTab({
-    super.key,
-    required this.vehicleId,
-    required this.useHours,
-  });
+  const OdometerTab({super.key, required this.vehicleId});
 
   final int vehicleId;
-  final bool useHours;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final async = ref.watch(odometerRecordsProvider(vehicleId));
-    final unit = _distanceUnitLabel(units, useHours: useHours);
 
     return RecordsTabBody<OdometerRecord>(
       async: async,
@@ -101,16 +82,11 @@ class OdometerTab extends ConsumerWidget {
             for (var i = ascending.length - 1; i >= 0; i--)
               RecordCard(
                 date: _date(ascending[i].date, units),
-                headline: _odoUnit(
-                  ascending[i].odometer,
-                  units,
-                  unit,
-                  useHours: useHours,
-                ),
+                headline: _odoUnit(ascending[i].odometer, units),
                 meta: [
                   RecordMetaItem(
                     Icons.trending_up,
-                    _odoUnit(deltas[i], units, unit, useHours: useHours),
+                    _odoUnit(deltas[i], units),
                   ),
                 ],
                 onTap: () => showAddOdometerForm(
@@ -133,22 +109,19 @@ class GenericRecordsTab extends ConsumerWidget {
     super.key,
     required this.vehicleId,
     required this.kind,
-    required this.useHours,
   });
 
   final int vehicleId;
   final RecordKind kind;
-  final bool useHours;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final symbol = ref.watch(currencySymbolProvider);
     final key = (vehicleId: vehicleId, kind: kind);
     final async = ref.watch(vehicleRecordsProvider(key));
-    final unit = _distanceUnitLabel(units, useHours: useHours);
 
     return RecordsTabBody<VehicleRecord>(
       async: async,
@@ -175,7 +148,7 @@ class GenericRecordsTab extends ConsumerWidget {
                   if (kind.hasOdometer)
                     RecordMetaItem(
                       Icons.speed,
-                      _odoUnit(r.odometer, units, unit, useHours: useHours),
+                      _odoUnit(r.odometer, units),
                     ),
                 ],
                 onTap: kind.editable
@@ -198,44 +171,39 @@ class GenericRecordsTab extends ConsumerWidget {
 /// cost headline, meta row of odometer / Δ / economy / price-per-volume).
 /// Economy uses [fuelRows]' fill-to-full accumulation so it matches the server.
 class FuelTab extends ConsumerWidget {
-  const FuelTab({super.key, required this.vehicleId, required this.useHours});
+  const FuelTab({super.key, required this.vehicleId});
 
   final int vehicleId;
-  final bool useHours;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final symbol = ref.watch(currencySymbolProvider);
     final async = ref.watch(gasRecordsProvider(vehicleId));
     final stats = ref.watch(gasStatsProvider(vehicleId)).valueOrNull;
-    final unit = _distanceUnitLabel(units, useHours: useHours);
 
     String econ(double? rawRatio) {
       if (rawRatio == null) return _placeholder;
-      final v = Formatters.fuelEconomyValue(
-        rawRatio,
-        1,
-        units.base,
-        units.economy,
-      );
+      final v = units.economyValue(rawRatio, 1);
       return v == null ? _placeholder : Formatters.number(v, decimals: 1);
     }
 
-    String pricePerVolume(GasRecord r) => r.fuelConsumed <= 0
+    // Cost per unit divides by what was bought, so an electric record uses the
+    // energy it put in rather than the energy the battery later gave up.
+    String pricePerUnit(GasRecord r) => r.fuelConsumed <= 0
         ? _placeholder
         : Formatters.currency(r.cost / r.fuelConsumed, symbol);
 
     String econMeta(double? rawRatio) {
       final v = econ(rawRatio);
-      return v == _placeholder ? v : '$v ${units.economy.label}';
+      return v == _placeholder ? v : '$v ${units.economyLabel}';
     }
 
     String priceMeta(GasRecord r) {
-      final v = pricePerVolume(r);
-      return v == _placeholder ? v : '$v/${units.base.volumeLabel}';
+      final v = pricePerUnit(r);
+      return v == _placeholder ? v : '$v/${units.consumptionLabel}';
     }
 
     return RecordsTabBody<GasRecord>(
@@ -244,34 +212,25 @@ class FuelTab extends ConsumerWidget {
       emptyLabel: l10n.recordsEmpty,
       onRefresh: () async {
         ref.invalidate(gasRecordsProvider(vehicleId));
-        ref.invalidate(gasStatsProvider(vehicleId));
         await ref.read(gasRecordsProvider(vehicleId).future);
       },
       builder: (records) {
-        final rows = fuelRows(records); // chronological (oldest first)
+        final rows = fuelRows(records, isElectric: units.isElectric);
         final displayed = [for (var i = rows.length - 1; i >= 0; i--) rows[i]];
-        final totalFuel = records.fold<double>(0, (s, r) => s + r.fuelConsumed);
+        final totalFuel = rows.fold<double>(0, (s, r) => s + r.rawConsumption);
         final totalCost = records.fold<double>(0, (s, r) => s + r.cost);
 
         // Per-record economies in the display unit, for min/max. Avg uses the
         // lifetime distance÷volume ratio (matches the dashboard + server).
         final economies = <double>[
           for (final r in rows)
-            if (r.rawRatio != null)
-              Formatters.fuelEconomyValue(
-                r.rawRatio!,
-                1,
-                units.base,
-                units.economy,
-              )!,
+            if (r.rawRatio != null) units.economyValue(r.rawRatio!, 1)!,
         ];
         final avg = stats?.averageRawRatio;
-        final avgDisplayed = avg == null
-            ? null
-            : Formatters.fuelEconomyValue(avg, 1, units.base, units.economy);
+        final avgDisplayed = avg == null ? null : units.economyValue(avg, 1);
         String econLabel(double? v) => v == null
             ? _placeholder
-            : '${Formatters.number(v, decimals: 1)} ${units.economy.label}';
+            : '${Formatters.number(v, decimals: 1)} ${units.economyLabel}';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -304,13 +263,13 @@ class FuelTab extends ConsumerWidget {
                 if (stats != null)
                   DashPill(
                     label: l10n.fuelPillDistance(
-                      '${_odo(stats.distanceSpan, units, useHours: useHours)} $unit',
+                      _odoUnit(stats.distanceSpan, units),
                     ),
                     accent: t.accentOrange,
                   ),
                 DashPill(
-                  label: l10n.fuelPillFuel(
-                    '${Formatters.odometer(totalFuel)} ${units.base.volumeLabel}',
+                  label: (units.isElectric ? l10n.fuelPillEnergy : l10n.fuelPillFuel)(
+                    '${Formatters.odometer(totalFuel)} ${units.consumptionLabel}',
                   ),
                   accent: t.accentOrange,
                 ),
@@ -333,16 +292,11 @@ class FuelTab extends ConsumerWidget {
                     meta: [
                       RecordMetaItem(
                         Icons.speed,
-                        _odoUnit(
-                          row.record.odometer,
-                          units,
-                          unit,
-                          useHours: useHours,
-                        ),
+                        _odoUnit(row.record.odometer, units),
                       ),
                       RecordMetaItem(
                         Icons.trending_up,
-                        _odoUnit(row.rawDelta, units, unit, useHours: useHours),
+                        _odoUnit(row.rawDelta, units),
                       ),
                       RecordMetaItem(
                         Icons.local_gas_station,
@@ -376,7 +330,7 @@ class SupplyTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final symbol = ref.watch(currencySymbolProvider);
     final async = ref.watch(supplyRecordsProvider(vehicleId));
 
@@ -429,7 +383,7 @@ class PlanTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final symbol = ref.watch(currencySymbolProvider);
     final async = ref.watch(planRecordsProvider(vehicleId));
 
@@ -477,22 +431,16 @@ class PlanTab extends ConsumerWidget {
 /// at the right, and the due date / odometer follow in the meta row. Sorted
 /// most-urgent first.
 class ReminderTab extends ConsumerWidget {
-  const ReminderTab({
-    super.key,
-    required this.vehicleId,
-    required this.useHours,
-  });
+  const ReminderTab({super.key, required this.vehicleId});
 
   final int vehicleId;
-  final bool useHours;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final async = ref.watch(remindersProvider(vehicleId));
-    final unit = _distanceUnitLabel(units, useHours: useHours);
 
     return RecordsTabBody<ReminderRecord>(
       async: async,
@@ -522,7 +470,7 @@ class ReminderTab extends ConsumerWidget {
                   if (r.showsOdometer)
                     RecordMetaItem(
                       Icons.speed,
-                      _odoUnit(r.dueOdometer, units, unit, useHours: useHours),
+                      _odoUnit(r.dueOdometer, units),
                     ),
                 ],
                 onTap: () =>
@@ -582,22 +530,16 @@ class NoteTab extends ConsumerWidget {
 /// Equipment items as cards: the name leads, an equipped/removed badge sits at
 /// the right, and the distance traveled while equipped follows in the meta row.
 class EquipmentTab extends ConsumerWidget {
-  const EquipmentTab({
-    super.key,
-    required this.vehicleId,
-    required this.useHours,
-  });
+  const EquipmentTab({super.key, required this.vehicleId});
 
   final int vehicleId;
-  final bool useHours;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final async = ref.watch(equipmentRecordsProvider(vehicleId));
-    final unit = _distanceUnitLabel(units, useHours: useHours);
 
     return RecordsTabBody<EquipmentRecord>(
       async: async,
@@ -623,12 +565,7 @@ class EquipmentTab extends ConsumerWidget {
                   if (r.distanceTraveled != null)
                     RecordMetaItem(
                       Icons.route,
-                      _odoUnit(
-                        r.distanceTraveled,
-                        units,
-                        unit,
-                        useHours: useHours,
-                      ),
+                      _odoUnit(r.distanceTraveled, units),
                     ),
                 ],
                 onTap: () =>

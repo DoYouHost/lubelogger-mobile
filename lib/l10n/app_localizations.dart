@@ -1028,6 +1028,24 @@ abstract class AppLocalizations {
   /// **'Couldn\'t open the file.'**
   String get attachmentOpenError;
 
+  /// No description provided for @extraFieldsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom fields'**
+  String get extraFieldsLabel;
+
+  /// No description provided for @formStateOfCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'State of charge'**
+  String get formStateOfCharge;
+
+  /// No description provided for @formStateOfChargeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start}% → {end}%'**
+  String formStateOfChargeRange(int start, int end);
+
   /// No description provided for @quickActionAddFuel.
   ///
   /// In en, this message translates to:
@@ -1885,6 +1903,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It becomes a public issue on GitHub — anyone can read it, and it stays.'**
   String get bugReportRequestPublic;
+
+  /// Fuel tab summary pill: total energy drawn from the battery
+  ///
+  /// In en, this message translates to:
+  /// **'Energy {value}'**
+  String fuelPillEnergy(String value);
+
+  /// Charging-session amount field; unit is kWh
+  ///
+  /// In en, this message translates to:
+  /// **'Energy charged ({unit})'**
+  String formEnergyLabel(String unit);
+
+  /// No description provided for @statAvgConsumption.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Consumption'**
+  String get statAvgConsumption;
+
+  /// No description provided for @chartConsumptionByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumption by Month'**
+  String get chartConsumptionByMonth;
+
+  /// Warning shown on the plan form when the item's progress is Done
+  ///
+  /// In en, this message translates to:
+  /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
+  String get planDoneReadOnly;
 }
 
 class _AppLocalizationsDelegate

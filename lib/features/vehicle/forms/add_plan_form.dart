@@ -6,22 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/plan_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'form_fields.dart';
 import 'record_form_scaffold.dart';
-
-/// Progress states the API accepts on write — Done is excluded (plans reach
-/// Done only via the planner board; the API rejects setting it).
-const _writableProgress = [
-  PlanProgress.backlog,
-  PlanProgress.inProgress,
-  PlanProgress.testing,
-];
 
 /// Opens the add/edit form for a planner item as a modal bottom sheet. Pass
 /// [existing] to edit that item instead (prefilled, with a delete option).
@@ -64,31 +58,42 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
   late PlanPriority _priority;
   late PlanProgress _progress;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
   bool get _isEditing => widget.existing != null;
 
+  /// A finished plan can be read and deleted, but not written back: every value
+  /// the API accepts would demote it. The whole form goes read-only rather than
+  /// letting a save look like it worked.
+  bool get _readOnly => widget.existing?.progress == PlanProgress.done;
+
+  bool get _enabled => !_submitting && !_readOnly;
+
   @override
   void initState() {
     super.initState();
     final e = widget.existing;
-    // Fall back to sensible defaults for add, or when a stored value isn't one
-    // the API can write back (unknown enum, or a Done plan being edited).
+    // Fall back to sensible defaults for add, or when the server reports a value
+    // this build doesn't know. Done is kept as-is so the dropdown shows the
+    // plan's real state — the form is read-only for it anyway.
     _type = (e != null && e.type != PlanType.unknown)
         ? e.type
         : PlanType.service;
     _priority = (e != null && e.priority != PlanPriority.unknown)
         ? e.priority
         : PlanPriority.normal;
-    _progress = (e != null && _writableProgress.contains(e.progress))
-        ? e.progress
-        : PlanProgress.backlog;
+    _progress = switch (e?.progress) {
+      null || PlanProgress.unknown => PlanProgress.backlog,
+      final stored => stored,
+    };
     if (e != null) {
       _description.text = e.description;
       _cost.text = formatFormNumber(e.cost);
       _notes.text = e.notes;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -111,13 +116,14 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
       isEditing: _isEditing,
       submitting: _submitting,
       onCancel: () => Navigator.pop(context),
-      onSubmit: _submit,
+      onSubmit: _readOnly ? null : _submit,
       onDelete: _confirmDelete,
       error: _error,
+      notice: _readOnly ? _DoneNotice(message: l10n.planDoneReadOnly) : null,
       fields: [
         TextFormField(
           controller: _description,
-          enabled: !_submitting,
+          enabled: _enabled,
           decoration: dashFieldDecoration(t, labelText: l10n.colDescription),
           validator: (raw) => (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
@@ -132,9 +138,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
               if (v != PlanType.unknown)
                 DropdownMenuItem(value: v, child: Text(_typeLabel(v, l10n))),
           ],
-          onChanged: _submitting
-              ? null
-              : (v) => setState(() => _type = v ?? _type),
+          onChanged: _enabled ? (v) => setState(() => _type = v ?? _type) : null,
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<PlanPriority>(
@@ -148,36 +152,50 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
                   child: Text(_priorityLabel(v, l10n)),
                 ),
           ],
-          onChanged: _submitting
-              ? null
-              : (v) => setState(() => _priority = v ?? _priority),
+          onChanged: _enabled
+              ? (v) => setState(() => _priority = v ?? _priority)
+              : null,
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<PlanProgress>(
           initialValue: _progress,
           decoration: dashFieldDecoration(t, labelText: l10n.formPlanProgress),
           items: [
-            for (final v in _writableProgress)
-              DropdownMenuItem(value: v, child: Text(_progressLabel(v, l10n))),
+            for (final v in PlanProgress.values)
+              // Done appears only on a plan that already is one, so the field
+              // can show its real state; picking it is never an option.
+              if (v != PlanProgress.unknown && (v.isWritable || v == _progress))
+                DropdownMenuItem(
+                  value: v,
+                  enabled: v.isWritable,
+                  child: Text(_progressLabel(v, l10n)),
+                ),
           ],
-          onChanged: _submitting
-              ? null
-              : (v) => setState(() => _progress = v ?? _progress),
+          onChanged: _enabled
+              ? (v) => setState(() => _progress = v ?? _progress)
+              : null,
         ),
         const SizedBox(height: 14),
-        _CostField(controller: _cost, enabled: !_submitting),
+        _CostField(controller: _cost, enabled: _enabled),
         const SizedBox(height: 14),
         TextFormField(
           controller: _notes,
-          enabled: !_submitting,
+          enabled: _enabled,
           minLines: 2,
           maxLines: 4,
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
         const SizedBox(height: 14),
+        ExtraFieldsField(
+          recordType: ExtraFieldRecordType.plan,
+          initial: _extraFields,
+          enabled: _enabled,
+          onChanged: (fields) => _extraFields = fields,
+        ),
+        const SizedBox(height: 14),
         AttachmentsField(
           initial: _files,
-          enabled: !_submitting,
+          enabled: _enabled,
           onChanged: (files) => _files = files,
         ),
       ],
@@ -185,7 +203,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_readOnly || !_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     setState(() {
@@ -205,6 +223,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           progress: _progress,
           notes: _notes.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updatePlanRecord(
@@ -216,6 +235,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           progress: _progress,
           notes: _notes.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       }
       ref.invalidate(planRecordsProvider(widget.vehicleId));
@@ -278,6 +298,44 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
         _error = l10n.recordDeleteError;
       });
     }
+  }
+}
+
+/// Why a finished plan can be read but not saved.
+class _DoneNotice extends StatelessWidget {
+  const _DoneNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: t.accentOrange.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: t.accentOrange.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_outline, size: 18, color: t.accentOrange),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 12.5,
+                height: 1.35,
+                color: t.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

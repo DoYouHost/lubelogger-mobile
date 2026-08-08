@@ -6,12 +6,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/api_exceptions.dart';
+import '../../core/models/extra_field.dart';
 import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../core/util/version.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/error_messages.dart';
 import '../../providers.dart';
+import '../vehicle/forms/extra_fields_field.dart';
 import '../vehicle/forms/record_form_scaffold.dart';
 
 /// Minimum LubeLogger version exposing `DELETE /api/vehicles/delete`.
@@ -77,6 +79,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
   late _FuelType _fuelType;
   late bool _useHours;
   late bool _odometerOptional;
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -95,6 +98,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
       _model.text = e.model;
       _licensePlate.text = e.licensePlate;
       _tags.text = e.tags.join(' ');
+      _extraFields = e.extraFields;
     }
   }
 
@@ -206,6 +210,13 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           controller: _tags,
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
+        ),
+        const SizedBox(height: 14),
+        ExtraFieldsField(
+          recordType: ExtraFieldRecordType.vehicle,
+          initial: _extraFields,
+          enabled: !_submitting,
+          onChanged: (fields) => _extraFields = fields,
         ),
       ],
     );
@@ -337,6 +348,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           useHours: _useHours,
           odometerOptional: _odometerOptional,
           tags: _tags.text.trim(),
+          extraFields: _extraFields,
         );
       } else {
         await repo.updateVehicle(
@@ -349,10 +361,10 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           useHours: _useHours,
           odometerOptional: _odometerOptional,
           tags: _tags.text.trim(),
-          // Resend the existing identifier/extra fields — the update endpoint
-          // overwrites them with whatever we send.
+          // Resend the identifier — the update endpoint overwrites it with
+          // whatever we send, and the app has no UI to choose one.
           identifier: existing.identifier,
-          extraFields: existing.extraFields,
+          extraFields: _extraFields,
         );
         resultId = existing.id;
         ref.invalidate(vehicleInfoProvider(existing.id));

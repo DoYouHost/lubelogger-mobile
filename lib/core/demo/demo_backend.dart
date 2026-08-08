@@ -99,6 +99,8 @@ class DemoBackend {
         return _ok(_whoami);
       case 'info':
         return _ok(_info);
+      case 'extrafields':
+        return _ok(_extraFieldTemplates);
       case 'version':
         return _ok(_version);
       case 'makebackup':
@@ -119,7 +121,12 @@ class DemoBackend {
         if (s.length < 2) return _notFound();
         final sub = s[1];
         if (sub == 'info' && m == 'GET') {
-          return _ok([_vehicleInfo(_int(q['vehicleId']))]);
+          // No vehicleId means the whole garage, as on the server — that form
+          // is the single request the garage screen makes.
+          final id = _int(q['vehicleId']);
+          return _ok(id == 0
+              ? [for (final v in _vehicles) _vehicleInfo(_int(v['id']))]
+              : [_vehicleInfo(id)]);
         }
         final coll = _collectionFor(sub);
         if (coll == null) return _notFound();
@@ -144,12 +151,28 @@ class DemoBackend {
 
   // ── Record writes ──────────────────────────────────────────────────────────
 
+  /// The one write the real API refuses (`PlanController.cs:150`). Mirrored so
+  /// demo mode can't quietly accept what a live server would reject.
+  DemoResult? _rejectDonePlan(String sub, Map<String, dynamic> body) =>
+      (sub == 'planrecords' && body['progress'] == 'Done')
+          ? (
+              status: 400,
+              body: {
+                'success': false,
+                'message':
+                    'Input object invalid, Progress cannot be set to Done.',
+              },
+            )
+          : null;
+
   DemoResult _addRecord(
     String sub,
     Map<int, List<Map<String, dynamic>>> coll,
     int vehicleId,
     Map<String, dynamic> body,
   ) {
+    final rejected = _rejectDonePlan(sub, body);
+    if (rejected != null) return rejected;
     final rec = <String, dynamic>{...body, 'id': _newId()};
     _fillDerivedFields(sub, vehicleId, rec, existing: null);
     (coll[vehicleId] ??= []).add(rec);
@@ -165,6 +188,8 @@ class DemoBackend {
     Map<int, List<Map<String, dynamic>>> coll,
     Map<String, dynamic> body,
   ) {
+    final rejected = _rejectDonePlan(sub, body);
+    if (rejected != null) return rejected;
     final id = _int(body['id']);
     for (final entry in coll.entries) {
       final idx = entry.value.indexWhere((r) => _int(r['id']) == id);
@@ -396,6 +421,24 @@ class DemoBackend {
 
   // 1.7.0: the fake backend implements the 1.7.0 vehicle-delete endpoint, so it
   // reports that version to keep the delete action enabled in the demo.
+  /// `/api/extrafields` shape: `fieldType` as the .NET enum **name** and only
+  /// the types that have fields configured, exactly as the real server answers.
+  List<Map<String, dynamic>> get _extraFieldTemplates => [
+        {
+          'recordType': 'ServiceRecord',
+          'extraFields': [
+            {'name': 'Workshop', 'isRequired': true, 'fieldType': 'Text'},
+            {'name': 'Warranty until', 'isRequired': false, 'fieldType': 'Date'},
+          ],
+        },
+        {
+          'recordType': 'GasRecord',
+          'extraFields': [
+            {'name': 'Station', 'isRequired': false, 'fieldType': 'Text'},
+          ],
+        },
+      ];
+
   Map<String, dynamic> get _info => {
         'currentVersion': '1.7.0',
         'locale': 'en-US',
@@ -447,6 +490,23 @@ class DemoBackend {
         'vehicleIdentifier': 'LicensePlate',
         'extraFields': const <Object>[],
       },
+      {
+        'id': 3,
+        'year': 2022,
+        'make': 'Nissan',
+        'model': 'Leaf',
+        'licensePlate': 'DEMO-303',
+        // No photo asset for this one; the garage card falls back to its
+        // placeholder, which is worth showing off too.
+        'imageLocation': '',
+        'tags': ['electric'],
+        'isElectric': true,
+        'isDiesel': false,
+        'useHours': false,
+        'odometerOptional': false,
+        'vehicleIdentifier': 'LicensePlate',
+        'extraFields': const <Object>[],
+      },
     ]);
 
     // Vehicle 1 — monthly fill-to-full refuels, odometer 60k → ~68k.
@@ -468,12 +528,28 @@ class DemoBackend {
       ago: ago,
     );
 
+    // Vehicle 3 — electric, 40 kWh pack, odometer 24k → ~33k.
+    // Roughly 165 km between charges on a 40 kWh pack, which works out near
+    // 15 kWh/100 km — where a real Leaf sits, and now a number the tab and
+    // dashboard put a kWh label on. The odometer reading below follows from it.
+    _gas[3] = _chargeSeries(
+      count: 9,
+      startOdometer: 31650,
+      stepPerCharge: 140,
+      batteryKwh: 40,
+      pricePerKwh: 0.42,
+      ago: ago,
+    );
+
     _odometer[1] = [
       _rec({'date': ago(6), 'odometer': 67650, 'initialOdometer': 66900}),
       _rec({'date': ago(95), 'odometer': 64200, 'initialOdometer': 63500}),
     ];
     _odometer[2] = [
       _rec({'date': ago(18), 'odometer': 141800, 'initialOdometer': 141000}),
+    ];
+    _odometer[3] = [
+      _rec({'date': ago(11), 'odometer': 33080, 'initialOdometer': 32995}),
     ];
 
     _service[1] = [
@@ -483,6 +559,15 @@ class DemoBackend {
         'description': 'Oil & filter change',
         'cost': 58.0,
         'notes': 'Fully synthetic 5W-30.',
+        // Records report `fieldType` as the integer, unlike the template above.
+        'extraFields': [
+          {
+            'name': 'Workshop',
+            'value': 'Demo Motors',
+            'isRequired': true,
+            'fieldType': 0,
+          },
+        ],
       }),
       _rec({
         'date': ago(160),
@@ -497,6 +582,15 @@ class DemoBackend {
         'odometer': 138400,
         'description': 'DSG transmission oil service',
         'cost': 210.0,
+      }),
+    ];
+    _service[3] = [
+      _rec({
+        'date': ago(52),
+        'odometer': 30100,
+        'description': 'Brake fluid change',
+        'cost': 70.0,
+        'notes': 'Regenerative braking spares the pads, not the fluid.',
       }),
     ];
 
@@ -540,6 +634,9 @@ class DemoBackend {
     ];
     _tax[2] = [
       _rec({'date': ago(30), 'description': 'Annual road tax', 'cost': 180.0}),
+    ];
+    _tax[3] = [
+      _rec({'date': ago(75), 'description': 'Annual road tax', 'cost': 0.0}),
     ];
 
     _supply[1] = [
@@ -591,6 +688,17 @@ class DemoBackend {
         'priority': 'Low',
         'progress': 'Backlog',
       }),
+      // The API refuses to write a finished plan back, so the form opens this
+      // one read-only. Seeded to keep that path reachable in demo mode.
+      _rec({
+        'dateCreated': ago(120),
+        'description': 'Fit winter tyres',
+        'cost': 480.0,
+        'type': 'UpgradeRecord',
+        'priority': 'Normal',
+        'progress': 'Done',
+        'notes': 'Completed on the planner board.',
+      }),
     ];
 
     _reminders[1] = [
@@ -625,6 +733,20 @@ class DemoBackend {
       }),
     ];
 
+    _reminders[3] = [
+      _reminder(3, {
+        'description': 'Cabin filter replacement',
+        'metric': 'Both',
+        'dueDate': ahead(35),
+        'dueOdometer': 35000,
+      }),
+      _reminder(3, {
+        'description': 'Battery health check',
+        'metric': 'Date',
+        'dueDate': ahead(120),
+      }),
+    ];
+
     _notes[1] = [
       _rec({
         'description': 'Tyre pressure',
@@ -637,6 +759,13 @@ class DemoBackend {
         'description': 'AdBlue',
         'noteText': 'Top up AdBlue roughly every 8,000 km.',
         'pinned': false,
+      }),
+    ];
+    _notes[3] = [
+      _rec({
+        'description': 'Charging',
+        'noteText': 'Home wallbox 7.4 kW; keep the daily limit at 80%.',
+        'pinned': true,
       }),
     ];
 
@@ -678,6 +807,40 @@ class DemoBackend {
     }
     return out;
   }
+
+  /// Charging sessions for the demo EV. `fuelConsumed` is kWh and follows from
+  /// the state-of-charge delta, so the pack size the server derives per record
+  /// (`kWh / SoC delta`) lands on [batteryKwh] instead of a random number.
+  List<Map<String, dynamic>> _chargeSeries({
+    required int count,
+    required int startOdometer,
+    required int stepPerCharge,
+    required double batteryKwh,
+    required double pricePerKwh,
+    required String Function(int) ago,
+  }) {
+    final out = <Map<String, dynamic>>[];
+    var odo = startOdometer;
+    for (var i = count - 1; i >= 0; i--) {
+      odo += stepPerCharge + (i % 3) * 25;
+      final startingSoc = 15 + (i % 4) * 5;
+      final endingSoc = 80 + (i % 3) * 5;
+      final kwh = batteryKwh * (endingSoc - startingSoc) / 100;
+      out.add(_rec({
+        'date': ago(i * 30 + 5),
+        'odometer': odo,
+        'fuelConsumed': _round2(kwh),
+        'cost': _round2(kwh * pricePerKwh),
+        'isFillToFull': true,
+        'missedFuelUp': false,
+        'startingSoc': startingSoc,
+        'endingSoc': endingSoc,
+      }));
+    }
+    return out;
+  }
+
+  static double _round2(double v) => (v * 100).roundToDouble() / 100;
 
   /// Seed a record map with a fresh id (fields the model reads that aren't
   /// supplied simply stay absent — the model tolerates that).

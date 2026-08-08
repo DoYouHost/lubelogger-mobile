@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
 import '../../../core/models/attachment.dart';
+import '../../../core/models/extra_field.dart';
 import '../../../core/models/odometer_record.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import 'attachments_field.dart';
+import 'extra_fields_field.dart';
 import 'form_fields.dart';
 
 /// Opens the "Add odometer reading" form as a modal bottom sheet. Pass
@@ -54,6 +56,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
 
   late DateTime _date;
   List<Attachment> _files = const [];
+  List<ExtraField> _extraFields = const [];
   bool _submitting = false;
   String? _error;
 
@@ -65,10 +68,15 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     final e = widget.existing;
     _date = e?.date ?? DateTime.now();
     if (e != null) {
-      _odometer.text = formatFormNumber(e.odometer);
+      _odometer.text = formatFormNumber(
+        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
+              e.odometer,
+            ),
+      );
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
+      _extraFields = e.extraFields;
     }
   }
 
@@ -84,8 +92,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
-    final distanceUnit = units.distance.label;
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
 
     return Padding(
       // Lift the sheet above the keyboard.
@@ -140,7 +147,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 style: const TextStyle(fontFamily: DashTokens.fontMono),
                 decoration: dashFieldDecoration(
                   t,
-                  labelText: l10n.formOdometerLabel(distanceUnit),
+                  labelText: l10n.formOdometerLabel(units.distanceLabel),
                 ),
                 validator: (raw) {
                   final value = parseFormNumber(raw);
@@ -172,6 +179,13 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   t,
                   labelText: l10n.formNotesOptional,
                 ),
+              ),
+              const SizedBox(height: 14),
+              ExtraFieldsField(
+                recordType: ExtraFieldRecordType.odometer,
+                initial: _extraFields,
+                enabled: !_submitting,
+                onChanged: (fields) => _extraFields = fields,
               ),
               const SizedBox(height: 14),
               AttachmentsField(
@@ -241,27 +255,34 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       _error = null;
     });
     final repo = ref.read(vehiclesRepositoryProvider);
+    final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
+    final odometer = units.toStoredDistance(
+      parseFormNumber(_odometer.text)!.toDouble(),
+    );
     final existing = widget.existing;
     try {
       if (existing == null) {
         await repo.addOdometerRecord(
           vehicleId: widget.vehicleId,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
         );
       } else {
         await repo.updateOdometerRecord(
           id: existing.id,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           // The update endpoint requires initialOdometer; preserve the record's.
           initialOdometer: existing.initialOdometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
+          extraFields: _extraFields,
+          equipmentRecordId: existing.equipmentRecordId,
         );
       }
       _invalidateOdometerProviders();
@@ -325,10 +346,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   }
 
   /// Refreshes every view derived from odometer readings after a write.
-  /// [lastOdometerDateProvider] recomputes via its watch on the records list.
+  /// [lastOdometerDateProvider] and [monthlyBreakdownProvider] recompute via
+  /// their watch on the records list.
   void _invalidateOdometerProviders() {
     ref.invalidate(odometerRecordsProvider(widget.vehicleId));
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
-    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }
 }
