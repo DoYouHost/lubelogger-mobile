@@ -12,15 +12,33 @@ class CachedBody {
   final DateTime storedAt;
 }
 
-/// The last successful body of every list the app has read, on disk.
+/// Where one server's offline copy lives: the lists this class stores, and the
+/// vehicle photos [PhotoCache] stores in a subdirectory of it.
 ///
-/// Scoped per server: the directory is named after a digest of the base URL, so
-/// two households can't see each other's records through one cache, and logging
-/// out drops the lot by removing a single directory.
+/// One directory per server, named after a digest of the base URL, so two
+/// households can't see each other's data through one cache and logging out
+/// drops the lot by removing a single directory.
+Future<Directory> serverCacheDirectory(
+  String baseUrl,
+  Future<Directory> Function() supportDirectory,
+) async {
+  final support = await supportDirectory();
+  return Directory('${support.path}/http_cache/${cacheDigest(baseUrl)}');
+}
+
+/// Names a file after what it holds, without the length or the characters a
+/// path can't take.
+String cacheDigest(String value) =>
+    sha256.convert(utf8.encode(value)).toString().substring(0, 32);
+
+/// The last successful body of every list the app has read, on disk.
 ///
 /// Entries never expire on their own. Staleness is the reader's decision — the
 /// app shows what it has and refreshes behind it — and an entry the user can
 /// still see beats an empty screen while the server is unreachable.
+///
+/// Sizing and clearing cover the whole server directory, photos included: they
+/// are one offline copy as far as the user (and logging out) is concerned.
 class HttpCache {
   HttpCache({
     required this.baseUrl,
@@ -87,7 +105,7 @@ class HttpCache {
     final dir = await _open();
     if (!dir.existsSync()) return 0;
     var total = 0;
-    await for (final entry in dir.list()) {
+    await for (final entry in dir.list(recursive: true)) {
       if (entry is File) total += await entry.length();
     }
     return total;
@@ -100,17 +118,12 @@ class HttpCache {
 
   Future<File> _fileFor(String key) async {
     final dir = await _open();
-    return File('${dir.path}/${_digest(key)}.json');
+    return File('${dir.path}/${cacheDigest(key)}.json');
   }
 
   /// Locates the directory without creating it — only [write] needs it to
   /// exist, and a profile that never stores anything (demo mode) should leave
   /// nothing behind.
-  Future<Directory> _open() => _directory ??= () async {
-        final support = await _supportDirectory();
-        return Directory('${support.path}/http_cache/${_digest(baseUrl)}');
-      }();
-
-  static String _digest(String value) =>
-      sha256.convert(utf8.encode(value)).toString().substring(0, 32);
+  Future<Directory> _open() =>
+      _directory ??= serverCacheDirectory(baseUrl, _supportDirectory);
 }

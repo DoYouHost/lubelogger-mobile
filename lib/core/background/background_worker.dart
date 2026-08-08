@@ -5,6 +5,7 @@ import 'package:workmanager/workmanager.dart';
 import '../../data/vehicles_repository.dart';
 import '../api/api_client.dart';
 import '../auth/credentials_store.dart';
+import '../cache/photo_cache.dart';
 import '../cache/sync_service.dart';
 import '../cache/write_queue.dart';
 import '../diagnostics/diagnostic_recorder.dart';
@@ -138,7 +139,8 @@ Future<void> _pass(
     return;
   }
   final credentials = SecureCredentialsStore();
-  if (await credentials.readApiKey() == null) {
+  final apiKey = await credentials.readApiKey();
+  if (apiKey == null) {
     log?.add(LogSource.app, 'worker_skipped', fields: {'reason': 'noKey'});
     return;
   }
@@ -154,6 +156,11 @@ Future<void> _pass(
     dio: client.dio,
     queue: queue,
     repository: repository,
+    // Demo photos are bundled assets: nothing to fetch, and no server to fetch
+    // it from.
+    photos: profile.isDemo
+        ? null
+        : PhotoCache(baseUrl: profile.baseUrl, apiKey: apiKey),
   );
 
   // Delivery first: a warm cache that predates the queue would show the user
