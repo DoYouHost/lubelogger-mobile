@@ -151,6 +151,8 @@ class VehiclesRepository {
     required num cost,
     required bool isFillToFull,
     required bool missedFuelUp,
+    int startingSoc = GasRecord.defaultStartingSoc,
+    int endingSoc = GasRecord.defaultEndingSoc,
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
@@ -168,6 +170,8 @@ class VehiclesRepository {
             cost: cost,
             isFillToFull: isFillToFull,
             missedFuelUp: missedFuelUp,
+            startingSoc: startingSoc,
+            endingSoc: endingSoc,
             notes: notes,
             tags: tags,
             files: files,
@@ -190,6 +194,8 @@ class VehiclesRepository {
     required num cost,
     required bool isFillToFull,
     required bool missedFuelUp,
+    int startingSoc = GasRecord.defaultStartingSoc,
+    int endingSoc = GasRecord.defaultEndingSoc,
     String notes = '',
     String tags = '',
     List<Attachment> files = const [],
@@ -209,6 +215,8 @@ class VehiclesRepository {
               cost: cost,
               isFillToFull: isFillToFull,
               missedFuelUp: missedFuelUp,
+              startingSoc: startingSoc,
+              endingSoc: endingSoc,
               notes: notes,
               tags: tags,
               files: files,
@@ -801,11 +809,9 @@ class VehiclesRepository {
   /// Shared field set for a gas record write (add or update); all values go out
   /// as strings, per the server's string-parsed export model.
   ///
-  /// `startingSoc`/`endingSoc` (EV state-of-charge, unused by this app) were
-  /// unconditionally `int.Parse`d server-side with no null/empty guard before
-  /// LubeLogger 1.7.0 — an absent field threw a 500 ("input string '' was not in
-  /// a correct format"). 1.7.0 defaults empty to 20/80, but we still send `"0"`
-  /// so a non-EV write never trips the bug on older servers.
+  /// `startingSoc`/`endingSoc` are always sent, never left empty: before
+  /// LubeLogger 1.7.0 the server `int.Parse`d them with no guard, so an absent
+  /// field threw a 500 ("input string '' was not in a correct format").
   static Map<String, dynamic> _gasRecordBody({
     required DateTime date,
     required num odometer,
@@ -813,6 +819,8 @@ class VehiclesRepository {
     required num cost,
     required bool isFillToFull,
     required bool missedFuelUp,
+    required int startingSoc,
+    required int endingSoc,
     required String notes,
     required String tags,
     required List<Attachment> files,
@@ -825,8 +833,8 @@ class VehiclesRepository {
         'cost': cost.toString(),
         'isFillToFull': isFillToFull.toString(),
         'missedFuelUp': missedFuelUp.toString(),
-        'startingSoc': '0',
-        'endingSoc': '0',
+        'startingSoc': startingSoc.toString(),
+        'endingSoc': endingSoc.toString(),
         'notes': notes,
         'tags': tags,
         'files': _filesJson(files),

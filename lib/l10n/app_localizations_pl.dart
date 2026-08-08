@@ -524,6 +524,14 @@ class AppLocalizationsPl extends AppLocalizations {
   String get extraFieldsLabel => 'Pola własne';
 
   @override
+  String get formStateOfCharge => 'Stan naładowania';
+
+  @override
+  String formStateOfChargeRange(int start, int end) {
+    return '$start% → $end%';
+  }
+
+  @override
   String get quickActionAddFuel => 'Dodaj tankowanie';
 
   @override

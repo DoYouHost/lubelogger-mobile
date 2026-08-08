@@ -246,6 +246,15 @@
 
   "extraFieldsLabel": "Custom fields",
 
+  "formStateOfCharge": "State of charge",
+  "formStateOfChargeRange": "{start}% → {end}%",
+  "@formStateOfChargeRange": {
+    "placeholders": {
+      "start": { "type": "int" },
+      "end": { "type": "int" }
+    }
+  },
+
   "quickActionAddFuel": "Add fuel",
   "quickActionAddOdometer": "Add odometer",
   "quickActionSelectVehicle": "Select vehicle",

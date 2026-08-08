@@ -57,6 +57,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   final _notes = TextEditingController();
 
   late DateTime _date;
+  late RangeValues _soc;
   late bool _fillToFull;
   late bool _missedFuelUp;
   List<Attachment> _files = const [];
@@ -73,6 +74,10 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     _date = e?.date ?? DateTime.now();
     _fillToFull = e?.isFillToFull ?? true;
     _missedFuelUp = e?.missedFuelUp ?? false;
+    _soc = RangeValues(
+      (e?.startingSoc ?? GasRecord.defaultStartingSoc).toDouble(),
+      (e?.endingSoc ?? GasRecord.defaultEndingSoc).toDouble(),
+    );
     if (e != null) {
       _odometer.text = formatFormNumber(e.odometer);
       _fuel.text = formatFormNumber(e.fuelConsumed);
@@ -155,6 +160,21 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                 controller: _fuel,
                 label: l10n.formFuelLabel(volumeUnit),
               ),
+              // Electric only, like the web's dual-range slider: the server
+              // reads state of charge for no other kind of vehicle.
+              if (ref
+                      .watch(vehicleInfoProvider(widget.vehicleId))
+                      .valueOrNull
+                      ?.vehicle
+                      .isElectric ??
+                  false) ...[
+                const SizedBox(height: 14),
+                _SocField(
+                  values: _soc,
+                  enabled: !_submitting,
+                  onChanged: (v) => setState(() => _soc = v),
+                ),
+              ],
               const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -318,6 +338,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
           cost: parseFormNumber(_cost.text)!,
           isFillToFull: _fillToFull,
           missedFuelUp: _missedFuelUp,
+          startingSoc: _soc.start.round(),
+          endingSoc: _soc.end.round(),
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
@@ -333,6 +355,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
           cost: parseFormNumber(_cost.text)!,
           isFillToFull: _fillToFull,
           missedFuelUp: _missedFuelUp,
+          startingSoc: _soc.start.round(),
+          endingSoc: _soc.end.round(),
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
@@ -405,5 +429,69 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     ref.invalidate(gasStatsProvider(widget.vehicleId));
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
     ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
+  }
+}
+
+/// Battery charge before and after a charging session, as a percentage range —
+/// the app's take on the web's dual-range slider. Equal ends are allowed, as
+/// they are there, even though the server then derives no battery capacity.
+class _SocField extends StatelessWidget {
+  const _SocField({
+    required this.values,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final RangeValues values;
+  final bool enabled;
+  final ValueChanged<RangeValues> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = DashTokens.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.formStateOfCharge,
+              style: TextStyle(
+                fontFamily: DashTokens.fontUi,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: t.textSecondary,
+              ),
+            ),
+            Text(
+              l10n.formStateOfChargeRange(
+                values.start.round(),
+                values.end.round(),
+              ),
+              style: TextStyle(
+                fontFamily: DashTokens.fontMono,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: t.accentGoldInk,
+              ),
+            ),
+          ],
+        ),
+        RangeSlider(
+          values: values,
+          min: 0,
+          max: 100,
+          divisions: 100,
+          activeColor: t.accentGold,
+          labels: RangeLabels(
+            '${values.start.round()}%',
+            '${values.end.round()}%',
+          ),
+          onChanged: enabled ? onChanged : null,
+        ),
+      ],
+    );
   }
 }

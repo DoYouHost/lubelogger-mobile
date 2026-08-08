@@ -232,6 +232,9 @@
 
   "extraFieldsLabel": "Pola własne",
 
+  "formStateOfCharge": "Stan naładowania",
+  "formStateOfChargeRange": "{start}% → {end}%",
+
   "quickActionAddFuel": "Dodaj tankowanie",
   "quickActionAddOdometer": "Dodaj licznik",
   "quickActionSelectVehicle": "Wybierz pojazd",

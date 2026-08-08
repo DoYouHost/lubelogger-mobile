@@ -1034,6 +1034,18 @@ abstract class AppLocalizations {
   /// **'Custom fields'**
   String get extraFieldsLabel;
 
+  /// No description provided for @formStateOfCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'State of charge'**
+  String get formStateOfCharge;
+
+  /// No description provided for @formStateOfChargeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start}% → {end}%'**
+  String formStateOfChargeRange(int start, int end);
+
   /// No description provided for @quickActionAddFuel.
   ///
   /// In en, this message translates to:

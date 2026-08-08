@@ -137,6 +137,44 @@ void main() {
     expect(await r.records(RecordKind.service, id), isEmpty);
   });
 
+  test('the electric vehicle charges with a coherent state of charge',
+      () async {
+    final r = repo();
+    expect((await r.list()).firstWhere((v) => v.id == 3).isElectric, isTrue);
+
+    final charges = await r.gasRecords(3);
+    expect(charges, isNotEmpty);
+    for (final c in charges) {
+      expect(c.endingSoc, greaterThan(c.startingSoc));
+      // The pack size the server derives per record; a demo that disagreed with
+      // itself here would show nonsense consumption in the real app.
+      final derivedKwh = c.fuelConsumed / ((c.endingSoc - c.startingSoc) / 100);
+      expect(derivedKwh, closeTo(40, 0.5));
+    }
+  });
+
+  test('editing a charge keeps its state of charge', () async {
+    final r = repo();
+    final before = (await r.gasRecords(3)).first;
+
+    await r.updateGasRecord(
+      vehicleId: 3,
+      id: before.id,
+      date: before.date!,
+      odometer: before.odometer,
+      fuelConsumed: before.fuelConsumed,
+      cost: before.cost,
+      isFillToFull: before.isFillToFull,
+      missedFuelUp: before.missedFuelUp,
+      startingSoc: before.startingSoc,
+      endingSoc: before.endingSoc,
+    );
+
+    final after = (await r.gasRecords(3)).firstWhere((c) => c.id == before.id);
+    expect(after.startingSoc, before.startingSoc);
+    expect(after.endingSoc, before.endingSoc);
+  });
+
   test('custom fields survive an edit that does not touch them', () async {
     final r = repo();
     final templates = await r.extraFieldTemplates();

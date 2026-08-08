@@ -467,6 +467,23 @@ class DemoBackend {
         'vehicleIdentifier': 'LicensePlate',
         'extraFields': const <Object>[],
       },
+      {
+        'id': 3,
+        'year': 2022,
+        'make': 'Nissan',
+        'model': 'Leaf',
+        'licensePlate': 'DEMO-303',
+        // No photo asset for this one; the garage card falls back to its
+        // placeholder, which is worth showing off too.
+        'imageLocation': '',
+        'tags': ['electric'],
+        'isElectric': true,
+        'isDiesel': false,
+        'useHours': false,
+        'odometerOptional': false,
+        'vehicleIdentifier': 'LicensePlate',
+        'extraFields': const <Object>[],
+      },
     ]);
 
     // Vehicle 1 — monthly fill-to-full refuels, odometer 60k → ~68k.
@@ -488,12 +505,25 @@ class DemoBackend {
       ago: ago,
     );
 
+    // Vehicle 3 — electric, 40 kWh pack, odometer 24k → ~33k.
+    _gas[3] = _chargeSeries(
+      count: 9,
+      startOdometer: 24000,
+      stepPerCharge: 950,
+      batteryKwh: 40,
+      pricePerKwh: 0.42,
+      ago: ago,
+    );
+
     _odometer[1] = [
       _rec({'date': ago(6), 'odometer': 67650, 'initialOdometer': 66900}),
       _rec({'date': ago(95), 'odometer': 64200, 'initialOdometer': 63500}),
     ];
     _odometer[2] = [
       _rec({'date': ago(18), 'odometer': 141800, 'initialOdometer': 141000}),
+    ];
+    _odometer[3] = [
+      _rec({'date': ago(11), 'odometer': 33150, 'initialOdometer': 32400}),
     ];
 
     _service[1] = [
@@ -526,6 +556,15 @@ class DemoBackend {
         'odometer': 138400,
         'description': 'DSG transmission oil service',
         'cost': 210.0,
+      }),
+    ];
+    _service[3] = [
+      _rec({
+        'date': ago(52),
+        'odometer': 30100,
+        'description': 'Brake fluid change',
+        'cost': 70.0,
+        'notes': 'Regenerative braking spares the pads, not the fluid.',
       }),
     ];
 
@@ -569,6 +608,9 @@ class DemoBackend {
     ];
     _tax[2] = [
       _rec({'date': ago(30), 'description': 'Annual road tax', 'cost': 180.0}),
+    ];
+    _tax[3] = [
+      _rec({'date': ago(75), 'description': 'Annual road tax', 'cost': 0.0}),
     ];
 
     _supply[1] = [
@@ -654,6 +696,20 @@ class DemoBackend {
       }),
     ];
 
+    _reminders[3] = [
+      _reminder(3, {
+        'description': 'Cabin filter replacement',
+        'metric': 'Both',
+        'dueDate': ahead(35),
+        'dueOdometer': 35000,
+      }),
+      _reminder(3, {
+        'description': 'Battery health check',
+        'metric': 'Date',
+        'dueDate': ahead(120),
+      }),
+    ];
+
     _notes[1] = [
       _rec({
         'description': 'Tyre pressure',
@@ -666,6 +722,13 @@ class DemoBackend {
         'description': 'AdBlue',
         'noteText': 'Top up AdBlue roughly every 8,000 km.',
         'pinned': false,
+      }),
+    ];
+    _notes[3] = [
+      _rec({
+        'description': 'Charging',
+        'noteText': 'Home wallbox 7.4 kW; keep the daily limit at 80%.',
+        'pinned': true,
       }),
     ];
 
@@ -707,6 +770,40 @@ class DemoBackend {
     }
     return out;
   }
+
+  /// Charging sessions for the demo EV. `fuelConsumed` is kWh and follows from
+  /// the state-of-charge delta, so the pack size the server derives per record
+  /// (`kWh / SoC delta`) lands on [batteryKwh] instead of a random number.
+  List<Map<String, dynamic>> _chargeSeries({
+    required int count,
+    required int startOdometer,
+    required int stepPerCharge,
+    required double batteryKwh,
+    required double pricePerKwh,
+    required String Function(int) ago,
+  }) {
+    final out = <Map<String, dynamic>>[];
+    var odo = startOdometer;
+    for (var i = count - 1; i >= 0; i--) {
+      odo += stepPerCharge + (i % 3) * 25;
+      final startingSoc = 15 + (i % 4) * 5;
+      final endingSoc = 80 + (i % 3) * 5;
+      final kwh = batteryKwh * (endingSoc - startingSoc) / 100;
+      out.add(_rec({
+        'date': ago(i * 30 + 5),
+        'odometer': odo,
+        'fuelConsumed': _round2(kwh),
+        'cost': _round2(kwh * pricePerKwh),
+        'isFillToFull': true,
+        'missedFuelUp': false,
+        'startingSoc': startingSoc,
+        'endingSoc': endingSoc,
+      }));
+    }
+    return out;
+  }
+
+  static double _round2(double v) => (v * 100).roundToDouble() / 100;
 
   /// Seed a record map with a fresh id (fields the model reads that aren't
   /// supplied simply stay absent — the model tolerates that).

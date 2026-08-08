@@ -516,6 +516,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get extraFieldsLabel => 'Custom fields';
 
   @override
+  String get formStateOfCharge => 'State of charge';
+
+  @override
+  String formStateOfChargeRange(int start, int end) {
+    return '$start% → $end%';
+  }
+
+  @override
   String get quickActionAddFuel => 'Add fuel';
 
   @override
