@@ -79,7 +79,11 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
     if (e != null) {
       _description.text = e.description;
       final o = e.dueOdometer;
-      if (o != null) _odometer.text = formatFormNumber(o);
+      if (o != null) {
+        _odometer.text = formatFormNumber(
+          ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(o),
+        );
+      }
       _notes.text = e.notes;
       _tags.text = e.tags;
     }
@@ -98,7 +102,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
 
     return RecordFormScaffold(
       formKey: _formKey,
@@ -151,7 +155,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
             style: const TextStyle(fontFamily: DashTokens.fontMono),
             decoration: dashFieldDecoration(
               t,
-              labelText: l10n.formReminderDueOdometer(units.distance.label),
+              labelText: l10n.formReminderDueOdometer(units.distanceLabel),
             ),
             validator: (raw) {
               // Only enforced while the field is shown (odometer/both metrics).
@@ -206,7 +210,9 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
     final existing = widget.existing;
     final dueDate = _needsDate ? _dueDate : null;
     final dueOdometer = _needsOdometer
-        ? parseFormNumber(_odometer.text)!
+        ? ref
+              .read(vehicleUnitsProvider(widget.vehicleId))
+              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
         : null;
     try {
       if (existing == null) {

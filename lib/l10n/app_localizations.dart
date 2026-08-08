@@ -1903,6 +1903,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'It becomes a public issue on GitHub — anyone can read it, and it stays.'**
   String get bugReportRequestPublic;
+
+  /// Fuel tab summary pill: total energy drawn from the battery
+  ///
+  /// In en, this message translates to:
+  /// **'Energy {value}'**
+  String fuelPillEnergy(String value);
+
+  /// Charging-session amount field; unit is kWh
+  ///
+  /// In en, this message translates to:
+  /// **'Energy charged ({unit})'**
+  String formEnergyLabel(String unit);
+
+  /// No description provided for @statAvgConsumption.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Consumption'**
+  String get statAvgConsumption;
+
+  /// No description provided for @chartConsumptionByMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumption by Month'**
+  String get chartConsumptionByMonth;
 }
 
 class _AppLocalizationsDelegate

@@ -18,6 +18,7 @@ import 'core/diagnostics/report_outbox.dart';
 import 'core/diagnostics/report_sender.dart';
 import 'core/diagnostics/session_facts.dart';
 import 'core/format/gas_stats.dart';
+import 'core/format/vehicle_units.dart';
 import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
 import 'core/models/equipment_record.dart';
@@ -404,14 +405,33 @@ final vehicleInfoProvider = FutureProvider.family<VehicleInfo, int>(
   (ref, vehicleId) => ref.watch(vehiclesRepositoryProvider).info(vehicleId),
 );
 
+/// Display units for one vehicle. Until the vehicle loads it reports the plain
+/// combustion/distance units, so a label can settle from `L` to `kWh`.
+final vehicleUnitsProvider = Provider.family<VehicleUnits, int>((
+  ref,
+  vehicleId,
+) {
+  final vehicle = ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
+  return VehicleUnits(
+    ref.watch(unitsSettingsProvider),
+    isElectric: vehicle?.isElectric ?? false,
+    useHours: vehicle?.useHours ?? false,
+  );
+});
+
 /// Locally-computed fuel statistics for one vehicle (lifetime average, distance
 /// span, per-month economy). Kept in raw stored units; unit conversion happens
-/// at display time, so this doesn't depend on the units settings.
+/// at display time, so this doesn't depend on the units settings. It does depend
+/// on the vehicle: an electric one's consumption is derived from state of charge
+/// rather than read off the record.
 final gasStatsProvider = FutureProvider.family<GasStats, int>(
   (ref, vehicleId) async {
-    final records =
-        await ref.watch(vehiclesRepositoryProvider).gasRecords(vehicleId);
-    return GasStats.from(records);
+    final repo = ref.watch(vehiclesRepositoryProvider);
+    final (records, info) = await (
+      repo.gasRecords(vehicleId),
+      ref.watch(vehicleInfoProvider(vehicleId).future),
+    ).wait;
+    return GasStats.from(records, isElectric: info.vehicle.isElectric);
   },
 );
 

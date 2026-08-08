@@ -1027,4 +1027,20 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get bugReportRequestPublic =>
       'Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe.';
+
+  @override
+  String fuelPillEnergy(String value) {
+    return 'Energia $value';
+  }
+
+  @override
+  String formEnergyLabel(String unit) {
+    return 'Pobrana energia ($unit)';
+  }
+
+  @override
+  String get statAvgConsumption => 'Średnie zużycie energii';
+
+  @override
+  String get chartConsumptionByMonth => 'Zużycie energii wg miesiąca';
 }

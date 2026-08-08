@@ -107,7 +107,6 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         .watch(vehicleInfoProvider(vehicleId))
         .valueOrNull
         ?.vehicle;
-    final useHours = vehicle?.useHours ?? false;
     final visible = ref.watch(visibleTabsProvider);
     final order = ref.watch(tabOrderProvider);
 
@@ -130,7 +129,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         },
       ),
       for (final tab in orderedVisible)
-        _recordTab(tab, l10n, vehicleId, useHours: useHours),
+        _recordTab(tab, l10n, vehicleId),
     ];
 
     final controller = _controllerFor(_tabs.length);
@@ -199,36 +198,23 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
 
   /// Builds the [_VehicleTab] (label, icon, content, background-refresh) for a
   /// single record [tab].
-  _VehicleTab _recordTab(
-    VehicleTab tab,
-    AppLocalizations l10n,
-    int vehicleId, {
-    required bool useHours,
-  }) {
+  _VehicleTab _recordTab(VehicleTab tab, AppLocalizations l10n, int vehicleId) {
     final (Widget content, void Function(WidgetRef) refresh) = switch (tab) {
       VehicleTab.odometer => (
-        OdometerTab(vehicleId: vehicleId, useHours: useHours),
+        OdometerTab(vehicleId: vehicleId),
         (ref) => ref.invalidate(odometerRecordsProvider(vehicleId)),
       ),
-      VehicleTab.service => _genericTab(
-        vehicleId,
-        RecordKind.service,
-        useHours,
-      ),
-      VehicleTab.repair => _genericTab(vehicleId, RecordKind.repair, useHours),
-      VehicleTab.upgrade => _genericTab(
-        vehicleId,
-        RecordKind.upgrade,
-        useHours,
-      ),
+      VehicleTab.service => _genericTab(vehicleId, RecordKind.service),
+      VehicleTab.repair => _genericTab(vehicleId, RecordKind.repair),
+      VehicleTab.upgrade => _genericTab(vehicleId, RecordKind.upgrade),
       VehicleTab.fuel => (
-        FuelTab(vehicleId: vehicleId, useHours: useHours),
+        FuelTab(vehicleId: vehicleId),
         (ref) {
           ref.invalidate(gasRecordsProvider(vehicleId));
           ref.invalidate(gasStatsProvider(vehicleId));
         },
       ),
-      VehicleTab.tax => _genericTab(vehicleId, RecordKind.tax, useHours),
+      VehicleTab.tax => _genericTab(vehicleId, RecordKind.tax),
       VehicleTab.supply => (
         SupplyTab(vehicleId: vehicleId),
         (ref) => ref.invalidate(supplyRecordsProvider(vehicleId)),
@@ -238,7 +224,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         (ref) => ref.invalidate(planRecordsProvider(vehicleId)),
       ),
       VehicleTab.reminder => (
-        ReminderTab(vehicleId: vehicleId, useHours: useHours),
+        ReminderTab(vehicleId: vehicleId),
         (ref) => ref.invalidate(remindersProvider(vehicleId)),
       ),
       VehicleTab.note => (
@@ -246,7 +232,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         (ref) => ref.invalidate(notesProvider(vehicleId)),
       ),
       VehicleTab.equipment => (
-        EquipmentTab(vehicleId: vehicleId, useHours: useHours),
+        EquipmentTab(vehicleId: vehicleId),
         (ref) => ref.invalidate(equipmentRecordsProvider(vehicleId)),
       ),
     };
@@ -255,12 +241,8 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
 
   /// The generic (date + cost) record tab + its refresh, shared by
   /// service / repair / upgrade / tax.
-  (Widget, void Function(WidgetRef)) _genericTab(
-    int vehicleId,
-    RecordKind kind,
-    bool useHours,
-  ) => (
-    GenericRecordsTab(vehicleId: vehicleId, kind: kind, useHours: useHours),
+  (Widget, void Function(WidgetRef)) _genericTab(int vehicleId, RecordKind kind) => (
+    GenericRecordsTab(vehicleId: vehicleId, kind: kind),
     (ref) => ref.invalidate(
       vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)),
     ),

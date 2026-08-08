@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/demo/demo_http_adapter.dart';
+import 'package:lubelogger_mobile/core/format/gas_stats.dart';
+import 'package:lubelogger_mobile/core/format/vehicle_units.dart';
+import 'package:lubelogger_mobile/core/settings/units_settings.dart';
 import 'package:lubelogger_mobile/core/models/extra_field.dart';
 import 'package:lubelogger_mobile/core/models/plan_record.dart';
 import 'package:lubelogger_mobile/core/models/reminder_record.dart';
@@ -151,6 +154,21 @@ void main() {
       final derivedKwh = c.fuelConsumed / ((c.endingSoc - c.startingSoc) / 100);
       expect(derivedKwh, closeTo(40, 0.5));
     }
+  });
+
+  test('the electric vehicle shows a believable kWh economy', () async {
+    // The demo is what the store screenshots are taken from, so its numbers have
+    // to survive being labelled: a Leaf that reads 2 kWh/100 km is worse than
+    // one with no label at all.
+    final charges = await repo().gasRecords(3);
+    final stats = GasStats.from(charges, isElectric: true);
+    final units = const VehicleUnits(UnitsSettings(), isElectric: true);
+
+    expect(units.economyLabel, 'kWh/100 km');
+    expect(
+      units.economyValue(stats.totalRawDistance, stats.totalRawVolume),
+      inInclusiveRange(12, 22),
+    );
   });
 
   test('editing a charge keeps its state of charge', () async {

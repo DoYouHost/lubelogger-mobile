@@ -8,7 +8,7 @@ import '../../core/format/gas_stats.dart';
 import '../../core/format/monthly_breakdown.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/models/vehicle_info.dart';
-import '../../core/settings/units_settings.dart';
+import '../../core/format/vehicle_units.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
@@ -81,7 +81,7 @@ class _DashboardBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final units = ref.watch(unitsSettingsProvider);
+    final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final symbol = ref.watch(currencySymbolProvider);
     final stats = ref.watch(gasStatsProvider(vehicleId)).valueOrNull;
     final breakdown = ref
@@ -159,7 +159,7 @@ class _DashboardBody extends ConsumerWidget {
                 currencySymbol: symbol,
                 expensesLegend: l10n.legendExpenses,
                 distanceLegend:
-                    '${l10n.legendDistance} (${units.distance.label})',
+                    '${l10n.legendDistance} (${units.distanceLabel})',
                 emptyLabel: l10n.chartNoData,
                 months: _comboMonths(context, breakdown, units),
               ),
@@ -197,9 +197,10 @@ class _DashboardBody extends ConsumerWidget {
               ),
             ),
             ChartCard(
-              title: '${l10n.chartFuelMileageByMonth} (${units.economy.label})',
+              title: '${units.isElectric ? l10n.chartConsumptionByMonth : l10n.chartFuelMileageByMonth}'
+                  ' (${units.economyLabel})',
               child: MonthlyBars(
-                lowerIsBetter: units.economy.lowerIsBetter,
+                lowerIsBetter: units.lowerIsBetter,
                 emptyLabel: l10n.chartNoData,
                 bars: _monthlyBars(stats, units),
               ),
@@ -215,7 +216,7 @@ class _DashboardBody extends ConsumerWidget {
   List<ComboMonth> _comboMonths(
     BuildContext context,
     MonthlyBreakdown? breakdown,
-    UnitsSettings units,
+    VehicleUnits units,
   ) {
     final t = DashTokens.of(context);
     final byMonth = {
@@ -232,11 +233,7 @@ class _DashboardBody extends ConsumerWidget {
             barColor: dominant == null
                 ? t.accentGold
                 : _categoryColor(dominant, t),
-            distance: Formatters.distanceValue(
-              entry?.distance ?? 0,
-              units.base,
-              units.distance,
-            ),
+            distance: units.toDisplayDistance(entry?.distance ?? 0),
           );
         }(),
     ];
@@ -244,7 +241,7 @@ class _DashboardBody extends ConsumerWidget {
 
   /// Twelve slots (Jan…Dec); each month's raw ratio converted to the display
   /// unit, or null when that month has no economy data.
-  List<MonthlyBar> _monthlyBars(GasStats? stats, UnitsSettings units) {
+  List<MonthlyBar> _monthlyBars(GasStats? stats, VehicleUnits units) {
     final byMonth = {
       for (final m in stats?.monthly ?? const <MonthlyEconomy>[])
         m.month: m.rawRatio,
@@ -255,12 +252,7 @@ class _DashboardBody extends ConsumerWidget {
           label: _monthLabels[month - 1],
           value: byMonth[month] == null
               ? null
-              : Formatters.fuelEconomyValue(
-                  byMonth[month]!,
-                  1,
-                  units.base,
-                  units.economy,
-                ),
+              : units.economyValue(byMonth[month]!, 1),
         ),
     ];
   }
@@ -277,21 +269,14 @@ class _StatBlock extends ConsumerWidget {
 
   final VehicleInfo info;
   final GasStats? stats;
-  final UnitsSettings units;
+  final VehicleUnits units;
   final String symbol;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final useHours = info.vehicle.useHours;
 
-    final odometer = useHours
-        ? '${Formatters.odometer(info.lastReportedOdometer)} h'
-        : Formatters.distance(
-            info.lastReportedOdometer,
-            units.base,
-            units.distance,
-          );
+    final odometer = units.distance(info.lastReportedOdometer);
 
     final lastOdometerDate = ref
         .watch(lastOdometerDateProvider(info.vehicle.id))
@@ -300,20 +285,11 @@ class _StatBlock extends ConsumerWidget {
         ? null
         : units.formatDate(lastOdometerDate);
 
-    final distance = stats == null
-        ? '—'
-        : useHours
-        ? '${Formatters.odometer(stats!.distanceSpan)} h'
-        : Formatters.distance(stats!.distanceSpan, units.base, units.distance);
+    final distance = stats == null ? '—' : units.distance(stats!.distanceSpan);
 
     final economy = stats == null
         ? '—'
-        : Formatters.fuelEconomy(
-            stats!.totalRawDistance,
-            stats!.totalRawVolume,
-            units.base,
-            units.economy,
-          );
+        : units.economy(stats!.totalRawDistance, stats!.totalRawVolume);
 
     final rows = [
       _StatRow(value: odometer, secondary: lastOdometerDateLabel),
@@ -322,7 +298,10 @@ class _StatBlock extends ConsumerWidget {
         value: Formatters.currency(info.totalCost, symbol),
         label: l10n.statTotalCost,
       ),
-      _StatRow(value: economy, label: l10n.statAvgEconomy),
+      _StatRow(
+        value: economy,
+        label: units.isElectric ? l10n.statAvgConsumption : l10n.statAvgEconomy,
+      ),
     ];
 
     // Side by side across the width in landscape/tablet; stacked in portrait.

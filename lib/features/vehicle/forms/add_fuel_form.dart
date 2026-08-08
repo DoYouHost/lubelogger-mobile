@@ -79,7 +79,11 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       (e?.endingSoc ?? GasRecord.defaultEndingSoc).toDouble(),
     );
     if (e != null) {
-      _odometer.text = formatFormNumber(e.odometer);
+      _odometer.text = formatFormNumber(
+        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
+              e.odometer,
+            ),
+      );
       _fuel.text = formatFormNumber(e.fuelConsumed);
       _cost.text = formatFormNumber(e.cost);
       _tags.text = e.tags;
@@ -103,9 +107,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
-    final distanceUnit = units.distance.label;
-    final volumeUnit = units.base.volumeLabel;
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
 
     return Padding(
       // Lift the sheet above the keyboard.
@@ -152,22 +154,19 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               const SizedBox(height: 14),
               _numberField(
                 controller: _odometer,
-                label: l10n.formOdometerLabel(distanceUnit),
+                label: l10n.formOdometerLabel(units.distanceLabel),
                 decimal: false,
               ),
               const SizedBox(height: 14),
               _numberField(
                 controller: _fuel,
-                label: l10n.formFuelLabel(volumeUnit),
+                label: units.isElectric
+                    ? l10n.formEnergyLabel(units.consumptionLabel)
+                    : l10n.formFuelLabel(units.consumptionLabel),
               ),
               // Electric only, like the web's dual-range slider: the server
               // reads state of charge for no other kind of vehicle.
-              if (ref
-                      .watch(vehicleInfoProvider(widget.vehicleId))
-                      .valueOrNull
-                      ?.vehicle
-                      .isElectric ??
-                  false) ...[
+              if (units.isElectric) ...[
                 const SizedBox(height: 14),
                 _SocField(
                   values: _soc,
@@ -327,13 +326,16 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       _error = null;
     });
     final repo = ref.read(vehiclesRepositoryProvider);
+    final odometer = ref
+        .read(vehicleUnitsProvider(widget.vehicleId))
+        .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble());
     final existing = widget.existing;
     try {
       if (existing == null) {
         await repo.addGasRecord(
           vehicleId: widget.vehicleId,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           fuelConsumed: parseFormNumber(_fuel.text)!,
           cost: parseFormNumber(_cost.text)!,
           isFillToFull: _fillToFull,
@@ -350,7 +352,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
           vehicleId: widget.vehicleId,
           id: existing.id,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           fuelConsumed: parseFormNumber(_fuel.text)!,
           cost: parseFormNumber(_cost.text)!,
           isFillToFull: _fillToFull,

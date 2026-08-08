@@ -506,10 +506,13 @@ class DemoBackend {
     );
 
     // Vehicle 3 — electric, 40 kWh pack, odometer 24k → ~33k.
+    // Roughly 165 km between charges on a 40 kWh pack, which works out near
+    // 15 kWh/100 km — where a real Leaf sits, and now a number the tab and
+    // dashboard put a kWh label on. The odometer reading below follows from it.
     _gas[3] = _chargeSeries(
       count: 9,
-      startOdometer: 24000,
-      stepPerCharge: 950,
+      startOdometer: 31650,
+      stepPerCharge: 140,
       batteryKwh: 40,
       pricePerKwh: 0.42,
       ago: ago,
@@ -523,7 +526,7 @@ class DemoBackend {
       _rec({'date': ago(18), 'odometer': 141800, 'initialOdometer': 141000}),
     ];
     _odometer[3] = [
-      _rec({'date': ago(11), 'odometer': 33150, 'initialOdometer': 32400}),
+      _rec({'date': ago(11), 'odometer': 33080, 'initialOdometer': 32995}),
     ];
 
     _service[1] = [

@@ -44,15 +44,18 @@ enum CurrencyOption {
   final String? fixedSymbol;
 }
 
-/// Distance / odometer unit. [fromKm] converts a metric-base value to this unit.
+/// Distance / odometer unit, sized in kilometres. Sizing it this way (rather
+/// than as a factor off km) makes a display unit that matches
+/// [MeasurementSystem]'s own divide out to exactly 1, so a form can show a
+/// stored odometer and write it back untouched.
 enum DistanceUnit {
   km('km', 1),
-  mi('mi', 0.621371);
+  mi('mi', 1.609344);
 
-  const DistanceUnit(this.label, this.fromKm);
+  const DistanceUnit(this.label, this.kmPerUnit);
 
   final String label;
-  final double fromKm;
+  final double kmPerUnit;
 }
 
 /// Fuel-economy readout unit. Labels use conventional notation (not localized).

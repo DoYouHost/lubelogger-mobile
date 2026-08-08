@@ -68,7 +68,11 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     final e = widget.existing;
     _date = e?.date ?? DateTime.now();
     if (e != null) {
-      _odometer.text = formatFormNumber(e.odometer);
+      _odometer.text = formatFormNumber(
+        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
+              e.odometer,
+            ),
+      );
       _tags.text = e.tags;
       _notes.text = e.notes;
       _files = [...e.files];
@@ -88,8 +92,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
-    final distanceUnit = units.distance.label;
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
 
     return Padding(
       // Lift the sheet above the keyboard.
@@ -144,7 +147,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 style: const TextStyle(fontFamily: DashTokens.fontMono),
                 decoration: dashFieldDecoration(
                   t,
-                  labelText: l10n.formOdometerLabel(distanceUnit),
+                  labelText: l10n.formOdometerLabel(units.distanceLabel),
                 ),
                 validator: (raw) {
                   final value = parseFormNumber(raw);
@@ -252,13 +255,17 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       _error = null;
     });
     final repo = ref.read(vehiclesRepositoryProvider);
+    final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
+    final odometer = units.toStoredDistance(
+      parseFormNumber(_odometer.text)!.toDouble(),
+    );
     final existing = widget.existing;
     try {
       if (existing == null) {
         await repo.addOdometerRecord(
           vehicleId: widget.vehicleId,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
           files: _files,
@@ -268,7 +275,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
         await repo.updateOdometerRecord(
           id: existing.id,
           date: _date,
-          odometer: parseFormNumber(_odometer.text)!,
+          odometer: odometer,
           // The update endpoint requires initialOdometer; preserve the record's.
           initialOdometer: existing.initialOdometer,
           notes: _notes.text.trim(),

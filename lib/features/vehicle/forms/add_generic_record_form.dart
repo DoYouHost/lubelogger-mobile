@@ -108,7 +108,11 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     _date = e?.date ?? DateTime.now();
     if (e != null) {
       final o = e.odometer;
-      if (o != null) _odometer.text = formatFormNumber(o);
+      if (o != null) {
+        _odometer.text = formatFormNumber(
+          ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(o),
+        );
+      }
       _description.text = e.description;
       _cost.text = formatFormNumber(e.cost);
       _tags.text = e.tags;
@@ -132,8 +136,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
-    final units = ref.watch(unitsSettingsProvider);
-    final distanceUnit = units.distance.label;
+    final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
     final titles = _titlesFor(widget.kind, l10n);
 
     return Padding(
@@ -194,7 +197,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                 const SizedBox(height: 14),
                 _numberField(
                   controller: _odometer,
-                  label: l10n.formOdometerLabel(distanceUnit),
+                  label: l10n.formOdometerLabel(units.distanceLabel),
                   decimal: false,
                 ),
               ],
@@ -334,7 +337,11 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     final existing = widget.existing;
     // Odometer is only collected (and required by the server) for the
     // odometer-bearing kinds; tax sends none.
-    final odometer = _hasOdometer ? parseFormNumber(_odometer.text)! : null;
+    final odometer = _hasOdometer
+        ? ref
+              .read(vehicleUnitsProvider(widget.vehicleId))
+              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
+        : null;
     try {
       if (existing == null) {
         await repo.addRecord(

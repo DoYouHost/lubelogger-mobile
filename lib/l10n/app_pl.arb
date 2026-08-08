@@ -386,5 +386,9 @@
   "bugReportRequestVersions": "Wersja aplikacji i serwera",
   "bugReportRequestNoLog": "Żadnego loga, żadnego nagrania",
   "bugReportRequestNoData": "Nic o Twoich pojazdach ani telefonie",
-  "bugReportRequestPublic": "Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe."
+  "bugReportRequestPublic": "Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe.",
+  "fuelPillEnergy": "Energia {value}",
+  "formEnergyLabel": "Pobrana energia ({unit})",
+  "statAvgConsumption": "Średnie zużycie energii",
+  "chartConsumptionByMonth": "Zużycie energii wg miesiąca"
 }
