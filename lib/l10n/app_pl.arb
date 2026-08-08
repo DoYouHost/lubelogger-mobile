@@ -390,5 +390,6 @@
   "fuelPillEnergy": "Energia {value}",
   "formEnergyLabel": "Pobrana energia ({unit})",
   "statAvgConsumption": "Średnie zużycie energii",
-  "chartConsumptionByMonth": "Zużycie energii wg miesiąca"
+  "chartConsumptionByMonth": "Zużycie energii wg miesiąca",
+  "planDoneReadOnly": "Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera."
 }

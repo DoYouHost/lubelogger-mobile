@@ -146,12 +146,28 @@ class DemoBackend {
 
   // ── Record writes ──────────────────────────────────────────────────────────
 
+  /// The one write the real API refuses (`PlanController.cs:150`). Mirrored so
+  /// demo mode can't quietly accept what a live server would reject.
+  DemoResult? _rejectDonePlan(String sub, Map<String, dynamic> body) =>
+      (sub == 'planrecords' && body['progress'] == 'Done')
+          ? (
+              status: 400,
+              body: {
+                'success': false,
+                'message':
+                    'Input object invalid, Progress cannot be set to Done.',
+              },
+            )
+          : null;
+
   DemoResult _addRecord(
     String sub,
     Map<int, List<Map<String, dynamic>>> coll,
     int vehicleId,
     Map<String, dynamic> body,
   ) {
+    final rejected = _rejectDonePlan(sub, body);
+    if (rejected != null) return rejected;
     final rec = <String, dynamic>{...body, 'id': _newId()};
     _fillDerivedFields(sub, vehicleId, rec, existing: null);
     (coll[vehicleId] ??= []).add(rec);
@@ -167,6 +183,8 @@ class DemoBackend {
     Map<int, List<Map<String, dynamic>>> coll,
     Map<String, dynamic> body,
   ) {
+    final rejected = _rejectDonePlan(sub, body);
+    if (rejected != null) return rejected;
     final id = _int(body['id']);
     for (final entry in coll.entries) {
       final idx = entry.value.indexWhere((r) => _int(r['id']) == id);
@@ -664,6 +682,17 @@ class DemoBackend {
         'type': 'UpgradeRecord',
         'priority': 'Low',
         'progress': 'Backlog',
+      }),
+      // The API refuses to write a finished plan back, so the form opens this
+      // one read-only. Seeded to keep that path reachable in demo mode.
+      _rec({
+        'dateCreated': ago(120),
+        'description': 'Fit winter tyres',
+        'cost': 480.0,
+        'type': 'UpgradeRecord',
+        'priority': 'Normal',
+        'progress': 'Done',
+        'notes': 'Completed on the planner board.',
       }),
     ];
 

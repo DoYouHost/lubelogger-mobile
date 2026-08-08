@@ -1034,4 +1034,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chartConsumptionByMonth => 'Consumption by Month';
+
+  @override
+  String get planDoneReadOnly =>
+      'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
 }

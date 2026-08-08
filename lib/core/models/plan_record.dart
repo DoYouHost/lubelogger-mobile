@@ -104,22 +104,24 @@ enum PlanPriority {
 }
 
 /// Planner progress (`PlanProgress`: Backlog=0, InProgress=1, Testing=2,
-/// Done=3). [unknown] covers values the server may add later. Note: the API
-/// rejects writing [done] (plans reach Done only via the planner board), so the
-/// edit form doesn't offer it.
+/// Done=3). [unknown] covers values the server may add later.
 enum PlanProgress {
   backlog('Backlog'),
   inProgress('InProgress'),
   testing('Testing'),
-  done('Testing'),
+  done('Done'),
   unknown('Backlog');
 
   const PlanProgress(this.wireName);
 
-  /// The .NET enum name the API expects on write. [done] maps to `Testing`
-  /// because the API forbids setting Done — a Done plan re-saved via the app
-  /// falls back to the closest writable state.
+  /// The .NET enum name the API expects on write.
   final String wireName;
+
+  /// Whether the API accepts this state on add/update. It answers 400 to `Done`
+  /// (`PlanController.cs:150`) — a plan only reaches it through the planner
+  /// board — and there is no substitute: every other value silently demotes a
+  /// finished plan, so the form refuses to write one at all.
+  bool get isWritable => this != done;
 
   static PlanProgress parse(Object? raw) =>
       switch (raw?.toString().toLowerCase()) {

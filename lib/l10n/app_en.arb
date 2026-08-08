@@ -507,5 +507,9 @@
     "placeholders": { "unit": { "type": "String" } }
   },
   "statAvgConsumption": "Average Consumption",
-  "chartConsumptionByMonth": "Consumption by Month"
+  "chartConsumptionByMonth": "Consumption by Month",
+  "planDoneReadOnly": "This plan is done. LubeLogger's API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.",
+  "@planDoneReadOnly": {
+    "description": "Warning shown on the plan form when the item's progress is Done"
+  }
 }

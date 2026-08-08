@@ -1043,4 +1043,8 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get chartConsumptionByMonth => 'Zużycie energii wg miesiąca';
+
+  @override
+  String get planDoneReadOnly =>
+      'Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera.';
 }

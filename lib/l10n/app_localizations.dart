@@ -1927,6 +1927,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Consumption by Month'**
   String get chartConsumptionByMonth;
+
+  /// Warning shown on the plan form when the item's progress is Done
+  ///
+  /// In en, this message translates to:
+  /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
+  String get planDoneReadOnly;
 }
 
 class _AppLocalizationsDelegate
