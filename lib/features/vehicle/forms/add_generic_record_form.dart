@@ -431,13 +431,12 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   }
 
   /// Refreshes every view derived from this record type after a write: its own
-  /// tab list, the vehicle's aggregated info (record counts/costs) and the
-  /// monthly expense breakdown.
+  /// tab list and the vehicle's aggregated info (record counts/costs). The
+  /// monthly expense breakdown watches the tab list, so it follows.
   void _invalidateProviders() {
     ref.invalidate(
       vehicleRecordsProvider((vehicleId: widget.vehicleId, kind: widget.kind)),
     );
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
-    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }
 }

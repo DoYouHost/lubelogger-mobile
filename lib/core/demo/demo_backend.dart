@@ -121,7 +121,12 @@ class DemoBackend {
         if (s.length < 2) return _notFound();
         final sub = s[1];
         if (sub == 'info' && m == 'GET') {
-          return _ok([_vehicleInfo(_int(q['vehicleId']))]);
+          // No vehicleId means the whole garage, as on the server — that form
+          // is the single request the garage screen makes.
+          final id = _int(q['vehicleId']);
+          return _ok(id == 0
+              ? [for (final v in _vehicles) _vehicleInfo(_int(v['id']))]
+              : [_vehicleInfo(id)]);
         }
         final coll = _collectionFor(sub);
         if (coll == null) return _notFound();

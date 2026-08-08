@@ -212,7 +212,6 @@ class FuelTab extends ConsumerWidget {
       emptyLabel: l10n.recordsEmpty,
       onRefresh: () async {
         ref.invalidate(gasRecordsProvider(vehicleId));
-        ref.invalidate(gasStatsProvider(vehicleId));
         await ref.read(gasRecordsProvider(vehicleId).future);
       },
       builder: (records) {

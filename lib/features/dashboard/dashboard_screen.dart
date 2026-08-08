@@ -51,9 +51,7 @@ class DashboardTab extends ConsumerWidget {
     final infoAsync = ref.watch(vehicleInfoProvider(vehicleId));
 
     Future<void> refresh() async {
-      ref.invalidate(vehicleInfoProvider(vehicleId));
-      ref.invalidate(gasStatsProvider(vehicleId));
-      ref.invalidate(monthlyBreakdownProvider(vehicleId));
+      invalidateVehicleData(ref, vehicleId);
       await ref.read(vehicleInfoProvider(vehicleId).future);
     }
 

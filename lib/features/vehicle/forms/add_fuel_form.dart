@@ -426,11 +426,11 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   }
 
   /// Refreshes every view derived from the refuel log after an add/update/delete.
+  /// The fuel statistics and the monthly breakdown watch the log, so dropping it
+  /// is enough for them.
   void _invalidateFuelProviders() {
     ref.invalidate(gasRecordsProvider(widget.vehicleId));
-    ref.invalidate(gasStatsProvider(widget.vehicleId));
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
-    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }
 }
 

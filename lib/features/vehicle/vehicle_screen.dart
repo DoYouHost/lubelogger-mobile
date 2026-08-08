@@ -122,11 +122,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         l10n.tabDashboard,
         Icons.dashboard_rounded,
         DashboardTab(vehicleId: vehicleId),
-        (ref) {
-          ref.invalidate(vehicleInfoProvider(vehicleId));
-          ref.invalidate(gasStatsProvider(vehicleId));
-          ref.invalidate(monthlyBreakdownProvider(vehicleId));
-        },
+        (ref) => invalidateVehicleData(ref, vehicleId),
       ),
       for (final tab in orderedVisible)
         _recordTab(tab, l10n, vehicleId),
@@ -209,10 +205,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
       VehicleTab.upgrade => _genericTab(vehicleId, RecordKind.upgrade),
       VehicleTab.fuel => (
         FuelTab(vehicleId: vehicleId),
-        (ref) {
-          ref.invalidate(gasRecordsProvider(vehicleId));
-          ref.invalidate(gasStatsProvider(vehicleId));
-        },
+        (ref) => ref.invalidate(gasRecordsProvider(vehicleId)),
       ),
       VehicleTab.tax => _genericTab(vehicleId, RecordKind.tax),
       VehicleTab.supply => (

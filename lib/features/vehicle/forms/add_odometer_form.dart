@@ -346,10 +346,10 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   }
 
   /// Refreshes every view derived from odometer readings after a write.
-  /// [lastOdometerDateProvider] recomputes via its watch on the records list.
+  /// [lastOdometerDateProvider] and [monthlyBreakdownProvider] recompute via
+  /// their watch on the records list.
   void _invalidateOdometerProviders() {
     ref.invalidate(odometerRecordsProvider(widget.vehicleId));
     ref.invalidate(vehicleInfoProvider(widget.vehicleId));
-    ref.invalidate(monthlyBreakdownProvider(widget.vehicleId));
   }
 }

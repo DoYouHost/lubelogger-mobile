@@ -6,7 +6,6 @@ import '../core/diagnostics/diagnostic_recorder.dart';
 import '../core/diagnostics/log_event.dart';
 import '../core/auth/whoami.dart';
 import '../core/models/attachment.dart';
-import '../core/models/dated_cost.dart';
 import '../core/models/equipment_record.dart';
 import '../core/models/extra_field.dart';
 import '../core/models/gas_record.dart';
@@ -130,6 +129,14 @@ class VehiclesRepository {
         return VehicleInfo.fromJson(list.first as Map<String, dynamic>);
       });
 
+  /// `GET /api/vehicle/info` with no `vehicleId` → the same aggregate for every
+  /// vehicle the key may view. This is the garage in one request; [list] plus
+  /// one [info] per vehicle would return the same thing in 1+N.
+  Future<List<VehicleInfo>> allInfo() => guard(() async {
+        final res = await _dio.get<List<dynamic>>(Endpoints.vehicleInfo);
+        return _parseAll(res.data, VehicleInfo.fromJson, Endpoints.vehicleInfo);
+      });
+
   /// `GET /api/vehicle/gasrecords?vehicleId=` → the vehicle's refuel log.
   Future<List<GasRecord>> gasRecords(int vehicleId) => guard(() async {
         final res = await _dio.get<List<dynamic>>(
@@ -236,20 +243,9 @@ class VehiclesRepository {
         _ensureSuccess(res.data);
       });
 
-  /// Date + cost records for one vehicle from any generic-record [endpoint]
-  /// (service / repair / upgrade / tax). Used for the monthly expense chart.
-  Future<List<DatedCost>> datedCosts(String endpoint, int vehicleId) =>
-      guard(() async {
-        final res = await _dio.get<List<dynamic>>(
-          endpoint,
-          queryParameters: {'vehicleId': vehicleId},
-        );
-        return _parseAll(res.data, DatedCost.fromJson, endpoint);
-      });
-
   /// Full records for one vehicle from a generic (date + cost) record [kind]
   /// (service / repair / upgrade / tax) — the source for the per-type record
-  /// tables. See [datedCosts] for the trimmed shape used by the expense chart.
+  /// tables and, trimmed to date + cost, for the monthly expense chart.
   Future<List<VehicleRecord>> records(RecordKind kind, int vehicleId) =>
       guard(() async {
         final res = await _dio.get<List<dynamic>>(

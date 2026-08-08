@@ -5,7 +5,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
-import 'core/api/endpoints.dart';
 import 'core/app_localizations_loader.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/whoami.dart';
@@ -389,15 +388,10 @@ final serverVersionProvider = FutureProvider<ServerVersion>(
   (ref) => ref.watch(vehiclesRepositoryProvider).serverVersion(),
 );
 
-/// Garage contents: every vehicle with its aggregated info. Fetches the vehicle
-/// list, then each vehicle's info in parallel (household lists are small, so the
-/// N+1 is cheap and keeps the cards fully populated).
-final garageProvider = FutureProvider<List<VehicleInfo>>((ref) async {
-  final repo = ref.watch(vehiclesRepositoryProvider);
-  final vehicles = await repo.list();
-  final infos = await Future.wait(vehicles.map((v) => repo.info(v.id)));
-  return infos;
-});
+/// Garage contents: every vehicle with its aggregated info, in one request.
+final garageProvider = FutureProvider<List<VehicleInfo>>(
+  (ref) => ref.watch(vehiclesRepositoryProvider).allInfo(),
+);
 
 /// Aggregated info for one vehicle (odometer, costs, reminders) — powers the
 /// dashboard header, stat block, and both expense/reminder charts.
@@ -424,11 +418,13 @@ final vehicleUnitsProvider = Provider.family<VehicleUnits, int>((
 /// at display time, so this doesn't depend on the units settings. It does depend
 /// on the vehicle: an electric one's consumption is derived from state of charge
 /// rather than read off the record.
+///
+/// Computed from [gasRecordsProvider] rather than fetching its own copy — the
+/// dashboard and the Fuel tab would otherwise ask for the same log twice.
 final gasStatsProvider = FutureProvider.family<GasStats, int>(
   (ref, vehicleId) async {
-    final repo = ref.watch(vehiclesRepositoryProvider);
     final (records, info) = await (
-      repo.gasRecords(vehicleId),
+      ref.watch(gasRecordsProvider(vehicleId).future),
       ref.watch(vehicleInfoProvider(vehicleId).future),
     ).wait;
     return GasStats.from(records, isElectric: info.vehicle.isElectric);
@@ -521,19 +517,27 @@ final equipmentRecordsProvider =
       ref.watch(vehiclesRepositoryProvider).equipmentRecords(vehicleId),
 );
 
-/// Monthly expense (by category) + distance breakdown for one vehicle. Fetches
-/// every cost-bearing record type plus odometer readings in parallel, then
-/// aggregates them per calendar month for the combo chart.
+/// Monthly expense (by category) + distance breakdown for one vehicle,
+/// aggregated per calendar month for the combo chart.
+///
+/// Every list it needs is already a provider of its own, so it composes those
+/// instead of re-fetching: opening the dashboard and then a record tab reads
+/// each endpoint once.
 final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
   (ref, vehicleId) async {
-    final repo = ref.watch(vehiclesRepositoryProvider);
+    Future<List<VehicleRecord>> records(RecordKind kind) =>
+        ref.watch(vehicleRecordsProvider((
+          vehicleId: vehicleId,
+          kind: kind,
+        )).future);
+
     final (service, repair, upgrade, tax, gas, odometers) = await (
-      repo.datedCosts(Endpoints.serviceRecords, vehicleId),
-      repo.datedCosts(Endpoints.repairRecords, vehicleId),
-      repo.datedCosts(Endpoints.upgradeRecords, vehicleId),
-      repo.datedCosts(Endpoints.taxRecords, vehicleId),
-      repo.gasRecords(vehicleId),
-      repo.odometerRecords(vehicleId),
+      records(RecordKind.service),
+      records(RecordKind.repair),
+      records(RecordKind.upgrade),
+      records(RecordKind.tax),
+      ref.watch(gasRecordsProvider(vehicleId).future),
+      ref.watch(odometerRecordsProvider(vehicleId).future),
     ).wait;
 
     // Distance timeline: every odometer reading from fuel-ups and dedicated
@@ -543,12 +547,15 @@ final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
       for (final o in odometers) (date: o.date, odometer: o.odometer),
     ];
 
+    List<DatedCost> costs(List<VehicleRecord> records) =>
+        [for (final r in records) DatedCost(date: r.date, cost: r.cost)];
+
     return MonthlyBreakdown.from(
       costsByCategory: {
-        ExpenseCategory.service: service,
-        ExpenseCategory.repair: repair,
-        ExpenseCategory.upgrade: upgrade,
-        ExpenseCategory.tax: tax,
+        ExpenseCategory.service: costs(service),
+        ExpenseCategory.repair: costs(repair),
+        ExpenseCategory.upgrade: costs(upgrade),
+        ExpenseCategory.tax: costs(tax),
         ExpenseCategory.fuel: [
           for (final r in gas) DatedCost(date: r.date, cost: r.cost),
         ],
@@ -557,3 +564,17 @@ final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
     );
   },
 );
+
+/// Drops every request behind one vehicle's screens, for pull-to-refresh.
+///
+/// The stats and the monthly breakdown derive from these lists rather than
+/// fetching their own copies, so they follow — invalidating *them* would only
+/// recompute from the same cache.
+void invalidateVehicleData(WidgetRef ref, int vehicleId) {
+  ref.invalidate(vehicleInfoProvider(vehicleId));
+  ref.invalidate(gasRecordsProvider(vehicleId));
+  ref.invalidate(odometerRecordsProvider(vehicleId));
+  for (final kind in RecordKind.values) {
+    ref.invalidate(vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)));
+  }
+}
