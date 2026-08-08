@@ -49,9 +49,19 @@ Write from the "USER-FACING" list. Rules:
   leak code identifiers, hex colors, file names, or Conventional-Commit prefixes.
 - **Merge & prioritize.** Fold tiny tweaks into one "UI polish" bullet; lead
   with the biggest change. Aim for 3–6 bullets.
+- **Keep it simple and short.** One short line per bullet, plain language. Name
+  the feature — don't enumerate its sub-options. Cut adjectives, marketing
+  ("fresh", "powerful"), and parenthetical lists. If a bullet spans more than
+  ~one line, it's too detailed: trim it or split the release into fewer bullets.
+  Fewer, shorter bullets beat a complete-but-bloated list.
 - **Bilingual, not machine-translated.** Write natural Polish and natural
   English independently. Keep app content PEGI-16 clean (see project rules).
-- **Length.** Play caps each language at **500 characters**. Stay well under.
+- **Length.** 500 characters per language is Play's **hard limit, not a target**.
+  Do not write up to it. A release is as long as its changes: two small fixes are
+  two short bullets and ~150 characters, and that is a finished set of notes, not
+  a draft with room left. Never pad a bullet with detail just because the counter
+  says there is space. The Step 4 check exists to catch overruns, not to be
+  approached.
 - **Format** exactly as below (bullets with `•`); paste the whole block into the
   Play Console field.
 
@@ -66,6 +76,49 @@ Write from the "USER-FACING" list. Rules:
 </pl-PL>
 ```
 
+## Step 3 — humanize (mandatory)
+
+Draft notes tend to read like an AI wrote them: inflated verbs, rule-of-three
+bullets, promotional adjectives, stiff phrasing. Before finalizing, run the
+draft through the **`humanizer`** skill (invoke `/humanizer` on the drafted
+bullets) and apply its fixes. Keep it plain and human: short bullets, real
+verbs, no marketing filler, no em-dash/curly-quote/emoji tells. This step is
+required, not optional — the notes users read should not sound machine-written.
+
+## Step 4 — check the length (mandatory)
+
+Play rejects a language over 500 characters, so **always** count both before
+handing the notes over. Write the final block to a file and count the content
+of each language (tags excluded):
+
+```bash
+cat > /tmp/relnotes.txt <<'EOF'
+<en-US>
+• ...
+• ...
+</en-US>
+<pl-PL>
+• ...
+• ...
+</pl-PL>
+EOF
+
+awk '
+  /<en-US>/{f="en-US";next} /<\/en-US>/{f="";next}
+  /<pl-PL>/{f="pl-PL";next} /<\/pl-PL>/{f="";next}
+  f{n[f]+=length($0)+1}
+  END{for(k in n) printf "%s: %d chars\n", k, n[k]}
+' /tmp/relnotes.txt
+```
+
+Report the per-language counts. If either is over 500, cut detail and re-count —
+do not hand over notes you haven't measured. A low count is not a problem to fix:
+short notes mean the release was small, so leave them short.
+
+Note the counter measures **bytes**, so Polish diacritics inflate the `pl-PL`
+number above its real character count. Fine as a safety margin; don't quote it as
+the character count.
+
 ## Worked example (v0.10.0 → v0.10.1)
 
 `collect-changes.sh` returned a widget redesign + new multi-printer widget
@@ -74,16 +127,16 @@ it skipped `chore: bump version`. Those became:
 
 ```
 <en-US>
-• Redesigned home screen widgets with a fresh dark look, plus a new multi-printer widget that shows all your printers at once.
-• Print thumbnails now reload automatically instead of disappearing after a while.
-• Maintenance sections can be collapsed for a tidier view.
-• UI polish: clearer "remember me" checkbox and better search bar spacing.
+• New look for the home screen widgets, plus a widget showing all your printers at once.
+• Print thumbnails no longer disappear after a while.
+• Maintenance sections can be collapsed.
+• Clearer "remember me" checkbox and better search bar spacing.
 </en-US>
 <pl-PL>
-• Odświeżony, ciemny wygląd widgetów na ekranie głównym oraz nowy widget wielu drukarek pokazujący wszystkie drukarki naraz.
-• Miniatury wydruków odświeżają się automatycznie zamiast znikać po pewnym czasie.
-• Sekcje konserwacji można teraz zwijać dla czytelniejszego widoku.
-• Poprawki interfejsu: wyraźniejszy checkbox „zapamiętaj mnie" i lepsze odstępy paska wyszukiwania.
+• Nowy wygląd widgetów na ekranie głównym i widget pokazujący wszystkie drukarki naraz.
+• Miniatury wydruków nie znikają już po pewnym czasie.
+• Sekcje konserwacji można zwijać.
+• Wyraźniejszy checkbox „zapamiętaj mnie" i lepsze odstępy paska wyszukiwania.
 </pl-PL>
 ```
 
@@ -98,5 +151,5 @@ it skipped `chore: bump version`. Those became:
   script skips tags pointing at the same commit as the newest and compares the
   two most recent distinct releases. If you've committed post-tag work you want
   to preview, pass `HEAD` explicitly.
-- The release pipeline is `just ship X.Y.Z` (bump + tag via Codeberg). Generate
+- The release pipeline is `just ship X.Y.Z` (bump + tag via GitHub). Generate
   notes **after** the tag exists, or pass `HEAD` to preview before shipping.
