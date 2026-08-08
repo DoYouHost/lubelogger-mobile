@@ -146,7 +146,7 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                   children: [
                                     _EditVehicleAction(
                                       onPressed: () => _editVehicle(info.vehicle),
-                                    ).tagged('garage.edit'),
+                                    ),
                                   ],
                                 ),
                                 child: logTag(
@@ -220,50 +220,59 @@ class _EditVehicleAction extends StatelessWidget {
     final t = DashTokens.of(context);
     final l10n = AppLocalizations.of(context);
     final ink = Theme.of(context).colorScheme.onPrimary;
+    // Named on the pill and not around the action: CustomSlidableAction builds
+    // an Expanded, and anything wrapped around it lands between that Expanded
+    // and the pane's flex layout, which throws on the first swipe. The tag still
+    // reaches the log — the probe reads the deepest identifier under the finger.
+    // SizedBox.expand is load-bearing: the action puts its child in an Align,
+    // which would otherwise shrink the pill to its content.
     return CustomSlidableAction(
       onPressed: (_) => onPressed(),
       backgroundColor: Colors.transparent,
       padding: EdgeInsets.zero,
-      child: SizedBox.expand(
-        child: Container(
-          margin: const EdgeInsets.only(left: 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [t.accentGold, t.accentOrange],
+      child: logTag(
+        'garage.edit',
+        SizedBox.expand(
+          child: Container(
+            margin: const EdgeInsets.only(left: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [t.accentGold, t.accentOrange],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: t.accentGold.withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: t.accentGold.withValues(alpha: 0.45),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(9),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.24),
-                  shape: BoxShape.circle,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.24),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.edit_rounded, size: 22, color: ink),
                 ),
-                child: Icon(Icons.edit_rounded, size: 22, color: ink),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.actionEdit,
-                style: TextStyle(
-                  fontFamily: DashTokens.fontUi,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: ink,
+                const SizedBox(height: 8),
+                Text(
+                  l10n.actionEdit,
+                  style: TextStyle(
+                    fontFamily: DashTokens.fontUi,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: ink,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
