@@ -8,6 +8,7 @@ import '../cache/write_queue.dart';
 import '../demo/demo_http_adapter.dart';
 import '../diagnostics/http_probe.dart';
 import '../settings/server_profile.dart';
+import 'retry_interceptor.dart';
 
 /// Header LubeLogger uses to return culture-invariant payloads: typed JSON and
 /// ISO-8601 dates instead of locale-formatted strings. Sent on every request so
@@ -49,6 +50,12 @@ class ApiClient {
     if (profile.isDemo) {
       this.dio.httpClientAdapter = DemoHttpClientAdapter();
     }
+    // Ahead of the offline interceptor on purpose: a transient failure gets its
+    // second attempt before it is allowed to count as the server being gone.
+    this.dio.interceptors.add(RetryInterceptor(
+      dio: this.dio,
+      status: this.status,
+    ));
     // The demo backend cannot fail and its data lives in memory already, so
     // caching it would only leave a real server's directory shape on disk for a
     // profile that is not a server.
