@@ -35,19 +35,9 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   TabController? _tabController;
   List<_VehicleTab> _tabs = const [];
 
-  /// Height of the collapsible tab strip: the [TabBar]'s own minimum (46px)
-  /// plus the strip Container's 1px bottom hairline, with 1px to spare.
-  static const double _tabStripHeight = 48;
-
-  // Outer scroll controller of the NestedScrollView — it drives the floating
-  // tab strip. Used to snap the strip back into view on a tab change.
-  final ScrollController _outerController = ScrollController();
-  int _lastTabIndex = 0;
-
   @override
   void dispose() {
     _tabController?.dispose();
-    _outerController.dispose();
     super.dispose();
   }
 
@@ -59,25 +49,8 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
   void _onTabChanged() {
     final controller = _tabController;
     if (controller == null) return;
-    // A tab change (including a sideways swipe) snaps the collapsed tab strip
-    // back into view, without disturbing the list's scroll position.
-    if (controller.index != _lastTabIndex) {
-      _lastTabIndex = controller.index;
-      _revealTabStrip();
-    }
     if (controller.indexIsChanging) return;
     _tabs[controller.index].refresh(ref);
-  }
-
-  /// Scrolls the NestedScrollView header back to fully-expanded, bringing the
-  /// floating tab strip back on screen.
-  void _revealTabStrip() {
-    if (!_outerController.hasClients || _outerController.offset <= 0) return;
-    _outerController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-    );
   }
 
   /// Returns a controller of the given [length], reusing the current one when
@@ -144,45 +117,28 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
           bottom: false,
           child: Column(
             children: [
-              // The vehicle header stays pinned; only the tab strip collapses.
               _VehicleHeader(vehicle: vehicle),
+              // Both header and tab strip stay put. The strip used to collapse,
+              // carried by a floating+snap SliverAppBar inside a
+              // NestedScrollView — and that cost 27-74ms of the UI thread on
+              // every frame of a scroll (measured on a Kirin 950, budget 16ms),
+              // because a scrollable TabBar re-measures all of its tabs and its
+              // indicator geometry each time the header moves. Holding the
+              // strip's widget instance across those rebuilds did not help: the
+              // cost is the layout, not the build. Static, the same scroll
+              // spends 5-6ms. The design asked for a collapsing strip; this is
+              // a deliberate trade, so do not restore it without measuring.
+              _VehicleTabBar(tabs: _tabs, controller: controller),
               Expanded(
-                child: NestedScrollView(
-                  controller: _outerController,
-                  headerSliverBuilder: (context, _) => [
-                    // Floating, non-pinned header carrying just the tab strip:
-                    // it scrolls away as the list scrolls down and snaps back
-                    // on scroll-up (and, via [_revealTabStrip], on tab change).
-                    SliverAppBar(
-                      primary: false,
-                      pinned: false,
-                      floating: true,
-                      snap: true,
-                      automaticallyImplyLeading: false,
-                      toolbarHeight: 0,
-                      backgroundColor: Colors.transparent,
-                      surfaceTintColor: Colors.transparent,
-                      elevation: 0,
-                      scrolledUnderElevation: 0,
-                      bottom: PreferredSize(
-                        preferredSize: const Size.fromHeight(_tabStripHeight),
-                        child: _VehicleTabBar(
-                          tabs: _tabs,
-                          controller: controller,
-                        ),
-                      ),
-                    ),
+                // One surface per tab, in the loop that already builds them:
+                // every control and every empty or error view inside a tab is
+                // named by the tab it is in.
+                child: TabBarView(
+                  controller: controller,
+                  children: [
+                    for (final t in _tabs)
+                      logSurface('vehicle.${t.id}', t.content),
                   ],
-                  // One surface per tab, in the loop that already builds them:
-                  // every control and every empty or error view inside a tab is
-                  // named by the tab it is in.
-                  body: TabBarView(
-                    controller: controller,
-                    children: [
-                      for (final t in _tabs)
-                        logSurface('vehicle.${t.id}', t.content),
-                    ],
-                  ),
                 ),
               ),
             ],

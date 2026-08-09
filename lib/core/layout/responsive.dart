@@ -65,23 +65,26 @@ class SliverResponsiveCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverLayoutBuilder(
-      builder: (context, constraints) {
-        var columns = responsiveColumns(constraints.crossAxisExtent);
-        final cap = maxColumns;
-        if (cap != null && columns > cap) columns = cap;
-        final rows = (itemCount + columns - 1) ~/ columns;
-        return SliverList.builder(
-          itemCount: rows,
-          itemBuilder: (context, row) => Padding(
-            // Like the wrap's runSpacing: between rows only, never trailing.
-            padding: EdgeInsets.only(bottom: row == rows - 1 ? 0 : runSpacing),
-            child: columns == 1
-                ? itemBuilder(context, row)
-                : _row(context, row, columns),
-          ),
-        );
-      },
+    // The column count comes from the screen and not from a SliverLayoutBuilder.
+    // Sliver constraints carry the scroll offset, so a layout callback here runs
+    // on every frame of a scroll, and each run hands the list a fresh delegate —
+    // whose shouldRebuild is unconditionally true, so every card on screen is
+    // rebuilt every frame. That cost lands on the UI thread and is felt as
+    // stutter. Cell widths still come from the real constraints, via Expanded;
+    // only the count is decided here.
+    var columns = responsiveColumns(MediaQuery.sizeOf(context).width);
+    final cap = maxColumns;
+    if (cap != null && columns > cap) columns = cap;
+    final rows = (itemCount + columns - 1) ~/ columns;
+    return SliverList.builder(
+      itemCount: rows,
+      itemBuilder: (context, row) => Padding(
+        // Like the wrap's runSpacing: between rows only, never trailing.
+        padding: EdgeInsets.only(bottom: row == rows - 1 ? 0 : runSpacing),
+        child: columns == 1
+            ? itemBuilder(context, row)
+            : _row(context, row, columns),
+      ),
     );
   }
 
