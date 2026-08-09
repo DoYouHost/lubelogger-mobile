@@ -87,6 +87,18 @@
   "equipmentRemoved": "Removed",
   "notePinned": "Pinned",
 
+  "cardAttachments": "{count, plural, =1{1 attachment} other{{count} attachments}}",
+  "@cardAttachments": {
+    "description": "Long-press text on a record card's paperclip, which shows the file count.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "cardHasNote": "Has a note",
+  "@cardHasNote": {
+    "description": "Long-press text on a record card's note icon."
+  },
+
   "tabDashboard": "Dashboard",
   "tabOdometer": "Odometer",
 

@@ -73,6 +73,9 @@
   "equipmentRemoved": "Zdjęte",
   "notePinned": "Przypięta",
 
+  "cardAttachments": "{count, plural, =1{1 załącznik} few{{count} załączniki} many{{count} załączników} other{{count} załącznika}}",
+  "cardHasNote": "Zawiera notatkę",
+
   "tabDashboard": "Pulpit",
   "tabOdometer": "Licznik kilometrów",
 

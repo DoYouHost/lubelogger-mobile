@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format/formatters.dart';
 import '../../../core/format/gas_stats.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/equipment_record.dart';
 import '../../../core/models/gas_record.dart';
 import '../../../core/models/note_record.dart';
@@ -42,6 +43,29 @@ String _odoUnit(double? raw, VehicleUnits units) {
   final v = _odo(raw, units);
   return v == _placeholder ? v : '$v ${units.distanceLabel}';
 }
+
+/// The two things a card used to hide: its attachments and its note. Both are
+/// stored, editable and previously invisible — the only way to learn a record
+/// had three photos on it was to open the edit form.
+///
+/// Tail of every card's meta row, so the row still reads left-to-right as the
+/// record's own numbers first. Pass only what the card doesn't already show:
+/// the note tab and the equipment tab print their notes as the description, so
+/// they send [files] alone.
+List<RecordMetaItem> _extras(
+  AppLocalizations l10n, {
+  List<Attachment> files = const [],
+  String notes = '',
+}) => [
+  if (files.isNotEmpty)
+    RecordMetaItem(
+      Icons.attach_file,
+      '${files.length}',
+      tooltip: l10n.cardAttachments(files.length),
+    ),
+  if (notes.trim().isNotEmpty)
+    RecordMetaItem.flag(Icons.notes, tooltip: l10n.cardHasNote),
+];
 
 /// Odometer readings as a card list: each card headlines the reading, with the
 /// gain since the previous reading (Δ) in the meta row.
@@ -85,6 +109,11 @@ class OdometerTab extends ConsumerWidget {
               headline: _odoUnit(ascending[i].odometer, units),
               meta: [
                 RecordMetaItem(Icons.trending_up, _odoUnit(deltas[i], units)),
+                ..._extras(
+                  l10n,
+                  files: ascending[i].files,
+                  notes: ascending[i].notes,
+                ),
               ],
               onTap: () => showAddOdometerForm(
                 context,
@@ -145,6 +174,7 @@ class GenericRecordsTab extends ConsumerWidget {
               meta: [
                 if (kind.hasOdometer)
                   RecordMetaItem(Icons.speed, _odoUnit(r.odometer, units)),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
               onTap: kind.editable
                   ? () => showGenericRecordForm(
@@ -296,6 +326,11 @@ class FuelTab extends ConsumerWidget {
                   econMeta(row.rawRatio),
                 ),
                 RecordMetaItem(Icons.sell, priceMeta(row.record)),
+                ..._extras(
+                  l10n,
+                  files: row.record.files,
+                  notes: row.record.notes,
+                ),
               ],
               onTap: () => showAddFuelForm(
                 context,
@@ -354,6 +389,7 @@ class SupplyTab extends ConsumerWidget {
                   RecordMetaItem(Icons.storefront, r.partSupplier),
                 if (r.partQuantity.isNotEmpty)
                   RecordMetaItem(Icons.numbers, r.partQuantity),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
               onTap: () => showAddSupplyForm(context, vehicleId, existing: r),
             );
@@ -410,6 +446,7 @@ class PlanTab extends ConsumerWidget {
                   Icons.timelapse,
                   _planProgress(r.progress, l10n),
                 ),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
               onTap: () => showAddPlanForm(context, vehicleId, existing: r),
             );
@@ -463,6 +500,9 @@ class ReminderTab extends ConsumerWidget {
                   RecordMetaItem(Icons.event, _date(r.dueDate, units)),
                 if (r.showsOdometer)
                   RecordMetaItem(Icons.speed, _odoUnit(r.dueOdometer, units)),
+                // Reminders are the one type with no attachments (the server's
+                // ReminderExportModel has no files field).
+                ..._extras(l10n, notes: r.notes),
               ],
               onTap: () => showAddReminderForm(context, vehicleId, existing: r),
             );
@@ -508,6 +548,9 @@ class NoteTab extends ConsumerWidget {
               description: r.noteText.isEmpty ? null : r.noteText,
               meta: [
                 if (r.pinned) RecordMetaItem(Icons.push_pin, l10n.notePinned),
+                // The note's own text is the description above; only its files
+                // are hidden.
+                ..._extras(l10n, files: r.files),
               ],
               onTap: () => showAddNoteForm(context, vehicleId, existing: r),
             );
@@ -559,6 +602,8 @@ class EquipmentTab extends ConsumerWidget {
                     Icons.route,
                     _odoUnit(r.distanceTraveled, units),
                   ),
+                // Equipment prints its notes as the description above.
+                ..._extras(l10n, files: r.files),
               ],
               onTap: () => showAddEquipmentForm(context, vehicleId, existing: r),
             );

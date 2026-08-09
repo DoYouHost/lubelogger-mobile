@@ -70,7 +70,8 @@ Future<void> _openImage(
   await Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(
       builder: (_) => _ImageViewerPage(
-        url: '${profile.baseUrl}${file.location}',
+        location: file.location,
+        baseUrl: profile.baseUrl,
         apiKey: apiKey,
         title: file.name,
       ),
@@ -135,12 +136,17 @@ Future<void> _downloadAndOpen(
 /// header so the API key stays out of the URL.
 class _ImageViewerPage extends StatelessWidget {
   const _ImageViewerPage({
-    required this.url,
+    required this.location,
+    required this.baseUrl,
     required this.apiKey,
     required this.title,
   });
 
-  final String url;
+  /// Server path (`/documents/<uuid>.jpg`) — or, in demo mode, a bundled asset.
+  /// A server location always starts with `/`, so the prefix tells them apart
+  /// (same discriminator as `vehicleImageProvider`).
+  final String location;
+  final String baseUrl;
   final String? apiKey;
   final String title;
 
@@ -160,9 +166,13 @@ class _ImageViewerPage extends StatelessWidget {
           child: InteractiveViewer(
             minScale: 1,
             maxScale: 5,
-            child: Image.network(
-              url,
-              headers: apiKey == null ? null : {'x-api-key': apiKey!},
+            child: Image(
+              image: location.startsWith('assets/')
+                  ? AssetImage(location)
+                  : NetworkImage(
+                      '$baseUrl$location',
+                      headers: apiKey == null ? null : {'x-api-key': apiKey!},
+                    ),
               fit: BoxFit.contain,
               loadingBuilder: (context, child, progress) => progress == null
                   ? child

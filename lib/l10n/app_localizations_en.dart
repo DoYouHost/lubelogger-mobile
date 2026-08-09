@@ -208,6 +208,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notePinned => 'Pinned';
 
   @override
+  String cardAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments',
+      one: '1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardHasNote => 'Has a note';
+
+  @override
   String get tabDashboard => 'Dashboard';
 
   @override

@@ -10,10 +10,20 @@ import '../../common/state_views.dart';
 /// One icon + value pair in a [RecordCard]'s meta row (design: odometer,
 /// distance-since-last, economy, price/volume — JetBrains Mono, tertiary).
 class RecordMetaItem {
-  const RecordMetaItem(this.icon, this.value);
+  const RecordMetaItem(this.icon, this.value, {this.tooltip});
+
+  /// An item that is only its icon — a flag ("this record has a note"), where
+  /// the icon is the whole message and a value beside it would just repeat it.
+  /// [tooltip] is what says so out loud, for a long press and for a screen
+  /// reader.
+  const RecordMetaItem.flag(this.icon, {required String this.tooltip})
+      : value = '';
 
   final IconData icon;
   final String value;
+
+  /// Long-press text, and the item's semantics label.
+  final String? tooltip;
 }
 
 /// One record entry, styled as a card (design handoff: subcard fill + hairline
@@ -113,25 +123,7 @@ class RecordCard extends StatelessWidget {
                     Wrap(
                       spacing: 14,
                       runSpacing: 4,
-                      children: [
-                        for (final m in meta)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(m.icon, size: 14, color: t.textTertiary),
-                              const SizedBox(width: 4),
-                              Text(
-                                m.value,
-                                style: TextStyle(
-                                  fontFamily: DashTokens.fontMono,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: t.textTertiary,
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
+                      children: [for (final m in meta) _MetaItem(item: m)],
                     ),
                   ],
                 ],
@@ -141,6 +133,39 @@ class RecordCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// One entry of a card's meta row. A [RecordMetaItem.flag] renders as the bare
+/// icon; anything else keeps its mono value beside it.
+class _MetaItem extends StatelessWidget {
+  const _MetaItem({required this.item});
+
+  final RecordMetaItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DashTokens.of(context);
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(item.icon, size: 14, color: t.textTertiary),
+        if (item.value.isNotEmpty) ...[
+          const SizedBox(width: 4),
+          Text(
+            item.value,
+            style: TextStyle(
+              fontFamily: DashTokens.fontMono,
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: t.textTertiary,
+            ),
+          ),
+        ],
+      ],
+    );
+    final tooltip = item.tooltip;
+    return tooltip == null ? row : Tooltip(message: tooltip, child: row);
   }
 }
 

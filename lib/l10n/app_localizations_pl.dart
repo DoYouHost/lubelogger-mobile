@@ -210,6 +210,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notePinned => 'Przypięta';
 
   @override
+  String cardAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count załącznika',
+      many: '$count załączników',
+      few: '$count załączniki',
+      one: '1 załącznik',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardHasNote => 'Zawiera notatkę';
+
+  @override
   String get tabDashboard => 'Pulpit';
 
   @override

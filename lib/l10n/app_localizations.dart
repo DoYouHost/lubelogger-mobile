@@ -482,6 +482,18 @@ abstract class AppLocalizations {
   /// **'Pinned'**
   String get notePinned;
 
+  /// Long-press text on a record card's paperclip, which shows the file count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attachment} other{{count} attachments}}'**
+  String cardAttachments(int count);
+
+  /// Long-press text on a record card's note icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a note'**
+  String get cardHasNote;
+
   /// No description provided for @tabDashboard.
   ///
   /// In en, this message translates to:

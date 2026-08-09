@@ -559,6 +559,17 @@ class DemoBackend {
         'description': 'Oil & filter change',
         'cost': 58.0,
         'notes': 'Fully synthetic 5W-30.',
+        // So the demo shows a card carrying both markers. A bundled asset, not
+        // a `/documents/...` path: nothing here reaches a server, and the image
+        // viewer discriminates on the `assets/` prefix the same way the garage
+        // covers do.
+        'files': [
+          {
+            'name': 'invoice.jpg',
+            'location': 'assets/demo/car_photo1.jpg',
+            'isPending': false,
+          },
+        ],
         // Records report `fieldType` as the integer, unlike the template above.
         'extraFields': [
           {
