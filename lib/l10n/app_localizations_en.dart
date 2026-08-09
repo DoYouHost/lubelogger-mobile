@@ -498,6 +498,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String formOdometerLast(String value) {
+    return 'Last reading: $value';
+  }
+
+  @override
+  String formOdometerBackwards(String value) {
+    return 'Below the last reading ($value).';
+  }
+
+  @override
+  String get formOdometerBackwardsTitle => 'Reading goes backwards';
+
+  @override
+  String formOdometerBackwardsMessage(String value) {
+    return 'This reading is lower than the last one ($value). Odometers normally only go up. Save it anyway?';
+  }
+
+  @override
+  String get actionSaveAnyway => 'Save anyway';
+
+  @override
   String formFuelLabel(String unit) {
     return 'Fuel consumed ($unit)';
   }

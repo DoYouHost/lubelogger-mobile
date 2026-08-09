@@ -986,6 +986,36 @@ abstract class AppLocalizations {
   /// **'Odometer reading ({unit})'**
   String formOdometerLabel(String unit);
 
+  /// Helper line under the odometer field, showing the reading this one follows.
+  ///
+  /// In en, this message translates to:
+  /// **'Last reading: {value}'**
+  String formOdometerLast(String value);
+
+  /// Inline warning when the entered reading is lower than the previous one.
+  ///
+  /// In en, this message translates to:
+  /// **'Below the last reading ({value}).'**
+  String formOdometerBackwards(String value);
+
+  /// No description provided for @formOdometerBackwardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading goes backwards'**
+  String get formOdometerBackwardsTitle;
+
+  /// No description provided for @formOdometerBackwardsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This reading is lower than the last one ({value}). Odometers normally only go up. Save it anyway?'**
+  String formOdometerBackwardsMessage(String value);
+
+  /// No description provided for @actionSaveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save anyway'**
+  String get actionSaveAnyway;
+
   /// No description provided for @formFuelLabel.
   ///
   /// In en, this message translates to:

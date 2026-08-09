@@ -6,6 +6,7 @@ import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
+import '../../../core/format/formatters.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/models/extra_field.dart';
 import '../../../core/models/odometer_record.dart';
@@ -67,6 +68,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     super.initState();
     final e = widget.existing;
     _date = e?.date ?? DateTime.now();
+    // The warning under the field tracks what is being typed, not what is
+    // submitted — a wrong digit is worth catching before the save button.
+    _odometer.addListener(() => setState(() {}));
     if (e != null) {
       _odometer.text = formatFormNumber(
         ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
@@ -93,6 +97,25 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
     final units = ref.watch(vehicleUnitsProvider(widget.vehicleId));
+    final previous = _previousReading(
+      ref.watch(odometerRecordsProvider(widget.vehicleId)).valueOrNull ??
+          const [],
+      // Only an added reading can fall back to it, so an edit does not even
+      // ask — watching it would fetch the vehicle for a value it discards.
+      _isEditing
+          ? null
+          : ref
+              .watch(vehicleInfoProvider(widget.vehicleId))
+              .valueOrNull
+              ?.lastReportedOdometer,
+    );
+    final previousText = previous == null
+        ? null
+        : '${Formatters.odometer(units.toDisplayOdometer(previous))} '
+              '${units.distanceLabel}';
+    final entered = _enteredReading;
+    final goesBackwards =
+        previous != null && entered != null && entered < previous;
 
     return Padding(
       // Lift the sheet above the keyboard.
@@ -148,6 +171,21 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 decoration: dashFieldDecoration(
                   t,
                   labelText: l10n.formOdometerLabel(units.distanceLabel),
+                ).copyWith(
+                  // One line under the field, which turns from the hint into
+                  // the warning. A lower reading is legitimate often enough (a
+                  // swapped cluster, a correction) that it must not block the
+                  // save — hence this and a confirmation on submit, rather than
+                  // a validator error.
+                  helperText: previousText == null
+                      ? null
+                      : goesBackwards
+                          ? l10n.formOdometerBackwards(previousText)
+                          : l10n.formOdometerLast(previousText),
+                  helperStyle: goesBackwards
+                      ? TextStyle(color: t.accentOrange)
+                      : null,
+                  helperMaxLines: 2,
                 ),
                 validator: (raw) {
                   final value = parseFormNumber(raw);
@@ -236,6 +274,51 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     );
   }
 
+  /// The reading this one follows, in stored units, or null when the app knows
+  /// of none.
+  ///
+  /// "Follows" is by date, not by insertion: editing a three-year-old entry has
+  /// to be measured against the entry before *it*, or every old record would be
+  /// flagged as going backwards simply for being old.
+  ///
+  /// Readings also arrive with fuel-ups and services, which this list does not
+  /// hold. The server's own `lastReportedOdometer` counts those, so it fills in
+  /// for a garage that logs no odometer records at all — but it says nothing
+  /// about *when* that reading was taken, so an edit never uses it.
+  double? _previousReading(List<OdometerRecord> records, double? reported) {
+    final existingId = widget.existing?.id;
+    double? best;
+    for (final r in records) {
+      if (r.id == existingId || r.odometer <= 0) continue;
+      if (r.date != null && r.date!.isAfter(_date)) continue;
+      if (best == null || r.odometer > best) best = r.odometer;
+    }
+    if (best != null || _isEditing) return best;
+    return (reported != null && reported > 0) ? reported : null;
+  }
+
+  /// [_previousReading]'s inputs, read rather than watched — for the submit
+  /// path, which runs outside a build.
+  double? _previousReadingNow() => _previousReading(
+        ref.read(odometerRecordsProvider(widget.vehicleId)).valueOrNull ??
+            const [],
+        _isEditing
+            ? null
+            : ref
+                .read(vehicleInfoProvider(widget.vehicleId))
+                .valueOrNull
+                ?.lastReportedOdometer,
+      );
+
+  /// Reading currently in the field, in stored units.
+  double? get _enteredReading {
+    final value = parseFormNumber(_odometer.text);
+    if (value == null || value <= 0) return null;
+    return ref
+        .read(vehicleUnitsProvider(widget.vehicleId))
+        .toStoredDistance(value.toDouble());
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -249,6 +332,8 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   Future<void> _submit() async {
     if (!validateAndLog(context, _formKey)) return;
     final l10n = AppLocalizations.of(context);
+    if (!await _confirmBackwards(l10n)) return;
+    if (!mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     setState(() {
       _submitting = true;
@@ -310,6 +395,30 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
             : l10n.recordUpdateError;
       });
     }
+  }
+
+  /// Asks once when the reading goes below the one it follows. True means carry
+  /// on — including when there is nothing to warn about.
+  ///
+  /// The inline warning is easy to type straight past; a reading with a fumbled
+  /// digit poisons every number derived from it (the gain since last, fuel
+  /// economy, the distance chart), and nothing later in the app can tell it from
+  /// a real one.
+  Future<bool> _confirmBackwards(AppLocalizations l10n) async {
+    final previous = _previousReadingNow();
+    final entered = _enteredReading;
+    if (previous == null || entered == null || entered >= previous) return true;
+
+    final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
+    final value = '${Formatters.odometer(units.toDisplayOdometer(previous))} '
+        '${units.distanceLabel}';
+    return confirmRisky(
+      context,
+      what: 'odometer_backwards',
+      title: l10n.formOdometerBackwardsTitle,
+      message: l10n.formOdometerBackwardsMessage(value),
+      confirmLabel: l10n.actionSaveAnyway,
+    );
   }
 
   Future<void> _confirmDelete() async {

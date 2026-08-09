@@ -25,6 +25,43 @@ Future<bool> confirmDelete(
   String? title,
   String? message,
   String? confirmLabel,
+}) {
+  final l10n = AppLocalizations.of(context);
+  return _confirm(
+    context,
+    what: what,
+    title: title ?? l10n.confirmDeleteTitle,
+    message: message ?? l10n.confirmDeleteMessage,
+    confirmLabel: confirmLabel ?? l10n.actionDelete,
+  );
+}
+
+/// The same dialog for something that is questionable rather than destructive —
+/// an odometer reading below the previous one, say. Nothing is lost either way,
+/// so the confirm is not painted as a danger.
+Future<bool> confirmRisky(
+  BuildContext context, {
+  required String what,
+  required String title,
+  required String message,
+  required String confirmLabel,
+}) =>
+    _confirm(
+      context,
+      what: what,
+      title: title,
+      message: message,
+      confirmLabel: confirmLabel,
+      danger: false,
+    );
+
+Future<bool> _confirm(
+  BuildContext context, {
+  required String what,
+  required String title,
+  required String message,
+  required String confirmLabel,
+  bool danger = true,
 }) async {
   final l10n = AppLocalizations.of(context);
   final t = DashTokens.of(context);
@@ -33,8 +70,8 @@ Future<bool> confirmDelete(
     builder: (dialogContext) => logSurface(
       'confirm.$what',
       AlertDialog(
-        title: Text(title ?? l10n.confirmDeleteTitle),
-        content: Text(message ?? l10n.confirmDeleteMessage),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -43,8 +80,8 @@ Future<bool> confirmDelete(
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
-              confirmLabel ?? l10n.actionDelete,
-              style: TextStyle(color: t.danger),
+              confirmLabel,
+              style: danger ? TextStyle(color: t.danger) : null,
             ),
           ).tagged('confirm.ok'),
         ],

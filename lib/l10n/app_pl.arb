@@ -218,6 +218,11 @@
       "unit": { "type": "String" }
     }
   },
+  "formOdometerLast": "Ostatni odczyt: {value}",
+  "formOdometerBackwards": "Poniżej ostatniego odczytu ({value}).",
+  "formOdometerBackwardsTitle": "Licznik się cofa",
+  "formOdometerBackwardsMessage": "Ten odczyt jest niższy niż ostatni ({value}). Licznik zwykle tylko rośnie. Zapisać mimo to?",
+  "actionSaveAnyway": "Zapisz mimo to",
   "formFuelLabel": "Zatankowane paliwo ({unit})",
   "@formFuelLabel": {
     "placeholders": {

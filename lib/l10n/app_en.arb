@@ -241,6 +241,28 @@
       "unit": { "type": "String" }
     }
   },
+  "formOdometerLast": "Last reading: {value}",
+  "@formOdometerLast": {
+    "description": "Helper line under the odometer field, showing the reading this one follows.",
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "formOdometerBackwards": "Below the last reading ({value}).",
+  "@formOdometerBackwards": {
+    "description": "Inline warning when the entered reading is lower than the previous one.",
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "formOdometerBackwardsTitle": "Reading goes backwards",
+  "formOdometerBackwardsMessage": "This reading is lower than the last one ({value}). Odometers normally only go up. Save it anyway?",
+  "@formOdometerBackwardsMessage": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "actionSaveAnyway": "Save anyway",
   "formFuelLabel": "Fuel consumed ({unit})",
   "@formFuelLabel": {
     "placeholders": {
