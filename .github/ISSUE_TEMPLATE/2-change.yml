@@ -1,0 +1,31 @@
+name: Change
+description: Something works, but not the way it should
+labels: ["change"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The same thing as Settings → *Report a bug or an idea* → **Change**. No log is attached to
+        a request like this — no amount of evidence about what the app does now settles what it
+        ought to do.
+  - type: textarea
+    id: request
+    attributes:
+      label: What should change?
+      description: What it does now, and what it should do instead.
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      placeholder: "0.3.1 (301000)"
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: LubeLogger server version
+      description: So we can tell an idea from something a newer server already does.
+    validations:
+      required: false

@@ -1,0 +1,32 @@
+name: Feature
+description: Something the app cannot do yet
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The same thing as Settings → *Report a bug or an idea* → **Feature**. No log is attached to
+        a request like this — it is answered by reading it.
+  - type: textarea
+    id: request
+    attributes:
+      label: What is missing?
+      description: What you want to do, and why the app does not let you.
+    validations:
+      required: true
+  - type: textarea
+    id: server-support
+    attributes:
+      label: Does the LubeLogger API support it?
+      description: >
+        This is a client for your own server — if the API cannot do it, the app cannot either.
+        A link to the endpoint or the server feature helps; leave it empty if you do not know.
+    validations:
+      required: false
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      placeholder: "0.3.1 (301000)"
+    validations:
+      required: true

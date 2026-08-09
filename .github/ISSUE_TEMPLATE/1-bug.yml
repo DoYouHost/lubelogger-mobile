@@ -1,0 +1,87 @@
+name: Bug
+description: Something in the app does not work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **The app can file this for you.** Settings → *Report a bug or an idea* → **Bug** records
+        what you do, shows you the whole log before anything leaves the phone, and opens an issue
+        here with the log attached. It answers most of what is below by itself. Use this form when
+        that route is not available to you.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you write
+      options:
+        - label: This issue is public and permanent. I have not pasted my API key, my server address, or my vehicle data — the in-app report redacts those, this form does not.
+          required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What went wrong?
+      description: What you were doing, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: Settings, at the bottom — "Version 0.3.1 (301000)".
+      placeholder: "0.3.1 (301000)"
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: LubeLogger server version
+      description: Settings shows it as "Server version …".
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Phone and Android version
+      placeholder: "Google Pixel 7, Android 15"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where in the app?
+      options:
+        - Setup / login
+        - Garage or vehicle list
+        - Dashboard and charts
+        - Fuel or odometer
+        - Service, repairs, upgrades, tax, supplies
+        - Planner
+        - Reminders or notifications
+        - Attachments
+        - Settings
+        - Somewhere else / everywhere
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Diagnostic log
+      description: >
+        Optional, and worth more than everything above. Settings → *Report a bug or an idea*,
+        record the problem, then **Save to a file** and drop the file here. It is redacted on the
+        phone and you read all of it before saving.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, how often it happens, whether it started after an update.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report from inside the app (preferred for bugs)
+    url: https://doyouhost.github.io/lubelogger-mobile/privacy.html#sending-a-report
+    about: Settings → Report a bug or an idea. Records a redacted log, shows it to you first, and opens the issue with the log attached.
+  - name: LubeLogger server (upstream project)
+    url: https://github.com/hargata/lubelog/issues
+    about: Problems with the LubeLogger server itself — this app only talks to it.
