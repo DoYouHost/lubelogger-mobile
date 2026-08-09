@@ -247,6 +247,33 @@ class AppLocalizationsPl extends AppLocalizations {
   String get recordsEmpty => 'Brak wpisów.';
 
   @override
+  String get recordsNoMatches => 'Brak pasujących wpisów.';
+
+  @override
+  String get recordsSearchHint => 'Szukaj';
+
+  @override
+  String get recordsSearchClear => 'Wyczyść wyszukiwanie';
+
+  @override
+  String get recordsSortBy => 'Sortuj według';
+
+  @override
+  String get recordsSortAscending => 'Rosnąco';
+
+  @override
+  String get recordsSortDescending => 'Malejąco';
+
+  @override
+  String get recordsClearFilters => 'Wyczyść filtry';
+
+  @override
+  String get colUrgency => 'Pilność';
+
+  @override
+  String get colDistance => 'Dystans';
+
+  @override
   String fuelPillRecords(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

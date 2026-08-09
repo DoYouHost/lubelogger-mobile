@@ -243,6 +243,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordsEmpty => 'No records yet.';
 
   @override
+  String get recordsNoMatches => 'No records match.';
+
+  @override
+  String get recordsSearchHint => 'Search';
+
+  @override
+  String get recordsSearchClear => 'Clear search';
+
+  @override
+  String get recordsSortBy => 'Sort by';
+
+  @override
+  String get recordsSortAscending => 'Ascending';
+
+  @override
+  String get recordsSortDescending => 'Descending';
+
+  @override
+  String get recordsClearFilters => 'Clear filters';
+
+  @override
+  String get colUrgency => 'Urgency';
+
+  @override
+  String get colDistance => 'Distance';
+
+  @override
   String fuelPillRecords(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

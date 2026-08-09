@@ -25,7 +25,7 @@ void main() {
             onRefresh: () async {},
             emptyIcon: Icons.speed,
             emptyLabel: 'nothing here',
-            builder: (records) => RecordsContent(
+            builder: (records, _) => RecordsContent(
               count: records.length,
               card: (context, index) {
                 builds++;

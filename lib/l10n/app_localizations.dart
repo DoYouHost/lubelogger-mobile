@@ -536,6 +536,60 @@ abstract class AppLocalizations {
   /// **'No records yet.'**
   String get recordsEmpty;
 
+  /// No description provided for @recordsNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No records match.'**
+  String get recordsNoMatches;
+
+  /// No description provided for @recordsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get recordsSearchHint;
+
+  /// No description provided for @recordsSearchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get recordsSearchClear;
+
+  /// No description provided for @recordsSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get recordsSortBy;
+
+  /// No description provided for @recordsSortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get recordsSortAscending;
+
+  /// No description provided for @recordsSortDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get recordsSortDescending;
+
+  /// No description provided for @recordsClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get recordsClearFilters;
+
+  /// No description provided for @colUrgency.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgency'**
+  String get colUrgency;
+
+  /// No description provided for @colDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get colDistance;
+
   /// No description provided for @fuelPillRecords.
   ///
   /// In en, this message translates to:

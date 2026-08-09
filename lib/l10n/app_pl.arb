@@ -85,6 +85,15 @@
   "colCost": "Koszt",
 
   "recordsEmpty": "Brak wpisów.",
+  "recordsNoMatches": "Brak pasujących wpisów.",
+  "recordsSearchHint": "Szukaj",
+  "recordsSearchClear": "Wyczyść wyszukiwanie",
+  "recordsSortBy": "Sortuj według",
+  "recordsSortAscending": "Rosnąco",
+  "recordsSortDescending": "Malejąco",
+  "recordsClearFilters": "Wyczyść filtry",
+  "colUrgency": "Pilność",
+  "colDistance": "Dystans",
 
   "fuelPillRecords": "{count, plural, =1{1 wpis} few{{count} wpisy} many{{count} wpisów} other{{count} wpisu}}",
   "@fuelPillRecords": {

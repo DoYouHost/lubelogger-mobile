@@ -108,6 +108,15 @@
   "colCost": "Cost",
 
   "recordsEmpty": "No records yet.",
+  "recordsNoMatches": "No records match.",
+  "recordsSearchHint": "Search",
+  "recordsSearchClear": "Clear search",
+  "recordsSortBy": "Sort by",
+  "recordsSortAscending": "Ascending",
+  "recordsSortDescending": "Descending",
+  "recordsClearFilters": "Clear filters",
+  "colUrgency": "Urgency",
+  "colDistance": "Distance",
 
   "fuelPillRecords": "{count, plural, =1{1 record} other{{count} records}}",
   "@fuelPillRecords": {

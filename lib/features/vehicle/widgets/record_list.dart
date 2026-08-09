@@ -6,6 +6,7 @@ import '../../../core/layout/responsive.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../common/state_views.dart';
+import 'record_filter.dart';
 
 /// One icon + value pair in a [RecordCard]'s meta row (design: odometer,
 /// distance-since-last, economy, price/volume — JetBrains Mono, tertiary).
@@ -40,6 +41,9 @@ class RecordCard extends StatelessWidget {
     this.headlineColor,
     this.description,
     this.meta = const [],
+    this.tags = const [],
+    this.activeTags = const {},
+    this.onTagTap,
     this.onTap,
   });
 
@@ -48,6 +52,16 @@ class RecordCard extends StatelessWidget {
   final Color? headlineColor;
   final String? description;
   final List<RecordMetaItem> meta;
+
+  /// The record's tags, shown as chips below the meta row. Stored and editable
+  /// since the first release, and until now printed nowhere.
+  final List<String> tags;
+
+  /// Which of [tags] are currently filtering the list, so a card can show that
+  /// one of its own tags is what the list is narrowed to.
+  final Set<String> activeTags;
+  final void Function(String tag)? onTagTap;
+
   final VoidCallback? onTap;
 
   @override
@@ -126,6 +140,21 @@ class RecordCard extends StatelessWidget {
                       children: [for (final m in meta) _MetaItem(item: m)],
                     ),
                   ],
+                  if (tags.isNotEmpty && onTagTap != null) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        for (final tag in tags)
+                          RecordTagChip(
+                            tag: tag,
+                            selected: activeTags.contains(tag),
+                            onTap: () => onTagTap!(tag),
+                          ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -190,7 +219,12 @@ class RecordsContent {
 /// Shared record-tab body: pull-to-refresh + loading / error / empty / content
 /// switching over an [AsyncValue] list. [onRefresh] both invalidates and awaits
 /// the provider so the spinner reflects the real reload.
-class RecordsTabBody<T> extends StatelessWidget {
+///
+/// With [facets] it also carries the search field, the sort menu and the tag
+/// filter, and hands the tab a [RecordListControls] to apply them. The state is
+/// this widget's own, so leaving the tab clears it — a filter nobody can see
+/// from another screen must not still be hiding records when you come back.
+class RecordsTabBody<T> extends StatefulWidget {
   const RecordsTabBody({
     super.key,
     required this.async,
@@ -198,44 +232,176 @@ class RecordsTabBody<T> extends StatelessWidget {
     required this.emptyIcon,
     required this.emptyLabel,
     required this.builder,
+    this.facets,
   });
 
   final AsyncValue<List<T>> async;
   final Future<void> Function() onRefresh;
   final IconData emptyIcon;
   final String emptyLabel;
-  final RecordsContent Function(List<T> records) builder;
+  final RecordsContent Function(List<T> records, RecordListControls<T> filter)
+      builder;
+  final RecordFacets<T>? facets;
+
+  @override
+  State<RecordsTabBody<T>> createState() => _RecordsTabBodyState<T>();
+}
+
+class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
+  final _query = TextEditingController();
+  final _tags = <String>{};
+  int _sortIndex = 0;
+  bool _descending = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _query.addListener(() => setState(() {}));
+    _descending = widget.facets?.sorts.first.descendingByDefault ?? true;
+  }
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  void _toggleTag(String tag) => setState(() {
+        if (!_tags.remove(tag)) _tags.add(tag);
+      });
+
+  void _clearFilters() => setState(() {
+        _tags.clear();
+        _query.clear();
+      });
+
+  RecordListControls<T> _controls(RecordFacets<T> facets) {
+    final needles = _query.text.trim().toLowerCase().split(RegExp(r'\s+'))
+      ..removeWhere((n) => n.isEmpty);
+    final sort = facets.sorts[_sortIndex.clamp(0, facets.sorts.length - 1)];
+    return RecordListControls<T>(
+      activeTags: _tags,
+      onTagTap: _toggleTag,
+      filtering: needles.isNotEmpty || _tags.isNotEmpty,
+      compare: _descending ? (a, b) => sort.compare(b, a) : sort.compare,
+      matches: (record) {
+        final recordTags = splitTags(facets.tagsOf(record));
+        // Every selected tag must be on the record: the chips accumulate, so
+        // each one is expected to narrow rather than widen. (LubeLogger's own
+        // `?tags=` query does the opposite, but that one is typed, not tapped.)
+        if (!_tags.every(recordTags.contains)) return false;
+        if (needles.isEmpty) return true;
+        final haystack =
+            [...facets.searchIn(record), ...recordTags].join(' ').toLowerCase();
+        // All words must appear, in any order or field — typing two words to
+        // narrow is the reflex, and requiring them adjacent breaks it.
+        return needles.every(haystack.contains);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: async.when(
+      onRefresh: widget.onRefresh,
+      child: widget.async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => AsyncErrorView(
           message: l10n.dashLoadError,
-          onRetry: onRefresh,
+          onRetry: widget.onRefresh,
           retryLabel: l10n.retry,
         ),
-        data: (records) => records.isEmpty
-            ? EmptyStateView(message: emptyLabel, icon: emptyIcon)
-            : _content(builder(records)),
+        data: _data,
       ),
     );
   }
 
-  Widget _content(RecordsContent content) {
+  Widget _data(List<T> records) {
+    final l10n = AppLocalizations.of(context);
+    final facets = widget.facets;
+    // Nothing recorded at all: the bar would offer to search an empty list.
+    if (records.isEmpty || facets == null) {
+      return records.isEmpty
+          ? EmptyStateView(message: widget.emptyLabel, icon: widget.emptyIcon)
+          : _content(
+              widget.builder(
+                records,
+                RecordListControls<T>(
+                  matches: (_) => true,
+                  compare: (_, _) => 0,
+                  activeTags: const {},
+                  onTagTap: (_) {},
+                  filtering: false,
+                ),
+              ),
+              null,
+            );
+    }
+
+    final controls = _controls(facets);
+    final content = widget.builder(records, controls);
+    final bar = RecordFilterBar(
+      controller: _query,
+      sortLabels: [for (final s in facets.sorts) s.label],
+      sortIndex: _sortIndex,
+      descending: _descending,
+      onSortSelected: (i) => setState(() {
+        _sortIndex = i;
+        _descending = facets.sorts[i].descendingByDefault;
+      }),
+      onDirectionToggled: () => setState(() => _descending = !_descending),
+      activeTags: _tags,
+      onTagTap: _toggleTag,
+    );
+    if (content.count == 0) {
+      return _content(
+        RecordsContent(
+          count: 0,
+          card: (_, _) => const SizedBox.shrink(),
+          header: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              bar,
+              const SizedBox(height: 24),
+              EmptyStateView(
+                message: controls.filtering
+                    ? l10n.recordsNoMatches
+                    : widget.emptyLabel,
+                icon: widget.emptyIcon,
+                scrollable: false,
+              ),
+              if (controls.filtering)
+                TextButton(
+                  onPressed: _clearFilters,
+                  child: Text(l10n.recordsClearFilters),
+                ),
+            ],
+          ),
+        ),
+        null,
+      );
+    }
+    return _content(content, bar);
+  }
+
+  Widget _content(RecordsContent content, Widget? bar) {
     final header = content.header;
+    final top = bar == null
+        ? header
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [bar, ?header],
+          );
     return CustomScrollView(
       slivers: [
-        if (header != null)
+        if (top != null)
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            sliver: SliverToBoxAdapter(child: header),
+            sliver: SliverToBoxAdapter(child: top),
           ),
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, header == null ? 8 : 0, 16, 32),
+          padding: EdgeInsets.fromLTRB(16, top == null ? 8 : 0, 16, 32),
           sliver: SliverResponsiveCards(
             itemCount: content.count,
             itemBuilder: content.card,

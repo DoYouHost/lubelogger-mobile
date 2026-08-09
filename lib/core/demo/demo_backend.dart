@@ -558,6 +558,7 @@ class DemoBackend {
         'odometer': 66800,
         'description': 'Oil & filter change',
         'cost': 58.0,
+        'tags': 'workshop scheduled',
         'notes': 'Fully synthetic 5W-30.',
         // So the demo shows a card carrying both markers. A bundled asset, not
         // a `/documents/...` path: nothing here reaches a server, and the image
@@ -585,6 +586,7 @@ class DemoBackend {
         'odometer': 63100,
         'description': 'Cabin air filter replacement',
         'cost': 24.0,
+        'tags': 'diy',
       }),
     ];
     _service[2] = [
@@ -593,6 +595,7 @@ class DemoBackend {
         'odometer': 138400,
         'description': 'DSG transmission oil service',
         'cost': 210.0,
+        'tags': 'workshop scheduled',
       }),
     ];
     _service[3] = [
@@ -601,6 +604,7 @@ class DemoBackend {
         'odometer': 30100,
         'description': 'Brake fluid change',
         'cost': 70.0,
+        'tags': 'workshop',
         'notes': 'Regenerative braking spares the pads, not the fluid.',
       }),
     ];
@@ -611,6 +615,7 @@ class DemoBackend {
         'odometer': 65200,
         'description': 'Replace front brake pads & discs',
         'cost': 185.0,
+        'tags': 'workshop warranty',
       }),
     ];
     _repair[2] = [
@@ -619,6 +624,7 @@ class DemoBackend {
         'odometer': 135600,
         'description': 'Replace glow plugs',
         'cost': 260.0,
+        'tags': 'diy',
       }),
     ];
 
@@ -628,6 +634,7 @@ class DemoBackend {
         'odometer': 61200,
         'description': 'All-season tyres (set of 4)',
         'cost': 520.0,
+        'tags': 'tyres',
       }),
     ];
     _upgrade[2] = [
