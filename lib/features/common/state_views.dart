@@ -98,6 +98,7 @@ class EmptyStateView extends StatefulWidget {
     required this.message,
     required this.icon,
     this.surface,
+    this.scrollable = true,
   });
 
   final String message;
@@ -105,6 +106,11 @@ class EmptyStateView extends StatefulWidget {
 
   /// Which screen is empty, for the log — defaults to the enclosing surface.
   final String? surface;
+
+  /// A list of its own, so pull-to-refresh still has something to drag on an
+  /// empty screen. Pass false where this sits inside someone else's scroll
+  /// view — a viewport nested in a viewport has no height to expand into.
+  final bool scrollable;
 
   @override
   State<EmptyStateView> createState() => _EmptyStateViewState();
@@ -120,19 +126,16 @@ class _EmptyStateViewState extends State<EmptyStateView> {
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(48),
-          child: Column(
-            children: [
-              Icon(widget.icon, size: 48, color: t.textTertiary),
-              const SizedBox(height: 12),
-              Text(widget.message, textAlign: TextAlign.center),
-            ],
-          ),
-        ),
-      ],
+    final body = Padding(
+      padding: const EdgeInsets.all(48),
+      child: Column(
+        children: [
+          Icon(widget.icon, size: 48, color: t.textTertiary),
+          const SizedBox(height: 12),
+          Text(widget.message, textAlign: TextAlign.center),
+        ],
+      ),
     );
+    return widget.scrollable ? ListView(children: [body]) : body;
   }
 }

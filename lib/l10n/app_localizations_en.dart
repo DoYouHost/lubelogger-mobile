@@ -208,6 +208,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notePinned => 'Pinned';
 
   @override
+  String cardAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments',
+      one: '1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardHasNote => 'Has a note';
+
+  @override
   String get tabDashboard => 'Dashboard';
 
   @override
@@ -227,6 +241,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordsEmpty => 'No records yet.';
+
+  @override
+  String get recordsNoMatches => 'No records match.';
+
+  @override
+  String get recordsSearchHint => 'Search';
+
+  @override
+  String get recordsSearchClear => 'Clear search';
+
+  @override
+  String get recordsSortBy => 'Sort by';
+
+  @override
+  String get recordsSortAscending => 'Ascending';
+
+  @override
+  String get recordsSortDescending => 'Descending';
+
+  @override
+  String get recordsClearFilters => 'Clear filters';
+
+  @override
+  String get colUrgency => 'Urgency';
+
+  @override
+  String get colDistance => 'Distance';
 
   @override
   String fuelPillRecords(int count) {
@@ -482,6 +523,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String formOdometerLabel(String unit) {
     return 'Odometer reading ($unit)';
   }
+
+  @override
+  String formOdometerLast(String value) {
+    return 'Last reading: $value';
+  }
+
+  @override
+  String formOdometerBackwards(String value) {
+    return 'Below the last reading ($value).';
+  }
+
+  @override
+  String get formOdometerBackwardsTitle => 'Reading goes backwards';
+
+  @override
+  String formOdometerBackwardsMessage(String value) {
+    return 'This reading is lower than the last one ($value). Odometers normally only go up. Save it anyway?';
+  }
+
+  @override
+  String get actionSaveAnyway => 'Save anyway';
 
   @override
   String formFuelLabel(String unit) {

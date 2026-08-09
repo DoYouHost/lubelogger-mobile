@@ -210,6 +210,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notePinned => 'Przypięta';
 
   @override
+  String cardAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count załącznika',
+      many: '$count załączników',
+      few: '$count załączniki',
+      one: '1 załącznik',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardHasNote => 'Zawiera notatkę';
+
+  @override
   String get tabDashboard => 'Pulpit';
 
   @override
@@ -229,6 +245,33 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get recordsEmpty => 'Brak wpisów.';
+
+  @override
+  String get recordsNoMatches => 'Brak pasujących wpisów.';
+
+  @override
+  String get recordsSearchHint => 'Szukaj';
+
+  @override
+  String get recordsSearchClear => 'Wyczyść wyszukiwanie';
+
+  @override
+  String get recordsSortBy => 'Sortuj według';
+
+  @override
+  String get recordsSortAscending => 'Rosnąco';
+
+  @override
+  String get recordsSortDescending => 'Malejąco';
+
+  @override
+  String get recordsClearFilters => 'Wyczyść filtry';
+
+  @override
+  String get colUrgency => 'Pilność';
+
+  @override
+  String get colDistance => 'Dystans';
 
   @override
   String fuelPillRecords(int count) {
@@ -489,6 +532,27 @@ class AppLocalizationsPl extends AppLocalizations {
   String formOdometerLabel(String unit) {
     return 'Stan licznika ($unit)';
   }
+
+  @override
+  String formOdometerLast(String value) {
+    return 'Ostatni odczyt: $value';
+  }
+
+  @override
+  String formOdometerBackwards(String value) {
+    return 'Poniżej ostatniego odczytu ($value).';
+  }
+
+  @override
+  String get formOdometerBackwardsTitle => 'Licznik się cofa';
+
+  @override
+  String formOdometerBackwardsMessage(String value) {
+    return 'Ten odczyt jest niższy niż ostatni ($value). Licznik zwykle tylko rośnie. Zapisać mimo to?';
+  }
+
+  @override
+  String get actionSaveAnyway => 'Zapisz mimo to';
 
   @override
   String formFuelLabel(String unit) {

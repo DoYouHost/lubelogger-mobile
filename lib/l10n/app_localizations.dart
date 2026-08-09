@@ -482,6 +482,18 @@ abstract class AppLocalizations {
   /// **'Pinned'**
   String get notePinned;
 
+  /// Long-press text on a record card's paperclip, which shows the file count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attachment} other{{count} attachments}}'**
+  String cardAttachments(int count);
+
+  /// Long-press text on a record card's note icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a note'**
+  String get cardHasNote;
+
   /// No description provided for @tabDashboard.
   ///
   /// In en, this message translates to:
@@ -523,6 +535,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No records yet.'**
   String get recordsEmpty;
+
+  /// No description provided for @recordsNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No records match.'**
+  String get recordsNoMatches;
+
+  /// No description provided for @recordsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get recordsSearchHint;
+
+  /// No description provided for @recordsSearchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get recordsSearchClear;
+
+  /// No description provided for @recordsSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get recordsSortBy;
+
+  /// No description provided for @recordsSortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending'**
+  String get recordsSortAscending;
+
+  /// No description provided for @recordsSortDescending.
+  ///
+  /// In en, this message translates to:
+  /// **'Descending'**
+  String get recordsSortDescending;
+
+  /// No description provided for @recordsClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get recordsClearFilters;
+
+  /// No description provided for @colUrgency.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgency'**
+  String get colUrgency;
+
+  /// No description provided for @colDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get colDistance;
 
   /// No description provided for @fuelPillRecords.
   ///
@@ -973,6 +1039,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Odometer reading ({unit})'**
   String formOdometerLabel(String unit);
+
+  /// Helper line under the odometer field, showing the reading this one follows.
+  ///
+  /// In en, this message translates to:
+  /// **'Last reading: {value}'**
+  String formOdometerLast(String value);
+
+  /// Inline warning when the entered reading is lower than the previous one.
+  ///
+  /// In en, this message translates to:
+  /// **'Below the last reading ({value}).'**
+  String formOdometerBackwards(String value);
+
+  /// No description provided for @formOdometerBackwardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading goes backwards'**
+  String get formOdometerBackwardsTitle;
+
+  /// No description provided for @formOdometerBackwardsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This reading is lower than the last one ({value}). Odometers normally only go up. Save it anyway?'**
+  String formOdometerBackwardsMessage(String value);
+
+  /// No description provided for @actionSaveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save anyway'**
+  String get actionSaveAnyway;
 
   /// No description provided for @formFuelLabel.
   ///

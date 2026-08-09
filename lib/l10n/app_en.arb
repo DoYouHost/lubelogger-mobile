@@ -87,6 +87,18 @@
   "equipmentRemoved": "Removed",
   "notePinned": "Pinned",
 
+  "cardAttachments": "{count, plural, =1{1 attachment} other{{count} attachments}}",
+  "@cardAttachments": {
+    "description": "Long-press text on a record card's paperclip, which shows the file count.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "cardHasNote": "Has a note",
+  "@cardHasNote": {
+    "description": "Long-press text on a record card's note icon."
+  },
+
   "tabDashboard": "Dashboard",
   "tabOdometer": "Odometer",
 
@@ -96,6 +108,15 @@
   "colCost": "Cost",
 
   "recordsEmpty": "No records yet.",
+  "recordsNoMatches": "No records match.",
+  "recordsSearchHint": "Search",
+  "recordsSearchClear": "Clear search",
+  "recordsSortBy": "Sort by",
+  "recordsSortAscending": "Ascending",
+  "recordsSortDescending": "Descending",
+  "recordsClearFilters": "Clear filters",
+  "colUrgency": "Urgency",
+  "colDistance": "Distance",
 
   "fuelPillRecords": "{count, plural, =1{1 record} other{{count} records}}",
   "@fuelPillRecords": {
@@ -229,6 +250,28 @@
       "unit": { "type": "String" }
     }
   },
+  "formOdometerLast": "Last reading: {value}",
+  "@formOdometerLast": {
+    "description": "Helper line under the odometer field, showing the reading this one follows.",
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "formOdometerBackwards": "Below the last reading ({value}).",
+  "@formOdometerBackwards": {
+    "description": "Inline warning when the entered reading is lower than the previous one.",
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "formOdometerBackwardsTitle": "Reading goes backwards",
+  "formOdometerBackwardsMessage": "This reading is lower than the last one ({value}). Odometers normally only go up. Save it anyway?",
+  "@formOdometerBackwardsMessage": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "actionSaveAnyway": "Save anyway",
   "formFuelLabel": "Fuel consumed ({unit})",
   "@formFuelLabel": {
     "placeholders": {

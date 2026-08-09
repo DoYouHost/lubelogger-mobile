@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format/formatters.dart';
 import '../../../core/format/gas_stats.dart';
+import '../../../core/models/attachment.dart';
 import '../../../core/models/equipment_record.dart';
 import '../../../core/models/gas_record.dart';
 import '../../../core/models/note_record.dart';
@@ -23,6 +24,7 @@ import '../forms/add_odometer_form.dart';
 import '../forms/add_plan_form.dart';
 import '../forms/add_reminder_form.dart';
 import '../forms/add_supply_form.dart';
+import 'record_filter.dart';
 import 'record_list.dart';
 
 const _placeholder = '—';
@@ -42,6 +44,29 @@ String _odoUnit(double? raw, VehicleUnits units) {
   final v = _odo(raw, units);
   return v == _placeholder ? v : '$v ${units.distanceLabel}';
 }
+
+/// The two things a card used to hide: its attachments and its note. Both are
+/// stored, editable and previously invisible — the only way to learn a record
+/// had three photos on it was to open the edit form.
+///
+/// Tail of every card's meta row, so the row still reads left-to-right as the
+/// record's own numbers first. Pass only what the card doesn't already show:
+/// the note tab and the equipment tab print their notes as the description, so
+/// they send [files] alone.
+List<RecordMetaItem> _extras(
+  AppLocalizations l10n, {
+  List<Attachment> files = const [],
+  String notes = '',
+}) => [
+  if (files.isNotEmpty)
+    RecordMetaItem(
+      Icons.attach_file,
+      '${files.length}',
+      tooltip: l10n.cardAttachments(files.length),
+    ),
+  if (notes.trim().isNotEmpty)
+    RecordMetaItem.flag(Icons.notes, tooltip: l10n.cardHasNote),
+];
 
 /// Odometer readings as a card list: each card headlines the reading, with the
 /// gain since the previous reading (Δ) in the meta row.
@@ -64,33 +89,51 @@ class OdometerTab extends ConsumerWidget {
         ref.invalidate(odometerRecordsProvider(vehicleId));
         await ref.read(odometerRecordsProvider(vehicleId).future);
       },
-      builder: (records) {
-        // Ascending to compute each reading's gain over the prior one, then
-        // reversed so the newest reading sits at the top.
+      facets: RecordFacets<OdometerRecord>(
+        searchIn: (r) => [r.notes, Formatters.odometer(r.odometer)],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            label: l10n.colDate,
+            compare: (a, b) => _compareDates(a.date, b.date),
+          ),
+          RecordSort(
+            label: l10n.colOdometer,
+            compare: (a, b) => a.odometer.compareTo(b.odometer),
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        // The gain over the previous reading is a property of the whole
+        // chronological chain, so it is computed over every record and then
+        // looked up per card — filtering or re-sorting the list first would
+        // measure each reading against whatever happens to precede it on
+        // screen.
         final ascending = [...records]
           ..sort((a, b) => _compareDates(a.date, b.date));
         final deltas = <int, double?>{};
         double? previous;
-        for (var i = 0; i < ascending.length; i++) {
-          final o = ascending[i].odometer;
-          deltas[i] = (previous != null && o > previous) ? o - previous : null;
+        for (final r in ascending) {
+          final o = r.odometer;
+          deltas[r.id] = (previous != null && o > previous) ? o - previous : null;
           previous = o > 0 ? o : previous;
         }
+        final displayed = filter.apply(records);
         return RecordsContent(
-          count: ascending.length,
+          count: displayed.length,
           card: (context, index) {
-            final i = ascending.length - 1 - index;
+            final r = displayed[index];
             return RecordCard(
-              date: _date(ascending[i].date, units),
-              headline: _odoUnit(ascending[i].odometer, units),
+              date: _date(r.date, units),
+              headline: _odoUnit(r.odometer, units),
               meta: [
-                RecordMetaItem(Icons.trending_up, _odoUnit(deltas[i], units)),
+                RecordMetaItem(Icons.trending_up, _odoUnit(deltas[r.id], units)),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
-              onTap: () => showAddOdometerForm(
-                context,
-                vehicleId,
-                existing: ascending[i],
-              ),
+              tags: splitTags(r.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
+              onTap: () => showAddOdometerForm(context, vehicleId, existing: r),
             );
           },
         );
@@ -128,9 +171,32 @@ class GenericRecordsTab extends ConsumerWidget {
         ref.invalidate(vehicleRecordsProvider(key));
         await ref.read(vehicleRecordsProvider(key).future);
       },
-      builder: (records) {
-        final sorted = [...records]
-          ..sort((a, b) => _compareDates(b.date, a.date)); // newest first
+      facets: RecordFacets<VehicleRecord>(
+        searchIn: (r) => [r.description, r.notes],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            label: l10n.colDate,
+            compare: (a, b) => _compareDates(a.date, b.date),
+          ),
+          RecordSort(
+            label: l10n.colCost,
+            compare: (a, b) => a.cost.compareTo(b.cost),
+          ),
+          if (kind.hasOdometer)
+            RecordSort(
+              label: l10n.colOdometer,
+              compare: (a, b) => (a.odometer ?? 0).compareTo(b.odometer ?? 0),
+            ),
+          RecordSort(
+            label: l10n.colDescription,
+            compare: (a, b) => _byText(a.description, b.description),
+            descendingByDefault: false,
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        final sorted = filter.apply(records);
         return RecordsContent(
           count: sorted.length,
           card: (context, index) {
@@ -145,7 +211,11 @@ class GenericRecordsTab extends ConsumerWidget {
               meta: [
                 if (kind.hasOdometer)
                   RecordMetaItem(Icons.speed, _odoUnit(r.odometer, units)),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
+              tags: splitTags(r.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
               onTap: kind.editable
                   ? () => showGenericRecordForm(
                       context,
@@ -209,9 +279,40 @@ class FuelTab extends ConsumerWidget {
         ref.invalidate(gasRecordsProvider(vehicleId));
         await ref.read(gasRecordsProvider(vehicleId).future);
       },
-      builder: (records) {
+      facets: RecordFacets<GasRecord>(
+        searchIn: (r) => [r.notes, Formatters.odometer(r.odometer)],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            label: l10n.colDate,
+            compare: (a, b) => _compareDates(a.date, b.date),
+          ),
+          RecordSort(
+            label: l10n.colCost,
+            compare: (a, b) => a.cost.compareTo(b.cost),
+          ),
+          RecordSort(
+            label: l10n.colOdometer,
+            compare: (a, b) => a.odometer.compareTo(b.odometer),
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        // Economy accumulates across fill-ups (a missed or partial one carries
+        // into the next), so the rows are built from every record in order and
+        // only then narrowed — computing them from a filtered list would
+        // silently restate every figure on the screen.
         final rows = fuelRows(records, isElectric: units.isElectric);
-        final displayed = [for (var i = rows.length - 1; i >= 0; i--) rows[i]];
+        final displayed = filter.sortStably(
+          [
+            for (var i = rows.length - 1; i >= 0; i--)
+              if (filter.matches(rows[i].record)) rows[i],
+          ],
+          (row) => row.record,
+        );
+        // The pills stay lifetime figures, filter or no filter: an average
+        // recomputed over an arbitrary subset of fill-ups is not this vehicle's
+        // consumption, and the bar sits directly above them to say so.
         final totalFuel = rows.fold<double>(0, (s, r) => s + r.rawConsumption);
         final totalCost = records.fold<double>(0, (s, r) => s + r.cost);
 
@@ -296,7 +397,15 @@ class FuelTab extends ConsumerWidget {
                   econMeta(row.rawRatio),
                 ),
                 RecordMetaItem(Icons.sell, priceMeta(row.record)),
+                ..._extras(
+                  l10n,
+                  files: row.record.files,
+                  notes: row.record.notes,
+                ),
               ],
+              tags: splitTags(row.record.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
               onTap: () => showAddFuelForm(
                 context,
                 vehicleId,
@@ -333,9 +442,34 @@ class SupplyTab extends ConsumerWidget {
         ref.invalidate(supplyRecordsProvider(vehicleId));
         await ref.read(supplyRecordsProvider(vehicleId).future);
       },
-      builder: (records) {
-        final sorted = [...records]
-          ..sort((a, b) => _compareDates(b.date, a.date)); // newest first
+      facets: RecordFacets<SupplyRecord>(
+        // A part is looked for by its number or its supplier at least as often
+        // as by what it was called.
+        searchIn: (r) => [
+          r.description,
+          r.notes,
+          r.partNumber,
+          r.partSupplier,
+        ],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            label: l10n.colDate,
+            compare: (a, b) => _compareDates(a.date, b.date),
+          ),
+          RecordSort(
+            label: l10n.colCost,
+            compare: (a, b) => a.cost.compareTo(b.cost),
+          ),
+          RecordSort(
+            label: l10n.colDescription,
+            compare: (a, b) => _byText(a.description, b.description),
+            descendingByDefault: false,
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        final sorted = filter.apply(records);
         return RecordsContent(
           count: sorted.length,
           card: (context, index) {
@@ -354,7 +488,11 @@ class SupplyTab extends ConsumerWidget {
                   RecordMetaItem(Icons.storefront, r.partSupplier),
                 if (r.partQuantity.isNotEmpty)
                   RecordMetaItem(Icons.numbers, r.partQuantity),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
+              tags: splitTags(r.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
               onTap: () => showAddSupplyForm(context, vehicleId, existing: r),
             );
           },
@@ -387,9 +525,37 @@ class PlanTab extends ConsumerWidget {
         ref.invalidate(planRecordsProvider(vehicleId));
         await ref.read(planRecordsProvider(vehicleId).future);
       },
-      builder: (records) {
-        final sorted = [...records]
-          ..sort((a, b) => _compareDates(b.dateCreated, a.dateCreated));
+      facets: RecordFacets<PlanRecord>(
+        searchIn: (r) => [r.description, r.notes],
+        // The planner is the one record type the server stores no tags for
+        // (`PlanRecordExportModel` has no field for them).
+        tagsOf: (_) => '',
+        sorts: [
+          RecordSort(
+            label: l10n.colDate,
+            compare: (a, b) => _compareDates(a.dateCreated, b.dateCreated),
+          ),
+          RecordSort(
+            label: l10n.formPlanPriority,
+            compare: (a, b) =>
+                _priorityRank(a.priority).compareTo(_priorityRank(b.priority)),
+          ),
+          RecordSort(
+            label: l10n.formPlanProgress,
+            // Ascending: backlog first, done last — the board's own order, and
+            // what is left to do is the reason to open this tab.
+            compare: (a, b) =>
+                _progressRank(a.progress).compareTo(_progressRank(b.progress)),
+            descendingByDefault: false,
+          ),
+          RecordSort(
+            label: l10n.colCost,
+            compare: (a, b) => a.cost.compareTo(b.cost),
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        final sorted = filter.apply(records);
         return RecordsContent(
           count: sorted.length,
           card: (context, index) {
@@ -410,6 +576,7 @@ class PlanTab extends ConsumerWidget {
                   Icons.timelapse,
                   _planProgress(r.progress, l10n),
                 ),
+                ..._extras(l10n, files: r.files, notes: r.notes),
               ],
               onTap: () => showAddPlanForm(context, vehicleId, existing: r),
             );
@@ -443,12 +610,31 @@ class ReminderTab extends ConsumerWidget {
         ref.invalidate(remindersProvider(vehicleId));
         await ref.read(remindersProvider(vehicleId).future);
       },
-      builder: (records) {
-        final sorted = [...records]
-          ..sort(
-            (a, b) =>
-                _urgencyRank(b.urgency).compareTo(_urgencyRank(a.urgency)),
-          );
+      facets: RecordFacets<ReminderRecord>(
+        searchIn: (r) => [r.description, r.notes],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            label: l10n.colUrgency,
+            compare: (a, b) =>
+                _urgencyRank(a.urgency).compareTo(_urgencyRank(b.urgency)),
+          ),
+          RecordSort(
+            label: l10n.colDate,
+            // Ascending by due date reads as "soonest first", which is the
+            // question this tab answers.
+            compare: (a, b) => _compareDates(a.dueDate, b.dueDate),
+            descendingByDefault: false,
+          ),
+          RecordSort(
+            label: l10n.colDescription,
+            compare: (a, b) => _byText(a.description, b.description),
+            descendingByDefault: false,
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        final sorted = filter.apply(records);
         return RecordsContent(
           count: sorted.length,
           card: (context, index) {
@@ -463,7 +649,13 @@ class ReminderTab extends ConsumerWidget {
                   RecordMetaItem(Icons.event, _date(r.dueDate, units)),
                 if (r.showsOdometer)
                   RecordMetaItem(Icons.speed, _odoUnit(r.dueOdometer, units)),
+                // Reminders are the one type with no attachments (the server's
+                // ReminderExportModel has no files field).
+                ..._extras(l10n, notes: r.notes),
               ],
+              tags: splitTags(r.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
               onTap: () => showAddReminderForm(context, vehicleId, existing: r),
             );
           },
@@ -493,10 +685,25 @@ class NoteTab extends ConsumerWidget {
         ref.invalidate(notesProvider(vehicleId));
         await ref.read(notesProvider(vehicleId).future);
       },
-      builder: (records) {
-        // Pinned first, otherwise keep the server order (a stable sort).
-        final sorted = [...records]
-          ..sort((a, b) => (b.pinned ? 1 : 0).compareTo(a.pinned ? 1 : 0));
+      facets: RecordFacets<NoteRecord>(
+        searchIn: (r) => [r.description, r.noteText],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            // Pinned first, otherwise the server's own order — which the
+            // filter's stable sort preserves.
+            label: l10n.notePinned,
+            compare: (a, b) => (a.pinned ? 1 : 0).compareTo(b.pinned ? 1 : 0),
+          ),
+          RecordSort(
+            label: l10n.colDescription,
+            compare: (a, b) => _byText(a.description, b.description),
+            descendingByDefault: false,
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        final sorted = filter.apply(records);
         return RecordsContent(
           count: sorted.length,
           card: (context, index) {
@@ -508,7 +715,13 @@ class NoteTab extends ConsumerWidget {
               description: r.noteText.isEmpty ? null : r.noteText,
               meta: [
                 if (r.pinned) RecordMetaItem(Icons.push_pin, l10n.notePinned),
+                // The note's own text is the description above; only its files
+                // are hidden.
+                ..._extras(l10n, files: r.files),
               ],
+              tags: splitTags(r.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
               onTap: () => showAddNoteForm(context, vehicleId, existing: r),
             );
           },
@@ -540,11 +753,28 @@ class EquipmentTab extends ConsumerWidget {
         ref.invalidate(equipmentRecordsProvider(vehicleId));
         await ref.read(equipmentRecordsProvider(vehicleId).future);
       },
-      builder: (records) {
+      facets: RecordFacets<EquipmentRecord>(
+        searchIn: (r) => [r.description, r.notes],
+        tagsOf: (r) => r.tags,
+        sorts: [
+          RecordSort(
+            label: l10n.colDescription,
+            compare: (a, b) => _byText(a.description, b.description),
+            descendingByDefault: false,
+          ),
+          RecordSort(
+            label: l10n.colDistance,
+            compare: (a, b) =>
+                (a.distanceTraveled ?? 0).compareTo(b.distanceTraveled ?? 0),
+          ),
+        ],
+      ),
+      builder: (records, filter) {
+        final sorted = filter.apply(records);
         return RecordsContent(
-          count: records.length,
+          count: sorted.length,
           card: (context, index) {
-            final r = records[index];
+            final r = sorted[index];
             return RecordCard(
               // Equipment has no date/cost; the name leads instead.
               date: r.description.isEmpty ? _placeholder : r.description,
@@ -559,7 +789,12 @@ class EquipmentTab extends ConsumerWidget {
                     Icons.route,
                     _odoUnit(r.distanceTraveled, units),
                   ),
+                // Equipment prints its notes as the description above.
+                ..._extras(l10n, files: r.files),
               ],
+              tags: splitTags(r.tags),
+              activeTags: filter.activeTags,
+              onTagTap: filter.onTagTap,
               onTap: () => showAddEquipmentForm(context, vehicleId, existing: r),
             );
           },
@@ -603,6 +838,23 @@ Color _urgencyColor(ReminderUrgency u, DashTokens t) => switch (u) {
   ReminderUrgency.unknown => t.textTertiary,
 };
 
+/// Sort weight for a planner item's priority: critical outranks normal.
+int _priorityRank(PlanPriority p) => switch (p) {
+  PlanPriority.critical => 2,
+  PlanPriority.normal => 1,
+  PlanPriority.low => 0,
+  PlanPriority.unknown => -1,
+};
+
+/// Sort weight following the board's own left-to-right order.
+int _progressRank(PlanProgress p) => switch (p) {
+  PlanProgress.backlog => 0,
+  PlanProgress.inProgress => 1,
+  PlanProgress.testing => 2,
+  PlanProgress.done => 3,
+  PlanProgress.unknown => 4,
+};
+
 /// Sort weight so the most pressing reminders float to the top.
 int _urgencyRank(ReminderUrgency u) => switch (u) {
   ReminderUrgency.pastDue => 3,
@@ -611,6 +863,10 @@ int _urgencyRank(ReminderUrgency u) => switch (u) {
   ReminderUrgency.notUrgent => 0,
   ReminderUrgency.unknown => -1,
 };
+
+/// A→Z, case-insensitively: a sort by name that put every lowercase entry after
+/// every uppercase one would look broken.
+int _byText(String a, String b) => a.toLowerCase().compareTo(b.toLowerCase());
 
 /// Chronological compare with nulls sorted last.
 int _compareDates(DateTime? a, DateTime? b) {

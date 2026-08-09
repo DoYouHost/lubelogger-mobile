@@ -73,6 +73,9 @@
   "equipmentRemoved": "Zdjęte",
   "notePinned": "Przypięta",
 
+  "cardAttachments": "{count, plural, =1{1 załącznik} few{{count} załączniki} many{{count} załączników} other{{count} załącznika}}",
+  "cardHasNote": "Zawiera notatkę",
+
   "tabDashboard": "Pulpit",
   "tabOdometer": "Licznik kilometrów",
 
@@ -82,6 +85,15 @@
   "colCost": "Koszt",
 
   "recordsEmpty": "Brak wpisów.",
+  "recordsNoMatches": "Brak pasujących wpisów.",
+  "recordsSearchHint": "Szukaj",
+  "recordsSearchClear": "Wyczyść wyszukiwanie",
+  "recordsSortBy": "Sortuj według",
+  "recordsSortAscending": "Rosnąco",
+  "recordsSortDescending": "Malejąco",
+  "recordsClearFilters": "Wyczyść filtry",
+  "colUrgency": "Pilność",
+  "colDistance": "Dystans",
 
   "fuelPillRecords": "{count, plural, =1{1 wpis} few{{count} wpisy} many{{count} wpisów} other{{count} wpisu}}",
   "@fuelPillRecords": {
@@ -215,6 +227,11 @@
       "unit": { "type": "String" }
     }
   },
+  "formOdometerLast": "Ostatni odczyt: {value}",
+  "formOdometerBackwards": "Poniżej ostatniego odczytu ({value}).",
+  "formOdometerBackwardsTitle": "Licznik się cofa",
+  "formOdometerBackwardsMessage": "Ten odczyt jest niższy niż ostatni ({value}). Licznik zwykle tylko rośnie. Zapisać mimo to?",
+  "actionSaveAnyway": "Zapisz mimo to",
   "formFuelLabel": "Zatankowane paliwo ({unit})",
   "@formFuelLabel": {
     "placeholders": {

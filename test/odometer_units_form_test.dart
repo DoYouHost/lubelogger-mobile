@@ -65,6 +65,11 @@ void main() {
           vehiclesRepositoryProvider.overrideWithValue(VehiclesRepository(dio)),
           vehicleUnitsProvider.overrideWith((ref, id) => units),
           extraFieldTemplatesProvider.overrideWith((ref) async => null),
+          // The form reads the vehicle's other readings to hint at the last one
+          // and warn when a new one goes below it. Left to fetch, that read
+          // would go through this adapter and be the request the assertions
+          // pick up.
+          odometerRecordsProvider.overrideWith((ref, id) async => const []),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
