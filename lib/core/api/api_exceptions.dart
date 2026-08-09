@@ -19,6 +19,12 @@ enum AppErrorCode {
   /// as 401), but a reverse proxy in front of the server may return it.
   forbidden,
   badResponse,
+
+  /// 404 on an endpoint a newer LubeLogger added — the route simply isn't there
+  /// on this server. Raised only where the app knows the minimum version (see
+  /// `ServerCapabilities`); a 404 anywhere else stays a [badResponse], because
+  /// there it means a wrong base URL, not an old server.
+  unsupportedByServer,
   badCertificate,
   connectionError,
   malformedResponse,

@@ -1214,6 +1214,12 @@ abstract class AppLocalizations {
   /// **'Unexpected server response (HTTP {status}).'**
   String errBadResponse(int status);
 
+  /// Shown when the server answers 404 because the endpoint only exists in a newer LubeLogger.
+  ///
+  /// In en, this message translates to:
+  /// **'Your LubeLogger server is too old for this action. Update the server to use it.'**
+  String get errUnsupportedByServer;
+
   /// No description provided for @errBadCertificate.
   ///
   /// In en, this message translates to:

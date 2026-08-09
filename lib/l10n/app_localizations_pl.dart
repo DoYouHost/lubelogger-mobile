@@ -624,6 +624,10 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get errUnsupportedByServer =>
+      'Twój serwer LubeLogger jest za stary na tę operację. Zaktualizuj go, aby z niej korzystać.';
+
+  @override
   String get errBadCertificate =>
       'Nie udało się zweryfikować certyfikatu serwera.';
 

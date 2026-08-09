@@ -137,7 +137,22 @@ class VehiclesRepository {
   /// The server cascades, wiping all of the vehicle's records first, so this is
   /// irreversible. Surfaces [AppErrorCode.unauthorized] when the key's household
   /// lacks the `Delete` permission (the server answers 401, not a logout signal).
-  Future<void> deleteVehicle(int id) => _delete(Endpoints.vehiclesDelete, id);
+  ///
+  /// 1.6.9 has no such route and answers 404, which reaches the user as an
+  /// "update your server" message rather than a bare HTTP code. The UI checks
+  /// the version first (`ServerCapabilities`) — this is the path taken when it
+  /// couldn't, because `/api/info` hadn't been read.
+  Future<void> deleteVehicle(int id) async {
+    try {
+      await _delete(Endpoints.vehiclesDelete, id);
+    } on ApiException catch (e) {
+      if (e.statusCode != 404) rethrow;
+      throw const ApiException(
+        AppErrorCode.unsupportedByServer,
+        statusCode: 404,
+      );
+    }
+  }
 
   /// `GET /api/vehicle/info?vehicleId=` → aggregated info for one vehicle. The
   /// endpoint returns an array; we take the first (and only) element.

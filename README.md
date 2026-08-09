@@ -63,8 +63,9 @@ its **Settings**; a non-expiring, scoped key is recommended.
 
 ## Server compatibility
 
-Built and tested against the LubeLogger REST API. Some
-endpoints require newer servers (e.g. deleting a vehicle needs LubeLogger 1.7.0+).
+Built and tested against the LubeLogger REST API on **1.6.9 and 1.7.0**, whose API surfaces
+differ in exactly one route: deleting a vehicle needs 1.7.0+, and on an older server the app
+says so instead of failing. Everything else works the same on both.
 Parsing is defensive — unknown fields are ignored and missing ones don't crash the app.
 
 ## Privacy

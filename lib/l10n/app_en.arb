@@ -299,6 +299,10 @@
       "status": { "type": "int" }
     }
   },
+  "errUnsupportedByServer": "Your LubeLogger server is too old for this action. Update the server to use it.",
+  "@errUnsupportedByServer": {
+    "description": "Shown when the server answers 404 because the endpoint only exists in a newer LubeLogger."
+  },
   "errBadCertificate": "The server's security certificate could not be verified.",
   "errConnection": "Connection error. Please try again.",
   "errMalformedResponse": "The server response could not be understood.",

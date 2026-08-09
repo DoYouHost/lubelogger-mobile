@@ -8,16 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_exceptions.dart';
 import '../../core/models/extra_field.dart';
 import '../../core/models/vehicle.dart';
+import '../../core/api/server_capabilities.dart';
 import '../../core/theme/dash_theme.dart';
-import '../../core/util/version.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/error_messages.dart';
 import '../../providers.dart';
 import '../vehicle/forms/extra_fields_field.dart';
 import '../vehicle/forms/record_form_scaffold.dart';
-
-/// Minimum LubeLogger version exposing `DELETE /api/vehicles/delete`.
-const _minVehicleDeleteVersion = '1.7.0';
 
 /// Opens the vehicle add/edit form as a modal bottom sheet. Pass [existing] to
 /// edit that vehicle (prefilled). Resolves to the vehicle's id on success (the
@@ -255,19 +252,16 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
     // Vehicle delete only exists on LubeLogger 1.7.0+. Guard older servers with
     // a disclaimer instead of firing a request they'd reject. An unknown version
     // (not yet loaded) falls through to the attempt — the server enforces it.
-    final serverVersion =
-        ref.read(serverInfoProvider).valueOrNull?.currentVersion ?? '';
-    final supported =
-        versionAtLeast(serverVersion, _minVehicleDeleteVersion) ?? true;
-    if (!supported) {
+    final capabilities = ref.read(serverCapabilitiesProvider);
+    if (!capabilities.vehicleDelete) {
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
           title: Text(l10n.vehicleDeleteUnsupportedTitle),
           content: Text(
             l10n.vehicleDeleteUnsupportedMessage(
-              _minVehicleDeleteVersion,
-              serverVersion,
+              ServerCapabilities.vehicleDeleteSince,
+              capabilities.version,
             ),
           ),
           actions: [

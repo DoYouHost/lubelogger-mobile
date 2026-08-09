@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api/api_client.dart';
+import 'core/api/server_capabilities.dart';
 import 'core/app_localizations_loader.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/whoami.dart';
@@ -555,6 +556,15 @@ Future<void> _revalidate<T>(
 /// number/date formatting across the app.
 final serverInfoProvider = FutureProvider<ServerInfo>(
   (ref) => cachedRead(ref, (repo) => repo.serverInfo()),
+);
+
+/// Which version-gated endpoints the connected server has. Derived from
+/// [serverInfoProvider]'s `currentVersion`, and permissive while that is still
+/// loading — see [ServerCapabilities].
+final serverCapabilitiesProvider = Provider<ServerCapabilities>(
+  (ref) => ServerCapabilities.forVersion(
+    ref.watch(serverInfoProvider).valueOrNull?.currentVersion ?? '',
+  ),
 );
 
 /// The household's custom-field templates, or null when the server didn't

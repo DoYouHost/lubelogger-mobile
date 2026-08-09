@@ -1108,6 +1108,37 @@ void main() {
       );
     });
 
+    test('a 404 on vehicle delete reads as an old server', () async {
+      // LubeLogger 1.6.9 has no /api/vehicles/delete route at all, so the
+      // request 404s. The app supports both versions, and the difference has to
+      // reach the user as "update your server", not as an HTTP code.
+      final (:repo, adapter: _) = _repo(status: 404);
+
+      await expectLater(
+        repo.deleteVehicle(7),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.code, 'code', AppErrorCode.unsupportedByServer),
+        ),
+      );
+    });
+
+    test('a 404 elsewhere stays a plain bad response', () async {
+      // Nothing else the app calls is version-gated, so a 404 there means a
+      // wrong base URL — mislabelling it "old server" would send the user
+      // upgrading a server that is fine.
+      final (:repo, adapter: _) = _repo(status: 404);
+
+      await expectLater(
+        repo.deleteNote(7),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.code, 'code', AppErrorCode.badResponse)
+              .having((e) => e.statusCode, 'statusCode', 404),
+        ),
+      );
+    });
+
     test('a 400 surfaces as a bad response with its status', () async {
       final (:repo, adapter: _) = _repo(
         status: 400,
