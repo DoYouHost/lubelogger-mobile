@@ -848,7 +848,7 @@ class VehiclesRepository {
   }) =>
       {
         'date': _isoDate(date),
-        'odometer': odometer.toString(),
+        'odometer': _intString(odometer),
         'fuelConsumed': fuelConsumed.toString(),
         'cost': cost.toString(),
         'isFillToFull': isFillToFull.toString(),

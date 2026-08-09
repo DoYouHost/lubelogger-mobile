@@ -343,7 +343,7 @@ void main() {
       expect(queue.pending, isEmpty);
       expect(
         [for (final r in server.calls) (r.data as Map)['odometer']],
-        ['1000.0', '2000.0'],
+        ['1000', '2000'],
         reason: 'an edit that follows an add is meaningless if it lands first',
       );
     });
