@@ -55,8 +55,8 @@ class RecordFacets<T> {
 ///
 /// Tabs call [apply] on their records. The fuel tab is the exception: its
 /// per-record economy accumulates across the whole chronological sequence, so
-/// it builds its rows from every record first and only then drops the ones that
-/// don't [matches].
+/// it builds its rows from every record first, then drops the ones that don't
+/// [matches] and orders what is left with [sortStably].
 class RecordListControls<T> {
   const RecordListControls({
     required this.matches,
@@ -80,19 +80,25 @@ class RecordListControls<T> {
   /// an empty list mean "nothing matched" instead of "nothing recorded".
   final bool filtering;
 
-  /// Filtered and sorted, preserving the incoming order between records the
-  /// sort considers equal (`List.sort` alone is not stable, and the note tab's
+  /// Filtered and sorted — what a tab normally calls.
+  List<T> apply(List<T> records) =>
+      sortStably([for (final r in records) if (matches(r)) r], (r) => r);
+
+  /// The active sort, preserving the incoming order between entries it
+  /// considers equal (`List.sort` alone is not stable, and the note tab's
   /// "pinned first, otherwise as the server sent them" depends on it).
-  List<T> apply(List<T> records) {
-    final kept = <(int, T)>[];
-    for (var i = 0; i < records.length; i++) {
-      if (matches(records[i])) kept.add((i, records[i]));
-    }
-    kept.sort((a, b) {
-      final byKey = compare(a.$2, b.$2);
+  ///
+  /// Takes the record out of [item] rather than sorting records directly, so a
+  /// tab that had to build and filter its own list first still gets the same
+  /// ordering — the fuel tab sorts rows whose economy was computed over the
+  /// full sequence, not the records themselves.
+  List<R> sortStably<R>(List<R> items, T Function(R item) recordOf) {
+    final indexed = [for (var i = 0; i < items.length; i++) (i, items[i])];
+    indexed.sort((a, b) {
+      final byKey = compare(recordOf(a.$2), recordOf(b.$2));
       return byKey != 0 ? byKey : a.$1.compareTo(b.$1);
     });
-    return [for (final e in kept) e.$2];
+    return [for (final e in indexed) e.$2];
   }
 }
 

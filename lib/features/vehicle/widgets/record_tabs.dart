@@ -303,10 +303,13 @@ class FuelTab extends ConsumerWidget {
         // only then narrowed — computing them from a filtered list would
         // silently restate every figure on the screen.
         final rows = fuelRows(records, isElectric: units.isElectric);
-        final displayed = [
-          for (var i = rows.length - 1; i >= 0; i--)
-            if (filter.matches(rows[i].record)) rows[i],
-        ]..sort((a, b) => filter.compare(a.record, b.record));
+        final displayed = filter.sortStably(
+          [
+            for (var i = rows.length - 1; i >= 0; i--)
+              if (filter.matches(rows[i].record)) rows[i],
+          ],
+          (row) => row.record,
+        );
         // The pills stay lifetime figures, filter or no filter: an average
         // recomputed over an arbitrary subset of fill-ups is not this vehicle's
         // consumption, and the bar sits directly above them to say so.

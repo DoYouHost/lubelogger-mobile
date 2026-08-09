@@ -236,6 +236,42 @@ void main() {
     });
   });
 
+  group('ordering', () {
+    // `List.sort` is not stable, so equal keys have to be broken by the
+    // incoming position — otherwise "pinned first, otherwise as the server sent
+    // them" reshuffles itself, and so does a fuel list where several fill-ups
+    // share a date.
+    RecordListControls<String> controls() => RecordListControls<String>(
+      matches: (r) => r != 'skip',
+      compare: (a, b) => a.length.compareTo(b.length),
+      activeTags: const {},
+      onTagTap: (_) {},
+      filtering: false,
+    );
+
+    test('apply keeps the incoming order between equal keys', () {
+      final input = ['bb', 'aa', 'skip', 'cc', 'a', 'dd'];
+
+      expect(controls().apply(input), ['a', 'bb', 'aa', 'cc', 'dd']);
+    });
+
+    test('sortStably does the same for a list a tab built itself', () {
+      // What the fuel tab passes: rows whose economy was computed over the full
+      // sequence, sorted by the record inside them.
+      final rows = [
+        (id: 1, record: 'bb'),
+        (id: 2, record: 'aa'),
+        (id: 3, record: 'a'),
+        (id: 4, record: 'cc'),
+      ];
+
+      expect(
+        controls().sortStably(rows, (row) => row.record).map((r) => r.id),
+        [3, 1, 2, 4],
+      );
+    });
+  });
+
   group('splitTags', () {
     test('splits on whitespace and drops the empties', () {
       expect(splitTags('diy  workshop\twarranty'), [
