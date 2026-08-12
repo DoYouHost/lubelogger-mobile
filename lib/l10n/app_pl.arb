@@ -245,6 +245,8 @@
   "attachmentsLabel": "Załączniki (opcjonalnie)",
   "attachmentAddButton": "Dodaj plik",
   "attachmentUploadError": "Nie udało się przesłać pliku. Spróbuj ponownie.",
+  "attachmentUploadRejected": "Serwer odrzucił tę wysyłkę ({size} MB, HTTP {status}). Plik jest prawdopodobnie za duży dla serwera lub dla proxy przed nim.",
+  "attachmentUploadInterrupted": "Wysyłka została przerwana ({size} MB). Na wolnym łączu duży plik może nie przejść.",
   "attachmentOpenError": "Nie udało się otworzyć pliku.",
 
   "extraFieldsLabel": "Pola własne",

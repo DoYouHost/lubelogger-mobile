@@ -1,13 +1,18 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api/api_exceptions.dart';
 import '../../../core/diagnostics/diagnostic_recorder.dart';
 import '../../../core/diagnostics/log_event.dart';
 import '../../../core/diagnostics/log_tag.dart';
+import '../../../core/files/upload_prep.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../l10n/error_messages.dart';
 import '../../../providers.dart';
 import '../attachments/attachment_viewer.dart';
 
@@ -87,10 +92,16 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
     _log('attachment_pick', fields: {'n': picked.length});
 
     setState(() => _uploading = true);
+    // Measured after downscaling, so a failure reports the bytes that were
+    // actually on the wire rather than what came out of the picker. Null while
+    // the upload has not got far enough to know.
+    int? bytes;
     try {
+      final ready = await prepareForUpload(picked);
+      bytes = await _totalBytes(ready);
       final uploaded = await ref
           .read(vehiclesRepositoryProvider)
-          .uploadDocuments(picked);
+          .uploadDocuments(ready);
       _log('attachment_uploaded', fields: {'n': uploaded.length});
       if (!mounted) return;
       setState(() {
@@ -102,14 +113,54 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
       _log(
         'attachment_upload_failed',
         lvl: LogLevel.error,
-        fields: {'n': picked.length, 'type': error.runtimeType.toString()},
+        fields: {
+          'n': picked.length,
+          'bytes': bytes,
+          'type': error.runtimeType.toString(),
+        },
       );
       if (!mounted) return;
       setState(() {
         _uploading = false;
-        _error = l10n.attachmentUploadError;
+        _error = _uploadError(l10n, error, bytes);
       });
     }
+  }
+
+  /// Statuses that mean "this file will not go through", as opposed to "the
+  /// server hiccuped". 413 is the honest answer; a proxy that drops an oversized
+  /// body instead of answering it surfaces as 502 or 504 — issue #15. Retrying
+  /// any of the three with the same file cannot succeed, so the message must not
+  /// end in "try again".
+  static const _rejectedStatuses = {413, 502, 504};
+
+  String _uploadError(AppLocalizations l10n, Object error, int? bytes) {
+    if (error is! AppApiException) return l10n.attachmentUploadError;
+    final size = bytes == null
+        ? null
+        : (bytes / (1024 * 1024)).toStringAsFixed(1);
+    final status = error.statusCode;
+    if (size != null && status != null && _rejectedStatuses.contains(status)) {
+      return l10n.attachmentUploadRejected(size, status);
+    }
+    if (size != null &&
+        (error.code == AppErrorCode.serverUnreachable ||
+            error.code == AppErrorCode.connectionError)) {
+      return l10n.attachmentUploadInterrupted(size);
+    }
+    return error.localized(l10n);
+  }
+
+  Future<int> _totalBytes(List<UploadFile> files) async {
+    var total = 0;
+    for (final file in files) {
+      try {
+        total += await File(file.path).length();
+      } on IOException {
+        continue;
+      }
+    }
+    return total;
   }
 
   void _remove(Attachment file) {

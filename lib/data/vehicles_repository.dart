@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../core/api/api_client.dart';
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
 import '../core/cache/offline_interceptor.dart';
@@ -718,7 +719,9 @@ class VehiclesRepository {
     List<({String path, String name})> files,
   ) =>
       guard(() async {
-        final form = FormData();
+        // Camel case because the lowercase spelling is what some proxies in
+        // front of LubeLogger fail to parse; both are legal per RFC 7578.
+        final form = FormData(camelCaseContentDisposition: true);
         for (final f in files) {
           form.files.add(MapEntry(
             'documents',
@@ -728,6 +731,10 @@ class VehiclesRepository {
         final res = await _dio.post<List<dynamic>>(
           Endpoints.documentsUpload,
           data: form,
+          options: Options(
+            sendTimeout: kUploadSendTimeout,
+            receiveTimeout: kUploadReceiveTimeout,
+          ),
         );
         return [
           for (final e in res.data ?? const [])

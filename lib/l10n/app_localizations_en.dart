@@ -572,6 +572,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentUploadError => 'Couldn\'t upload the file. Try again.';
 
   @override
+  String attachmentUploadRejected(String size, int status) {
+    return 'The server rejected this upload ($size MB, HTTP $status). The file is probably too large for the server or for a proxy in front of it.';
+  }
+
+  @override
+  String attachmentUploadInterrupted(String size) {
+    return 'The upload was interrupted ($size MB). On a slow connection a large file may not get through.';
+  }
+
+  @override
   String get attachmentOpenError => 'Couldn\'t open the file.';
 
   @override

@@ -15,6 +15,12 @@ import 'retry_interceptor.dart';
 /// parsing never depends on the server's locale. See `reference/LUBELOGGER-API.md`.
 const String kCultureInvariantHeader = 'culture-invariant';
 
+/// Dio spends `sendTimeout` on the whole body in one `addStream`, so for an
+/// upload it caps file size, not latency: 7 MB up a 3 Mbps link needs ~20 s,
+/// which the 15 s below reported as an unreachable server.
+const Duration kUploadSendTimeout = Duration(minutes: 3);
+const Duration kUploadReceiveTimeout = Duration(minutes: 1);
+
 /// Bare Dio for calls without auth and as the base for [ApiClient]. Single place
 /// for timeouts.
 ///

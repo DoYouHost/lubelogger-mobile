@@ -285,6 +285,20 @@
   "attachmentsLabel": "Attachments (optional)",
   "attachmentAddButton": "Add file",
   "attachmentUploadError": "Couldn't upload the file. Try again.",
+  "attachmentUploadRejected": "The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.",
+  "@attachmentUploadRejected": {
+    "description": "Shown for 413/502/504, where retrying the same file cannot help — so the message must not say 'try again'.",
+    "placeholders": {
+      "size": { "type": "String" },
+      "status": { "type": "int" }
+    }
+  },
+  "attachmentUploadInterrupted": "The upload was interrupted ({size} MB). On a slow connection a large file may not get through.",
+  "@attachmentUploadInterrupted": {
+    "placeholders": {
+      "size": { "type": "String" }
+    }
+  },
   "attachmentOpenError": "Couldn't open the file.",
 
   "extraFieldsLabel": "Custom fields",

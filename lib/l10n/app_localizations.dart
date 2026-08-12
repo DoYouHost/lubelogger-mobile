@@ -1118,6 +1118,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t upload the file. Try again.'**
   String get attachmentUploadError;
 
+  /// Shown for 413/502/504, where retrying the same file cannot help — so the message must not say 'try again'.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.'**
+  String attachmentUploadRejected(String size, int status);
+
+  /// No description provided for @attachmentUploadInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload was interrupted ({size} MB). On a slow connection a large file may not get through.'**
+  String attachmentUploadInterrupted(String size);
+
   /// No description provided for @attachmentOpenError.
   ///
   /// In en, this message translates to:

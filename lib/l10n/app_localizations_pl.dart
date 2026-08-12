@@ -582,6 +582,16 @@ class AppLocalizationsPl extends AppLocalizations {
       'Nie udało się przesłać pliku. Spróbuj ponownie.';
 
   @override
+  String attachmentUploadRejected(String size, int status) {
+    return 'Serwer odrzucił tę wysyłkę ($size MB, HTTP $status). Plik jest prawdopodobnie za duży dla serwera lub dla proxy przed nim.';
+  }
+
+  @override
+  String attachmentUploadInterrupted(String size) {
+    return 'Wysyłka została przerwana ($size MB). Na wolnym łączu duży plik może nie przejść.';
+  }
+
+  @override
   String get attachmentOpenError => 'Nie udało się otworzyć pliku.';
 
   @override

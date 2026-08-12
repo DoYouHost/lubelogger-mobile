@@ -41,6 +41,10 @@ dependencies:
   # decided by the OEM's battery manager — so "notifications never arrive" is
   # answered by the make of the phone more often than by anything in the code.
   device_info_plus: ^12.4.0
+  # Downscales camera photos before they are attached to a record. Native rather
+  # than the pure-Dart `image` package: decoding a 12 MP JPEG in Dart blocks for
+  # seconds, and this runs while the user waits on the form.
+  flutter_image_compress: ^2.5.1
 
 dev_dependencies:
   flutter_test:
