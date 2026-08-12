@@ -62,11 +62,31 @@ jobs:
           git clone --depth 1 --single-branch \
             https://github.com/hargata/lubelog.git /tmp/lubelog-server-ref
 
+      # The action's own setup-bun runs with caching disabled, so it refetches the
+      # release asset every run; the runners have hit connection resets on that host.
+      - name: Ensure Bun
+        id: bun
+        env:
+          BUN_VERSION: "1.3.14" # keep in sync with the pin in claude-code-action
+        run: |
+          BUN_BIN="$HOME/.bun/bin/bun"
+          if [ "$("$BUN_BIN" --version 2>/dev/null)" != "$BUN_VERSION" ]; then
+            TMP=$(mktemp -d)
+            curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors -o "$TMP/bun.zip" \
+              "https://github.com/oven-sh/bun/releases/download/bun-v$BUN_VERSION/bun-linux-x64.zip"
+            unzip -qo "$TMP/bun.zip" -d "$TMP"
+            mkdir -p "$HOME/.bun/bin"
+            install -m 755 "$TMP/bun-linux-x64/bun" "$BUN_BIN"
+            rm -rf "$TMP"
+          fi
+          echo "path=$BUN_BIN" >>"$GITHUB_OUTPUT"
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          path_to_bun_executable: ${{ steps.bun.outputs.path }}
           additional_permissions: |
             actions: read
           claude_args: |
