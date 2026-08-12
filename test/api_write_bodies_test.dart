@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lubelogger_mobile/core/api/api_client.dart';
 import 'package:lubelogger_mobile/core/api/api_exceptions.dart';
 import 'package:lubelogger_mobile/core/api/endpoints.dart';
 import 'package:lubelogger_mobile/core/models/attachment.dart';
@@ -59,6 +60,11 @@ class _ArrayResponseAdapter implements HttpClientAdapter {
   final List<Map<String, dynamic>> response;
   RequestOptions? captured;
 
+  /// The multipart body as it goes on the wire. Drained here for the same
+  /// reason a real adapter drains it — an upload's defects live in the bytes,
+  /// not in [RequestOptions].
+  List<int>? body;
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -66,6 +72,9 @@ class _ArrayResponseAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     captured = options;
+    if (requestStream != null) {
+      body = await requestStream.expand((chunk) => chunk).toList();
+    }
     return ResponseBody.fromString(
       jsonEncode(response),
       200,
@@ -1009,6 +1018,47 @@ void main() {
       expect(attachments.single.name, 'invoice.pdf');
       expect(attachments.single.location, '/documents/abc.pdf');
       expect(attachments.single.isPending, isFalse);
+    });
+
+    test('the part header is camel-case Content-Disposition', () async {
+      // Both spellings are legal per RFC 7578 and LubeLogger parses either, but
+      // a proxy in front of it may not — see issue #15.
+      final (:repo, :adapter) = uploader(const []);
+      final file = tempPdf('invoice.pdf');
+
+      await repo.uploadDocuments([(path: file.path, name: 'invoice.pdf')]);
+
+      final wire = utf8.decode(adapter.body!);
+      expect(wire, contains('Content-Disposition: form-data'));
+      expect(wire, isNot(contains('content-disposition:')));
+    });
+
+    test('the declared Content-Length matches the bytes actually sent',
+        () async {
+      // A body shorter than its Content-Length is the one client-side defect
+      // that would produce issue #15's edge-generated 502 on a request the
+      // server never sees.
+      final (:repo, :adapter) = uploader(const []);
+      final file = tempPdf('invoice.pdf');
+
+      await repo.uploadDocuments([(path: file.path, name: 'invoice.pdf')]);
+
+      final declared = adapter.captured!.headers[Headers.contentLengthHeader];
+      expect(int.parse('$declared'), adapter.body!.length);
+    });
+
+    test('the upload gets its own timeouts, not the global 15s', () async {
+      // Dio spends `sendTimeout` on the whole body in one go, so the global
+      // budget is a cap on file size disguised as a network timeout: 7 MB up a
+      // 3 Mbps link needs ~20s and used to surface as "server unreachable".
+      final (:repo, :adapter) = uploader(const []);
+      final file = tempPdf('invoice.pdf');
+
+      await repo.uploadDocuments([(path: file.path, name: 'invoice.pdf')]);
+
+      expect(adapter.captured!.sendTimeout, kUploadSendTimeout);
+      expect(adapter.captured!.receiveTimeout, kUploadReceiveTimeout);
+      expect(kUploadSendTimeout, greaterThan(const Duration(seconds: 15)));
     });
   });
 
