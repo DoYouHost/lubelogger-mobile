@@ -79,83 +79,34 @@ class GasStats {
       hasEconomy ? totalRawDistance / totalRawVolume : null;
 
   factory GasStats.from(List<GasRecord> records, {bool isElectric = false}) {
-    final sorted = _chronological(records);
-
-    double previousOdometer = 0;
-    int previousEndingSoc = 0;
-    double unFactoredVolume = 0;
-    double unFactoredDistance = 0;
-
     double avgDistance = 0; // Σ delta for records included in the average.
     double avgVolume = 0; // Σ fuel for records included in the average.
     double minOdometer = double.infinity;
     double maxOdometer = 0;
-
-    // Per-record ratio grouped by month (only records that resolve a full-tank
-    // economy contribute — the rest are null and skipped).
     final ratiosByMonth = <DateTime, List<double>>{};
 
-    for (var i = 0; i < sorted.length; i++) {
-      final r = sorted[i];
+    for (final (i, row) in fuelRows(records, isElectric: isElectric).indexed) {
+      final r = row.record;
       if (r.odometer > 0) {
         minOdometer = r.odometer < minOdometer ? r.odometer : minOdometer;
         maxOdometer = r.odometer > maxOdometer ? r.odometer : maxOdometer;
       }
-
-      // The first record only seeds `previousOdometer`: with no prior reading,
-      // its delta would be the entire odometer. Mirrors the server's `i > 0`
-      // guard, so the first fill never yields a bogus economy.
-      if (i == 0) {
-        if (r.odometer > 0) previousOdometer = r.odometer;
-        if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
-        continue;
-      }
-
-      var delta = r.odometer - previousOdometer;
-      if (delta < 0) delta = 0;
-      final volume = isElectric
-          ? _energyUsedSince(r, previousEndingSoc)
-          : r.fuelConsumed;
-      double? ratio;
-
-      if (r.missedFuelUp) {
-        // Distance since the last full tank is unattributable; drop it.
-        unFactoredVolume = 0;
-        unFactoredDistance = 0;
-      } else if (isElectric) {
-        // A charge is measured against the previous one, so there is no partial
-        // fill to carry forward and "fill to full" says nothing about a battery.
-        if (volume > 0 && delta > 0 && r.odometer > 0) ratio = delta / volume;
-      } else if (r.isFillToFull && r.odometer > 0) {
-        final totalVolume = unFactoredVolume + volume;
-        final totalDistance = unFactoredDistance + delta;
-        if (volume > 0 && delta > 0 && totalVolume > 0) {
-          ratio = totalDistance / totalVolume;
-        }
-        unFactoredVolume = 0;
-        unFactoredDistance = 0;
-      } else {
-        unFactoredVolume += volume;
-        unFactoredDistance += delta;
-      }
+      if (i == 0) continue;
 
       // IncludeInAverage: a resolved economy, or a partial/odometer-less record
       // that still carries real fuel (but never a missed fuel-up).
+      final ratio = row.rawRatio;
       final includeInAverage = !r.missedFuelUp &&
-          ((ratio != null && ratio > 0) ||
-              !r.isFillToFull ||
-              r.odometer == 0);
+          (ratio != null || !r.isFillToFull || r.odometer == 0);
       if (includeInAverage) {
-        avgDistance += delta;
-        avgVolume += volume;
+        // The walk clamps an odometer-less row's delta to 0.
+        avgDistance += row.rawDelta ?? 0;
+        avgVolume += row.rawConsumption;
       }
 
-      if (ratio != null && ratio > 0 && r.date != null) {
+      if (ratio != null && r.date != null) {
         (ratiosByMonth[monthOf(r.date!)] ??= []).add(ratio);
       }
-
-      if (r.odometer > 0) previousOdometer = r.odometer;
-      if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
     }
 
     final monthly = [
@@ -199,10 +150,10 @@ class FuelRow {
   final double rawConsumption;
 }
 
-/// Per-record fuel rows in chronological order (oldest first), reusing the same
-/// fill-to-full accumulation as [GasStats.from] so per-row economy matches the
-/// server: partial fills accumulate their distance/volume into the next full
-/// tank, and a missed fuel-up drops the unattributable span.
+/// Per-record fuel rows in chronological order (oldest first), with the
+/// server's fill-to-full accumulation so per-row economy matches it: partial
+/// fills accumulate their distance/volume into the next full tank, and a missed
+/// fuel-up drops the unattributable span. [GasStats.from] aggregates these rows.
 List<FuelRow> fuelRows(List<GasRecord> records, {bool isElectric = false}) {
   final sorted = _chronological(records);
 
@@ -215,8 +166,9 @@ List<FuelRow> fuelRows(List<GasRecord> records, {bool isElectric = false}) {
   for (var i = 0; i < sorted.length; i++) {
     final r = sorted[i];
 
-    // The oldest record only seeds `previousOdometer`; with no prior reading it
-    // gets no delta and no economy (matches GasStats' `i == 0` guard).
+    // The oldest record only seeds `previousOdometer`: with no prior reading,
+    // its delta would be the entire odometer. Mirrors the server's `i > 0`
+    // guard, so the first fill never yields a bogus economy.
     if (i == 0) {
       if (r.odometer > 0) previousOdometer = r.odometer;
       if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
@@ -240,6 +192,8 @@ List<FuelRow> fuelRows(List<GasRecord> records, {bool isElectric = false}) {
       unFactoredVolume = 0;
       unFactoredDistance = 0;
     } else if (isElectric) {
+      // A charge is measured against the previous one, so there is no partial
+      // fill to carry forward and "fill to full" says nothing about a battery.
       if (volume > 0 && delta > 0 && r.odometer > 0) ratio = delta / volume;
     } else if (r.isFillToFull && r.odometer > 0) {
       final totalVolume = unFactoredVolume + volume;

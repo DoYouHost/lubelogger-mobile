@@ -39,6 +39,25 @@ Color _categoryColor(ExpenseCategory category, DashTokens t) =>
       ExpenseCategory.tax => t.danger,
     };
 
+String _categoryLabel(ExpenseCategory category, AppLocalizations l10n) =>
+    switch (category) {
+      ExpenseCategory.service => l10n.catService,
+      ExpenseCategory.repair => l10n.catRepairs,
+      ExpenseCategory.upgrade => l10n.catUpgrades,
+      ExpenseCategory.fuel => l10n.catFuel,
+      ExpenseCategory.tax => l10n.catTax,
+    };
+
+/// The server's lifetime total for [category].
+double _categoryCost(ExpenseCategory category, VehicleInfo info) =>
+    switch (category) {
+      ExpenseCategory.service => info.serviceRecordCost,
+      ExpenseCategory.repair => info.repairRecordCost,
+      ExpenseCategory.upgrade => info.upgradeRecordCost,
+      ExpenseCategory.fuel => info.gasRecordCost,
+      ExpenseCategory.tax => info.taxRecordCost,
+    };
+
 /// Vehicle dashboard (design screen #5): at-a-glance stats plus expense,
 /// reminder, and fuel-mileage charts for one vehicle. Rendered as the first tab
 /// of [VehicleScreen], which supplies the surrounding chrome and vehicle header.
@@ -88,6 +107,15 @@ class _DashboardBody extends ConsumerWidget {
         .watch(monthlyBreakdownProvider(vehicleId))
         .valueOrNull;
     final window = trailingMonths(DateTime.now());
+    final t = DashTokens.of(context);
+
+    ChartSlice reminderSlice(String label, int count, Color color) =>
+        ChartSlice(
+          label: label,
+          value: count.toDouble(),
+          color: color,
+          legendValue: '$count',
+        );
 
     // Charts flow two-up on wider (landscape) screens, single column on
     // portrait phones. Off-screen ones are left unbuilt: a chart is expensive to
@@ -98,51 +126,16 @@ class _DashboardBody extends ConsumerWidget {
         child: DonutChart(
           emptyLabel: l10n.chartNoData,
           slices: [
-            ChartSlice(
-              label: l10n.catService,
-              value: info.serviceRecordCost,
-              color: DashTokens.of(context).accentBlue,
-              legendValue: Formatters.currency(
-                info.serviceRecordCost,
-                symbol,
+            for (final category in ExpenseCategory.values)
+              ChartSlice(
+                label: _categoryLabel(category, l10n),
+                value: _categoryCost(category, info),
+                color: _categoryColor(category, t),
+                legendValue: Formatters.currency(
+                  _categoryCost(category, info),
+                  symbol,
+                ),
               ),
-            ),
-            ChartSlice(
-              label: l10n.catRepairs,
-              value: info.repairRecordCost,
-              color: _repairsColor,
-              legendValue: Formatters.currency(
-                info.repairRecordCost,
-                symbol,
-              ),
-            ),
-            ChartSlice(
-              label: l10n.catUpgrades,
-              value: info.upgradeRecordCost,
-              color: _upgradesColor,
-              legendValue: Formatters.currency(
-                info.upgradeRecordCost,
-                symbol,
-              ),
-            ),
-            ChartSlice(
-              label: l10n.catFuel,
-              value: info.gasRecordCost,
-              color: DashTokens.of(context).accentGold,
-              legendValue: Formatters.currency(
-                info.gasRecordCost,
-                symbol,
-              ),
-            ),
-            ChartSlice(
-              label: l10n.catTax,
-              value: info.taxRecordCost,
-              color: DashTokens.of(context).danger,
-              legendValue: Formatters.currency(
-                info.taxRecordCost,
-                symbol,
-              ),
-            ),
           ],
         ),
       ),
@@ -162,29 +155,25 @@ class _DashboardBody extends ConsumerWidget {
         child: DonutChart(
           emptyLabel: l10n.chartNoReminders,
           slices: [
-            ChartSlice(
-              label: l10n.urgencyNotUrgent,
-              value: info.notUrgentReminderCount.toDouble(),
-              color: _okGreen,
-              legendValue: '${info.notUrgentReminderCount}',
+            reminderSlice(
+              l10n.urgencyNotUrgent,
+              info.notUrgentReminderCount,
+              _okGreen,
             ),
-            ChartSlice(
-              label: l10n.urgencyUrgent,
-              value: info.urgentReminderCount.toDouble(),
-              color: DashTokens.of(context).accentOrange,
-              legendValue: '${info.urgentReminderCount}',
+            reminderSlice(
+              l10n.urgencyUrgent,
+              info.urgentReminderCount,
+              t.accentOrange,
             ),
-            ChartSlice(
-              label: l10n.urgencyVeryUrgent,
-              value: info.veryUrgentReminderCount.toDouble(),
-              color: DashTokens.of(context).danger,
-              legendValue: '${info.veryUrgentReminderCount}',
+            reminderSlice(
+              l10n.urgencyVeryUrgent,
+              info.veryUrgentReminderCount,
+              t.danger,
             ),
-            ChartSlice(
-              label: l10n.urgencyPastDue,
-              value: info.pastDueReminderCount.toDouble(),
-              color: DashTokens.of(context).textTertiary,
-              legendValue: '${info.pastDueReminderCount}',
+            reminderSlice(
+              l10n.urgencyPastDue,
+              info.pastDueReminderCount,
+              t.textTertiary,
             ),
           ],
         ),

@@ -676,34 +676,38 @@ final odometerRecordsProvider =
 
 /// Date of the vehicle's highest-odometer reading among fuel-ups and dedicated
 /// odometer records — the "as of" date shown under the dashboard's "Last
-/// Reported Odometer" stat. Mirrors [MonthlyBreakdown]'s odometer timeline
-/// (gas + odometer records only; see its doc comment), not the server's
+/// Reported Odometer" stat. Reads [odometerReadingsProvider], the same timeline
+/// [MonthlyBreakdown] charts (gas + odometer records only), not the server's
 /// `lastReportedOdometer`, which also considers service/repair/upgrade
 /// mileage — a rare enough source for the current max that this stays a close
 /// approximation without fetching those record types just for a date label.
 final lastOdometerDateProvider = FutureProvider.family<DateTime?, int>(
   (ref, vehicleId) async {
-    final gas = await ref.watch(gasRecordsProvider(vehicleId).future);
-    final odometers = await ref.watch(odometerRecordsProvider(vehicleId).future);
-
     DateTime? bestDate;
     var bestOdometer = 0.0;
-    void consider(DateTime? date, double odometer) {
-      if (date != null && odometer > bestOdometer) {
-        bestOdometer = odometer;
-        bestDate = date;
+    for (final r in await ref.watch(odometerReadingsProvider(vehicleId).future)) {
+      if (r.date != null && r.odometer > bestOdometer) {
+        bestOdometer = r.odometer;
+        bestDate = r.date;
       }
-    }
-
-    for (final r in gas) {
-      consider(r.date, r.odometer);
-    }
-    for (final r in odometers) {
-      consider(r.date, r.odometer);
     }
     return bestDate;
   },
 );
+
+/// Every odometer reading from fuel-ups and dedicated odometer records, so a
+/// fuel-only vehicle still has a distance timeline.
+final odometerReadingsProvider =
+    FutureProvider.family<List<OdometerReading>, int>((ref, vehicleId) async {
+  final (gas, odometers) = await (
+    ref.watch(gasRecordsProvider(vehicleId).future),
+    ref.watch(odometerRecordsProvider(vehicleId).future),
+  ).wait;
+  return [
+    for (final g in gas) (date: g.date, odometer: g.odometer),
+    for (final o in odometers) (date: o.date, odometer: o.odometer),
+  ];
+});
 
 /// Full records for one vehicle's generic (date + cost) record tab, keyed by
 /// vehicle + [RecordKind] (service / repair / upgrade / tax).
@@ -755,21 +759,14 @@ final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
           kind: kind,
         )).future);
 
-    final (service, repair, upgrade, tax, gas, odometers) = await (
+    final (service, repair, upgrade, tax, gas, readings) = await (
       records(RecordKind.service),
       records(RecordKind.repair),
       records(RecordKind.upgrade),
       records(RecordKind.tax),
       ref.watch(gasRecordsProvider(vehicleId).future),
-      ref.watch(odometerRecordsProvider(vehicleId).future),
+      ref.watch(odometerReadingsProvider(vehicleId).future),
     ).wait;
-
-    // Distance timeline: every odometer reading from fuel-ups and dedicated
-    // odometer records, so a fuel-only vehicle still charts distance.
-    final readings = <OdometerReading>[
-      for (final g in gas) (date: g.date, odometer: g.odometer),
-      for (final o in odometers) (date: o.date, odometer: o.odometer),
-    ];
 
     List<DatedCost> costs(List<VehicleRecord> records) =>
         [for (final r in records) DatedCost(date: r.date, cost: r.cost)];
