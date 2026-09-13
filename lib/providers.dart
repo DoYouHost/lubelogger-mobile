@@ -682,17 +682,9 @@ final odometerRecordsProvider =
 /// mileage — a rare enough source for the current max that this stays a close
 /// approximation without fetching those record types just for a date label.
 final lastOdometerDateProvider = FutureProvider.family<DateTime?, int>(
-  (ref, vehicleId) async {
-    DateTime? bestDate;
-    var bestOdometer = 0.0;
-    for (final r in await ref.watch(odometerReadingsProvider(vehicleId).future)) {
-      if (r.date != null && r.odometer > bestOdometer) {
-        bestOdometer = r.odometer;
-        bestDate = r.date;
-      }
-    }
-    return bestDate;
-  },
+  (ref, vehicleId) async => highestReadingDate(
+    await ref.watch(odometerReadingsProvider(vehicleId).future),
+  ),
 );
 
 /// Every odometer reading from fuel-ups and dedicated odometer records, so a

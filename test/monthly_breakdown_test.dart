@@ -84,6 +84,36 @@ void main() {
     });
   });
 
+  group('highestReadingDate', () {
+    test('a repeated top reading dates from its latest record', () {
+      final readings = [
+        reading('2026-01-01', 50000),
+        reading('2026-02-01', 50000),
+        reading('2025-12-01', 49000),
+      ];
+      expect(highestReadingDate(readings), DateTime(2026, 2));
+      expect(highestReadingDate(readings.reversed), DateTime(2026, 2));
+    });
+
+    test('a higher reading wins over a later lower one', () {
+      final date = highestReadingDate([
+        reading('2026-01-01', 50000),
+        reading('2026-03-01', 42000),
+      ]);
+      expect(date, DateTime(2026, 1));
+    });
+
+    test('records without an odometer or a date never supply the date', () {
+      expect(
+        highestReadingDate([
+          reading('2026-05-01', 0),
+          (date: null, odometer: 60000),
+        ]),
+        isNull,
+      );
+    });
+  });
+
   group('trailingMonths', () {
     test('ends with the current month and crosses the year boundary', () {
       final window = trailingMonths(DateTime(2026, 9, 13, 17, 30));

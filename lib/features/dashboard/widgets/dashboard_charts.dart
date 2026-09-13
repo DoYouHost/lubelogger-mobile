@@ -143,6 +143,8 @@ class MonthlyBars extends StatelessWidget {
   final bool lowerIsBetter;
   final String emptyLabel;
 
+  static const double _height = 170;
+
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
@@ -150,7 +152,7 @@ class MonthlyBars extends StatelessWidget {
       for (final b in bars)
         if (b.value != null) b.value!,
     ];
-    if (values.isEmpty) return _NoData(label: emptyLabel, height: 150);
+    if (values.isEmpty) return _NoData(label: emptyLabel, height: _height);
 
     final minV = values.reduce((a, b) => a < b ? a : b);
     final maxV = values.reduce((a, b) => a > b ? a : b);
@@ -167,7 +169,7 @@ class MonthlyBars extends StatelessWidget {
     final decimals = interval < 1 ? 1 : 0;
 
     return SizedBox(
-      height: 170,
+      height: _height,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -178,7 +180,9 @@ class MonthlyBars extends StatelessWidget {
           barTouchData: BarTouchData(
             touchTooltipData: _barTooltip(
               t,
-              (y) => Formatters.number(y, decimals: 1),
+              (i, y) => bars[i].value == null
+                  ? null
+                  : Formatters.number(y, decimals: 1),
             ),
           ),
           titlesData: FlTitlesData(
@@ -291,6 +295,7 @@ class MonthlyComboChart extends StatelessWidget {
   final String distanceLegend;
   final String emptyLabel;
 
+  static const double _height = 180;
   static const double _reservedSide = 40;
   static const double _reservedBottom = 20;
 
@@ -301,25 +306,24 @@ class MonthlyComboChart extends StatelessWidget {
     final maxDistance = months.fold<double>(0, (m, e) => math.max(m, e.distance));
     final hasDistance = maxDistance > 0;
 
-    if (maxCost <= 0 && !hasDistance) {
-      return _NoData(label: emptyLabel, height: 170);
-    }
-
     final costInterval = niceAxisInterval(maxCost, divisions: 3);
     final distInterval = niceAxisInterval(maxDistance, divisions: 3);
 
     return Column(
       children: [
-        SizedBox(
-          height: 180,
-          child: Stack(
-            children: [
-              _bars(t, _roundUp(maxCost, costInterval), costInterval, hasDistance),
-              if (hasDistance)
-                _line(t, _roundUp(maxDistance, distInterval), distInterval),
-            ],
+        if (maxCost <= 0 && !hasDistance)
+          _NoData(label: emptyLabel, height: _height)
+        else
+          SizedBox(
+            height: _height,
+            child: Stack(
+              children: [
+                _bars(t, _roundUp(maxCost, costInterval), costInterval, hasDistance),
+                if (hasDistance)
+                  _line(t, _roundUp(maxDistance, distInterval), distInterval),
+              ],
+            ),
           ),
-        ),
         const SizedBox(height: 12),
         _Legend(
           items: [
@@ -343,7 +347,9 @@ class MonthlyComboChart extends StatelessWidget {
         barTouchData: BarTouchData(
           touchTooltipData: _barTooltip(
             t,
-            (y) => Formatters.currencyRounded(y, currencySymbol),
+            (i, y) => months[i].cost > 0
+                ? Formatters.currencyRounded(y, currencySymbol)
+                : null,
           ),
         ),
         titlesData: FlTitlesData(
@@ -591,22 +597,29 @@ FlGridData _horizontalGrid(DashTokens t, double interval) => FlGridData(
       getDrawingHorizontalLine: (_) => FlLine(color: t.hairline, strokeWidth: 1),
     );
 
-/// Tooltip over a touched bar, showing its value through [format].
+/// Tooltip over a touched bar, showing its value through [format]. A null from
+/// [format] shows none: an undrawn bar still answers touches, and its `toY`
+/// is only a placeholder.
 BarTouchTooltipData _barTooltip(
   DashTokens t,
-  String Function(double y) format,
+  String? Function(int groupIndex, double y) format,
 ) =>
     BarTouchTooltipData(
       getTooltipColor: (_) => t.overlaySurface,
-      getTooltipItem: (group, _, rod, _) => BarTooltipItem(
-        format(rod.toY),
-        TextStyle(
-          fontFamily: DashTokens.fontMono,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: t.textPrimary,
-        ),
-      ),
+      getTooltipItem: (_, groupIndex, rod, _) {
+        final text = format(groupIndex, rod.toY);
+        return text == null
+            ? null
+            : BarTooltipItem(
+                text,
+                TextStyle(
+                  fontFamily: DashTokens.fontMono,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: t.textPrimary,
+                ),
+              );
+      },
     );
 
 TextStyle _axisStyle(DashTokens t) => TextStyle(

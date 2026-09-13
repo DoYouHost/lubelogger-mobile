@@ -5,6 +5,22 @@ import 'calendar_month.dart';
 /// gas and odometer records). Raw stored distance unit.
 typedef OdometerReading = ({DateTime? date, double odometer});
 
+/// When the highest odometer value was last seen: a car standing still logs the
+/// same value again, and the later record is the fresher confirmation. A zero
+/// odometer is a record without a reading, so it never counts.
+DateTime? highestReadingDate(Iterable<OdometerReading> readings) {
+  DateTime? bestDate;
+  var bestOdometer = 0.0;
+  for (final (:date, :odometer) in readings) {
+    if (date == null || odometer <= 0 || odometer < bestOdometer) continue;
+    if (odometer > bestOdometer || date.isAfter(bestDate!)) {
+      bestOdometer = odometer;
+      bestDate = date;
+    }
+  }
+  return bestDate;
+}
+
 /// Expense record type, for coloring the monthly-expense bars by their dominant
 /// category (colors are assigned in the UI layer).
 enum ExpenseCategory { service, repair, upgrade, fuel, tax }

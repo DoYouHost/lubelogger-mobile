@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/format/calendar_month.dart';
 import '../../core/format/formatters.dart';
@@ -22,11 +23,6 @@ import 'widgets/dashboard_charts.dart';
 const _repairsColor = Color(0xFF8A5FD1);
 const _upgradesColor = Color(0xFFD1499A);
 const _okGreen = Color(0xFF4CAF6E);
-
-const _monthLabels = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
 
 /// Category → swatch, shared by the "Expenses by Type" donut and the combo
 /// chart's dominant-category bar coloring.
@@ -107,6 +103,7 @@ class _DashboardBody extends ConsumerWidget {
         .watch(monthlyBreakdownProvider(vehicleId))
         .valueOrNull;
     final window = trailingMonths(DateTime.now());
+    final monthLabel = DateFormat.LLL(l10n.localeName).format;
     final t = DashTokens.of(context);
 
     ChartSlice reminderSlice(String label, int count, Color color) =>
@@ -147,7 +144,7 @@ class _DashboardBody extends ConsumerWidget {
           distanceLegend:
               '${l10n.legendDistance} (${units.distanceLabel})',
           emptyLabel: l10n.chartNoData,
-          months: _comboMonths(context, window, breakdown, units),
+          months: _comboMonths(context, window, monthLabel, breakdown, units),
         ),
       ),
       ChartCard(
@@ -184,7 +181,7 @@ class _DashboardBody extends ConsumerWidget {
         child: MonthlyBars(
           lowerIsBetter: units.lowerIsBetter,
           emptyLabel: l10n.chartNoData,
-          bars: _monthlyBars(window, stats, units),
+          bars: _monthlyBars(window, monthLabel, stats, units),
         ),
       ),
     ];
@@ -221,6 +218,7 @@ class _DashboardBody extends ConsumerWidget {
   List<ComboMonth> _comboMonths(
     BuildContext context,
     List<DateTime> window,
+    String Function(DateTime) monthLabel,
     MonthlyBreakdown? breakdown,
     VehicleUnits units,
   ) {
@@ -231,7 +229,7 @@ class _DashboardBody extends ConsumerWidget {
           final entry = breakdown?.months[month];
           final dominant = entry?.dominantCategory;
           return ComboMonth(
-            label: _monthLabels[month.month - 1],
+            label: monthLabel(month),
             cost: entry?.totalCost ?? 0,
             barColor: dominant == null
                 ? t.accentGold
@@ -246,6 +244,7 @@ class _DashboardBody extends ConsumerWidget {
   /// unit, or null when that month has no economy data.
   List<MonthlyBar> _monthlyBars(
     List<DateTime> window,
+    String Function(DateTime) monthLabel,
     GasStats? stats,
     VehicleUnits units,
   ) {
@@ -256,7 +255,7 @@ class _DashboardBody extends ConsumerWidget {
     return [
       for (final month in window)
         MonthlyBar(
-          label: _monthLabels[month.month - 1],
+          label: monthLabel(month),
           value: byMonth[month] == null
               ? null
               : units.economyValue(byMonth[month]!, 1),

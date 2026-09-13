@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/features/dashboard/widgets/dashboard_charts.dart';
@@ -120,6 +121,78 @@ void main() {
       ),
     );
     expect(find.text('nothing'), findsOneWidget);
-    expect(find.text('Expenses'), findsNothing);
+    expect(find.text('Expenses'), findsOneWidget);
+  });
+
+  /// The tooltip [BarChart] would show over bar group [index], or null.
+  BarTooltipItem? tooltipAt(WidgetTester tester, int index) {
+    final data = tester.widget<BarChart>(find.byType(BarChart)).data;
+    final group = data.barGroups[index];
+    return data.barTouchData.touchTooltipData.getTooltipItem(
+      group,
+      index,
+      group.barRods.first,
+      0,
+    );
+  }
+
+  testWidgets('an empty month gets no tooltip, a filled one does',
+      (tester) async {
+    await pump(
+      tester,
+      MonthlyBars(
+        lowerIsBetter: true,
+        emptyLabel: 'nothing',
+        bars: const [
+          MonthlyBar(label: 'Oct', value: 6.5),
+          MonthlyBar(label: 'Nov', value: null),
+        ],
+      ),
+    );
+    expect(tooltipAt(tester, 0)?.text, '6.5');
+    expect(tooltipAt(tester, 1), isNull);
+
+    await pump(
+      tester,
+      MonthlyComboChart(
+        currencySymbol: r'$',
+        expensesLegend: 'Expenses',
+        distanceLegend: 'Distance',
+        emptyLabel: 'nothing',
+        months: const [
+          ComboMonth(label: 'Oct', cost: 120, barColor: Colors.blue, distance: 0),
+          ComboMonth(label: 'Nov', cost: 0, barColor: Colors.blue, distance: 0),
+        ],
+      ),
+    );
+    expect(tooltipAt(tester, 0)?.text, r'$120');
+    expect(tooltipAt(tester, 1), isNull);
+  });
+
+  testWidgets('a chart keeps its height when data replaces the empty state',
+      (tester) async {
+    Future<double> heightOf(Widget chart) async {
+      await pump(tester, Center(child: chart));
+      return tester.getSize(find.byWidget(chart)).height;
+    }
+
+    MonthlyBars bars(double? value) => MonthlyBars(
+          lowerIsBetter: true,
+          emptyLabel: 'nothing',
+          bars: [for (final label in months) MonthlyBar(label: label, value: value)],
+        );
+    expect(await heightOf(bars(null)), await heightOf(bars(7)));
+
+    MonthlyComboChart combo(double cost) => MonthlyComboChart(
+          currencySymbol: r'$',
+          expensesLegend: 'Expenses',
+          distanceLegend: 'Distance',
+          emptyLabel: 'nothing',
+          months: [
+            for (final label in months)
+              ComboMonth(label: label, cost: cost, barColor: Colors.blue, distance: 0),
+          ],
+        );
+    expect(await heightOf(combo(0)), await heightOf(combo(120)));
   });
 }
