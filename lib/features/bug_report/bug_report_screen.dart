@@ -127,9 +127,18 @@ class _IdleViewState extends ConsumerState<_IdleView> {
           onChanged: ref.read(bugReportProvider.notifier).chooseKind,
         ),
         const SizedBox(height: 12),
-        if (state.kind.needsLog)
-          ..._bugSteps(l10n)
-        else
+        if (state.kind.needsLog) ...[
+          // A report queued earlier — a request a moment ago, or anything left
+          // in the outbox by the last run — keeps counting down whatever tab is
+          // open, and this tab is where the screen opens after a restart.
+          if (state.send.phase == SendPhase.waiting ||
+              state.send.phase == SendPhase.sending) ...[
+            _SendStatus(send: state.send, shownKind: state.kind),
+            if (state.send.phase == SendPhase.waiting) const _CancelSend(),
+            const SizedBox(height: 12),
+          ],
+          ..._bugSteps(l10n),
+        ] else
           ..._requestForm(l10n, state),
       ],
     );
@@ -212,7 +221,7 @@ class _IdleViewState extends ConsumerState<_IdleView> {
             : l10n.bugReportChangeLabel,
         hint: feature ? l10n.bugReportFeatureHint : l10n.bugReportChangeHint,
       ),
-      _SendStatus(send: state.send),
+      _SendStatus(send: state.send, shownKind: state.kind),
       const SizedBox(height: 8),
       if (sent)
         _SentActions(
@@ -226,10 +235,7 @@ class _IdleViewState extends ConsumerState<_IdleView> {
         // off, and afterwards the relay already has it.
         if (state.send.phase == SendPhase.waiting) ...[
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: ref.read(bugReportProvider.notifier).cancelSend,
-            child: Text(l10n.bugReportCancelSend),
-          ).tagged('bug_report.cancel_send'),
+          const _CancelSend(),
         ],
       ],
     ];
@@ -454,7 +460,7 @@ class _ReviewViewState extends ConsumerState<_ReviewView> {
                       state.send.phase == SendPhase.idle ||
                       state.send.phase == SendPhase.failed,
                 ),
-                _SendStatus(send: state.send),
+                _SendStatus(send: state.send, shownKind: ReportKind.bug),
               ],
               const SizedBox(height: 12),
               _SummaryCard(summary: summary),
@@ -732,9 +738,12 @@ class _DescriptionField extends StatelessWidget {
 /// one thing on this screen the user did not ask for and cannot shorten, so
 /// burying it reads as the app having quietly hung.
 class _SendStatus extends StatelessWidget {
-  const _SendStatus({required this.send});
+  const _SendStatus({required this.send, required this.shownKind});
 
   final SendState send;
+
+  /// The kind the screen is showing, which a queued report need not be.
+  final ReportKind shownKind;
 
   /// `m:ss`, because "167 s" is a number the reader has to convert themselves.
   static String clock(Duration left) {
@@ -745,18 +754,33 @@ class _SendStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (send.phase) {
-      SendPhase.waiting => _Waiting(remaining: send.remaining),
+      SendPhase.waiting => _Waiting(
+        remaining: send.remaining,
+        otherKind: send.kind == shownKind ? null : send.kind,
+      ),
       SendPhase.sending => const _Working(),
-      SendPhase.failed => _Failed(failure: send.failure),
+      // Worded for the report that failed: the bug wording's fallback is
+      // saving the log, and a request has none.
+      SendPhase.failed => _Failed(failure: send.failure, kind: send.kind),
       SendPhase.idle || SendPhase.sent => const SizedBox.shrink(),
     };
   }
 }
 
 class _Waiting extends StatelessWidget {
-  const _Waiting({required this.remaining});
+  const _Waiting({required this.remaining, this.otherKind});
 
   final Duration remaining;
+
+  /// Set when the countdown belongs to a report of another kind than the tab.
+  final ReportKind? otherKind;
+
+  static String _queuedText(AppLocalizations l10n, ReportKind kind) =>
+      switch (kind) {
+        ReportKind.bug => l10n.bugReportQueuedBug,
+        ReportKind.change => l10n.bugReportQueuedChange,
+        ReportKind.feature => l10n.bugReportQueuedFeature,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -791,6 +815,18 @@ class _Waiting extends StatelessWidget {
                     color: t.textPrimary,
                   ),
                 ),
+                if (otherKind case final kind?) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    _queuedText(l10n, kind),
+                    style: TextStyle(
+                      fontFamily: DashTokens.fontUi,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: t.textPrimary,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   l10n.bugReportSendWaitingBody,
@@ -842,9 +878,10 @@ class _Working extends StatelessWidget {
 }
 
 class _Failed extends StatelessWidget {
-  const _Failed({required this.failure});
+  const _Failed({required this.failure, required this.kind});
 
   final RelayFailure? failure;
+  final ReportKind kind;
 
   @override
   Widget build(BuildContext context) {
@@ -852,7 +889,9 @@ class _Failed extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
-        _failureText(AppLocalizations.of(context), failure),
+        kind.needsLog
+            ? _failureText(AppLocalizations.of(context), failure)
+            : _requestFailureText(AppLocalizations.of(context), failure),
         style: TextStyle(
           fontFamily: DashTokens.fontUi,
           fontSize: 12,
@@ -872,6 +911,29 @@ class _Failed extends StatelessWidget {
         RelayFailure.demo => l10n.bugReportSendFailedDemo,
         RelayFailure.rejected || null => l10n.bugReportSendFailedRejected,
       };
+
+  static String _requestFailureText(
+    AppLocalizations l10n,
+    RelayFailure? failure,
+  ) => switch (failure) {
+    RelayFailure.notYet => l10n.bugReportRequestFailedNotYet,
+    RelayFailure.duplicate => l10n.bugReportSendFailedDuplicate,
+    RelayFailure.unreachable => l10n.bugReportRequestFailedUnreachable,
+    RelayFailure.demo => l10n.bugReportRequestFailedDemo,
+    RelayFailure.refused ||
+    RelayFailure.rejected ||
+    null => l10n.bugReportRequestFailedRefused,
+  };
+}
+
+class _CancelSend extends ConsumerWidget {
+  const _CancelSend();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => TextButton(
+    onPressed: ref.read(bugReportProvider.notifier).cancelSend,
+    child: Text(AppLocalizations.of(context).bugReportCancelSend),
+  ).tagged('bug_report.cancel_send');
 }
 
 class _SendButton extends StatelessWidget {
@@ -978,10 +1040,12 @@ class _SummaryCard extends StatelessWidget {
 
   final LogSummary summary;
 
-  /// The header without the two keys that mean nothing to a reader.
+  static const _bookkeeping = {'v', 'session', 'stream', 'ts'};
+
+  /// The header without the keys that describe the file rather than the phone.
   Map<String, Object?> get _sessionFacts => {
     for (final e in summary.header.entries)
-      if (e.key != 'v' && e.key != 'session') e.key: e.value,
+      if (!_bookkeeping.contains(e.key)) e.key: e.value,
   };
 
   @override

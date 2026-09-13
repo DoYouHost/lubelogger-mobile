@@ -483,7 +483,16 @@ final diagnosticRecorderProvider = Provider<DiagnosticRecorder>(
 /// must see none of the auth interceptors, none of the credentials and none of
 /// the base URL the user configured.
 final relayClientProvider = Provider<RelayClient>(
-  (ref) => RelayClient(ref.watch(bareDioProvider), baseUrl: relayBaseUrl),
+  (ref) => RelayClient(ref.watch(relayDioProvider), baseUrl: relayBaseUrl),
+);
+
+/// A report carries the gzipped log in its body — up to a couple of megabytes
+/// from a 10 MB session — and dio spends `sendTimeout` on the whole body, so the
+/// 15 s an API call gets would fail it on a slow mobile link.
+final relayDioProvider = Provider<Dio>(
+  (ref) => createBareDio()
+    ..options.sendTimeout = kUploadSendTimeout
+    ..options.receiveTimeout = kUploadReceiveTimeout,
 );
 
 final reportOutboxProvider =
