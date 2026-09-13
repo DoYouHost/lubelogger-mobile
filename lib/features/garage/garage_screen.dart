@@ -1,4 +1,5 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_ui/app_report_ui.dart' show bugReportRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -9,7 +10,6 @@ import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
-import '../bug_report/recording_banner.dart' show bugReportRoute;
 import '../common/state_views.dart';
 import '../sync/sync_sheet.dart';
 import 'add_vehicle_form.dart';

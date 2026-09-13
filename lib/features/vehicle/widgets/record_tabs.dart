@@ -783,7 +783,7 @@ class EquipmentTab extends ConsumerWidget {
               headline: r.isEquipped
                   ? l10n.equipmentEquipped
                   : l10n.equipmentRemoved,
-              headlineColor: r.isEquipped ? _equippedGreen : t.textTertiary,
+              headlineColor: r.isEquipped ? equippedInk(t) : t.textTertiary,
               description: r.notes.isEmpty ? null : r.notes,
               meta: [
                 if (r.distanceTraveled != null)
@@ -806,8 +806,12 @@ class EquipmentTab extends ConsumerWidget {
   }
 }
 
-/// Positive-status green for an equipped item (matches the dashboard's OK green).
-const _equippedGreen = Color(0xFF4CAF6E);
+/// Positive-status green for an equipped item: the dashboard's OK green in the
+/// dark theme, and that hue darkened in the light one, where the swatch reads
+/// 2.3:1 as a headline. `brand_contrast_test.dart` measures both.
+@visibleForTesting
+Color equippedInk(DashTokens t) =>
+    t.isDark ? const Color(0xFF4CAF6E) : const Color(0xFF317147);
 
 String _planPriority(PlanPriority p, AppLocalizations l10n) => switch (p) {
   PlanPriority.critical => l10n.planPriorityCritical,
@@ -834,9 +838,9 @@ String _urgencyLabel(ReminderUrgency u, AppLocalizations l10n) => switch (u) {
 
 Color _urgencyColor(ReminderUrgency u, DashTokens t) => switch (u) {
   ReminderUrgency.notUrgent => t.textTertiary,
-  ReminderUrgency.urgent => t.accentOrange,
-  ReminderUrgency.veryUrgent => t.danger,
-  ReminderUrgency.pastDue => t.danger,
+  ReminderUrgency.urgent => t.accentOrangeInk,
+  ReminderUrgency.veryUrgent => t.dangerInk,
+  ReminderUrgency.pastDue => t.dangerInk,
   ReminderUrgency.unknown => t.textTertiary,
 };
 

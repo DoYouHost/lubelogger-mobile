@@ -82,7 +82,7 @@ class RecordFormScaffold extends StatelessWidget {
                   // as the form's own surface (`form.fuel`, `form.note`, …).
                   if (isEditing && onDelete != null)
                     IconButton(
-                      icon: Icon(Icons.delete_outline, color: t.danger),
+                      icon: Icon(Icons.delete_outline, color: t.dangerInk),
                       onPressed: submitting ? null : onDelete,
                     ).tagged('form.delete'),
                   IconButton(
@@ -99,7 +99,7 @@ class RecordFormScaffold extends StatelessWidget {
                 Text(
                   error!,
                   style: TextStyle(
-                    color: t.danger,
+                    color: t.dangerInk,
                     fontFamily: DashTokens.fontUi,
                   ),
                 ),

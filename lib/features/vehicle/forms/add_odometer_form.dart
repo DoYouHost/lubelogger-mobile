@@ -145,7 +145,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   ),
                   if (_isEditing)
                     IconButton(
-                      icon: Icon(Icons.delete_outline, color: t.danger),
+                      icon: Icon(Icons.delete_outline, color: t.dangerInk),
                       onPressed: _submitting ? null : _confirmDelete,
                     ).tagged('form.delete'),
                   IconButton(
@@ -236,7 +236,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 Text(
                   _error!,
                   style: TextStyle(
-                    color: t.danger,
+                    color: t.dangerInk,
                     fontFamily: DashTokens.fontUi,
                   ),
                 ),

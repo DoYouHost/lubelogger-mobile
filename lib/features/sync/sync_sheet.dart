@@ -36,7 +36,13 @@ class SyncStatusAction extends ConsumerWidget {
 
     final pending = sync.pending.length;
     final refused = sync.rejected.isNotEmpty;
-    final accent = refused ? t.danger : (pending > 0 ? t.accentGold : t.textTertiary);
+    // The count sits on the fill and the icon on the app bar, so each takes the
+    // colour that reads where it is.
+    final fill = refused ? t.dangerInk : t.accentGold;
+    final label = refused ? t.onDanger : t.onAccent;
+    final ink = refused
+        ? t.dangerInk
+        : (pending > 0 ? t.accentGoldInk : t.textTertiary);
 
     return IconButton(
       tooltip: pending > 0 ? l10n.syncPendingTooltip : l10n.syncOfflineTooltip,
@@ -44,13 +50,13 @@ class SyncStatusAction extends ConsumerWidget {
       icon: Badge(
         isLabelVisible: pending > 0,
         label: Text('$pending'),
-        backgroundColor: accent,
-        textColor: t.accentGoldInk,
+        backgroundColor: fill,
+        textColor: label,
         child: Icon(
           pending > 0 || refused
               ? Icons.cloud_upload_outlined
               : Icons.cloud_off_outlined,
-          color: accent,
+          color: ink,
         ),
       ),
     ).tagged('sync.open');
@@ -95,7 +101,7 @@ class _SyncSheet extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: DashTokens.fontUi,
                   fontSize: 13,
-                  color: sync.offline ? t.danger : t.textTertiary,
+                  color: sync.offline ? t.dangerInk : t.textTertiary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -153,7 +159,7 @@ class _SyncSheet extends ConsumerWidget {
                     fontFamily: DashTokens.fontUi,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: t.danger,
+                    color: t.dangerInk,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -172,7 +178,7 @@ class _SyncSheet extends ConsumerWidget {
                     title: describePendingWrite(write, l10n),
                     subtitle: write.lastError,
                     icon: Icons.error_outline,
-                    tint: t.danger,
+                    tint: t.dangerInk,
                     onDiscard: () => ref
                         .read(syncStateProvider.notifier)
                         .discardRejected(write.id),

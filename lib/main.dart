@@ -15,6 +15,7 @@ import 'core/notifications/notification_service.dart';
 import 'core/background/background_worker.dart';
 import 'core/quick_actions_service.dart';
 import 'core/settings/settings_repository.dart';
+import 'features/bug_report/report_wiring.dart';
 import 'features/quick_actions/quick_action_handler.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -117,6 +118,7 @@ Future<void> main() async {
     ProviderScope(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
+        reportBindingsOverride,
       ],
       child: const LubeLoggerApp(),
     ),

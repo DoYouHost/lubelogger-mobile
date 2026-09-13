@@ -1,4 +1,5 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_ui/app_report_ui.dart' show bugReportRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +9,6 @@ import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
-import '../bug_report/recording_banner.dart' show bugReportRoute;
 import '../common/vehicle_tab_ui.dart';
 
 /// Basic settings: display units (currency / distance / fuel economy) and the
@@ -277,7 +277,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: t.danger,
+                      foregroundColor: t.dangerInk,
                       side: BorderSide(color: t.danger.withValues(alpha: 0.5)),
                     ),
                     icon: const Icon(Icons.logout, size: 18),

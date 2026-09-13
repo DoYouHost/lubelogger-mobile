@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/app.dart';
 import 'package:lubelogger_mobile/core/models/vehicle_info.dart';
+import 'package:lubelogger_mobile/features/bug_report/report_wiring.dart';
 import 'package:lubelogger_mobile/features/garage/widgets/vehicle_card.dart';
 import 'package:lubelogger_mobile/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +24,7 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
+          reportBindingsOverride,
           garageProvider.overrideWith((ref) async => vehicles),
         ],
         child: const LubeLoggerApp(),

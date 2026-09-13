@@ -188,7 +188,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     fontFamily: DashTokens.fontUi,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: t.danger,
+                    color: t.dangerInk,
                   ),
                 ),
               ),

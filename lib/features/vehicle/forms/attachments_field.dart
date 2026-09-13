@@ -214,7 +214,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+              style: TextStyle(color: t.dangerInk, fontFamily: DashTokens.fontUi),
             ),
           ],
         ],

@@ -71,15 +71,4 @@ void main() {
       'lib/features/vehicle/vehicle_screen.dart: "vehicle.tabbar.\${tab.id}"',
     ]);
   });
-
-  test("the recorder's own controls are named so the probe can skip them", () {
-    // `InteractionProbe.ownUiPrefix` — the recorder must not record the user
-    // operating the recorder.
-    final own = [
-      for (final (file, id) in _declaredTags())
-        if (file.contains('features/bug_report/')) id,
-    ];
-    expect(own, isNotEmpty);
-    expect(own.every((id) => id.startsWith('bug_report.')), isTrue);
-  });
 }

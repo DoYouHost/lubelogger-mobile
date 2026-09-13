@@ -79,7 +79,7 @@ Future<bool> _confirm(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               confirmLabel,
-              style: danger ? TextStyle(color: t.danger) : null,
+              style: danger ? TextStyle(color: t.dangerInk) : null,
             ),
           ).tagged('confirm.ok'),
         ],
