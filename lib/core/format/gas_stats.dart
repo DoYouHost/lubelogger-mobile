@@ -1,4 +1,5 @@
 import '../models/gas_record.dart';
+import 'calendar_month.dart';
 
 /// Energy drawn from the battery since the previous charge, ported from
 /// LubeLogger's `GasHelper`. An electric record logs the energy put *in*, so the
@@ -25,14 +26,14 @@ List<GasRecord> _chronological(List<GasRecord> records) => [...records]..sort((
   return byOdometer != 0 ? byOdometer : a.endingSoc.compareTo(b.endingSoc);
 });
 
-/// One calendar month's fuel economy, as a raw distance/volume ratio (stored
-/// distance units per stored volume unit). The screen converts it to the user's
-/// chosen unit + measurement base for display.
+/// One month's fuel economy, as a raw distance/volume ratio (stored distance
+/// units per stored volume unit). The screen converts it to the user's chosen
+/// unit + measurement base for display.
 class MonthlyEconomy {
   const MonthlyEconomy({required this.month, required this.rawRatio});
 
-  /// Calendar month, 1 (Jan) … 12 (Dec).
-  final int month;
+  /// First day of the month, see [monthOf].
+  final DateTime month;
 
   /// Average of the per-record distance÷volume ratios for this month, in raw
   /// stored units. Mirrors LubeLogger's report, which averages per-record
@@ -67,7 +68,8 @@ class GasStats {
   /// dashboard's "Distance Traveled".
   final double distanceSpan;
 
-  /// Per-calendar-month average economy (raw ratio), only for months with data.
+  /// Per-month average economy (raw ratio), oldest first, only for months with
+  /// data.
   final List<MonthlyEconomy> monthly;
 
   bool get hasEconomy => totalRawDistance > 0 && totalRawVolume > 0;
@@ -89,9 +91,9 @@ class GasStats {
     double minOdometer = double.infinity;
     double maxOdometer = 0;
 
-    // Per-record ratio grouped by calendar month (only records that resolve a
-    // full-tank economy contribute — the rest are null and skipped).
-    final ratiosByMonth = <int, List<double>>{};
+    // Per-record ratio grouped by month (only records that resolve a full-tank
+    // economy contribute — the rest are null and skipped).
+    final ratiosByMonth = <DateTime, List<double>>{};
 
     for (var i = 0; i < sorted.length; i++) {
       final r = sorted[i];
@@ -149,7 +151,7 @@ class GasStats {
       }
 
       if (ratio != null && ratio > 0 && r.date != null) {
-        (ratiosByMonth[r.date!.month] ??= []).add(ratio);
+        (ratiosByMonth[monthOf(r.date!)] ??= []).add(ratio);
       }
 
       if (r.odometer > 0) previousOdometer = r.odometer;

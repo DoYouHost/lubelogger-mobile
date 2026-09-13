@@ -1,4 +1,5 @@
 import '../models/dated_cost.dart';
+import 'calendar_month.dart';
 
 /// A single odometer reading on the shared distance timeline (sourced from both
 /// gas and odometer records). Raw stored distance unit.
@@ -8,7 +9,7 @@ typedef OdometerReading = ({DateTime? date, double odometer});
 /// category (colors are assigned in the UI layer).
 enum ExpenseCategory { service, repair, upgrade, fuel, tax }
 
-/// One calendar month's expenses (broken down by category) and distance, for the
+/// Each month's expenses (broken down by category) and distance, for the
 /// "Expenses and Distance by Month" combo chart. Costs are summed across every
 /// record type per month. Distance is derived from a single timeline of every
 /// odometer reading (gas + odometer records) — the delta between consecutive
@@ -17,25 +18,28 @@ enum ExpenseCategory { service, repair, upgrade, fuel, tax }
 class MonthlyBreakdown {
   const MonthlyBreakdown({required this.months});
 
-  final List<MonthlyEntry> months;
+  /// Keyed by [monthOf]; a month with no records is absent.
+  final Map<DateTime, MonthlyEntry> months;
 
-  bool get hasCost => months.any((m) => m.totalCost > 0);
-  bool get hasDistance => months.any((m) => m.distance > 0);
+  bool get hasCost => months.values.any((m) => m.totalCost > 0);
+  bool get hasDistance => months.values.any((m) => m.distance > 0);
 
   factory MonthlyBreakdown.from({
     required Map<ExpenseCategory, List<DatedCost>> costsByCategory,
     required List<OdometerReading> odometerReadings,
   }) {
-    final entries = [
-      for (var month = 1; month <= 12; month++) _MutableEntry(month: month),
-    ];
+    final entries = <DateTime, _MutableEntry>{};
+    _MutableEntry entryFor(DateTime date) {
+      final month = monthOf(date);
+      return entries[month] ??= _MutableEntry(month: month);
+    }
 
     costsByCategory.forEach((category, records) {
       for (final r in records) {
-        final m = r.date?.month;
-        if (m == null) continue;
-        entries[m - 1].byCategory[category] =
-            (entries[m - 1].byCategory[category] ?? 0) + r.cost;
+        final date = r.date;
+        if (date == null) continue;
+        final entry = entryFor(date);
+        entry.byCategory[category] = (entry.byCategory[category] ?? 0) + r.cost;
       }
     });
 
@@ -52,12 +56,16 @@ class MonthlyBreakdown {
     for (final r in timeline) {
       if (previous != null) {
         final delta = r.odometer - previous;
-        if (delta > 0) entries[r.date!.month - 1].distance += delta;
+        if (delta > 0) entryFor(r.date!).distance += delta;
       }
       previous = r.odometer;
     }
 
-    return MonthlyBreakdown(months: [for (final e in entries) e.freeze()]);
+    return MonthlyBreakdown(
+      months: {
+        for (final e in entries.values) e.month: e.freeze(),
+      },
+    );
   }
 }
 
@@ -69,7 +77,8 @@ class MonthlyEntry {
     required this.distance,
   });
 
-  final int month;
+  /// First day of the month, see [monthOf].
+  final DateTime month;
   final Map<ExpenseCategory, double> byCategory;
   final double distance;
 
@@ -93,7 +102,7 @@ class MonthlyEntry {
 class _MutableEntry {
   _MutableEntry({required this.month});
 
-  final int month;
+  final DateTime month;
   final Map<ExpenseCategory, double> byCategory = {};
   double distance = 0;
 

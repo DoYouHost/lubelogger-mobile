@@ -742,7 +742,7 @@ final equipmentRecordsProvider =
 );
 
 /// Monthly expense (by category) + distance breakdown for one vehicle,
-/// aggregated per calendar month for the combo chart.
+/// aggregated per month for the combo chart.
 ///
 /// Every list it needs is already a provider of its own, so it composes those
 /// instead of re-fetching: opening the dashboard and then a record tab reads

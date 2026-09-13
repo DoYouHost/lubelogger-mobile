@@ -401,7 +401,12 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
             sliver: SliverToBoxAdapter(child: top),
           ),
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, top == null ? 8 : 0, 16, 32),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            top == null ? 8 : 0,
+            16,
+            fabScrollClearance(context),
+          ),
           sliver: SliverResponsiveCards(
             itemCount: content.count,
             itemBuilder: content.card,

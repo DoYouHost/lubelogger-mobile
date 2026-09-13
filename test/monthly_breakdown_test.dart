@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lubelogger_mobile/core/format/calendar_month.dart';
 import 'package:lubelogger_mobile/core/format/monthly_breakdown.dart';
 import 'package:lubelogger_mobile/core/models/dated_cost.dart';
 
@@ -10,21 +11,36 @@ OdometerReading reading(String date, double odo) =>
 
 void main() {
   group('MonthlyBreakdown.from', () {
-    test('sums costs per calendar month across categories', () {
+    test('sums costs per month across categories', () {
       final b = MonthlyBreakdown.from(
         costsByCategory: {
           ExpenseCategory.service: [cost('2026-03-05', 100), cost('2026-03-20', 50)],
           ExpenseCategory.fuel: [cost('2026-03-10', 30), cost('2026-07-01', 40)],
-          ExpenseCategory.tax: [cost('2025-03-15', 200)], // different year, same month
         },
         odometerReadings: const [],
       );
 
-      final march = b.months.firstWhere((m) => m.month == 3);
-      // 100 + 50 (service) + 30 (fuel) + 200 (tax, prior year folds into March).
-      expect(march.totalCost, 380);
-      final july = b.months.firstWhere((m) => m.month == 7);
-      expect(july.totalCost, 40);
+      expect(b.months[DateTime(2026, 3)]!.totalCost, 180);
+      expect(b.months[DateTime(2026, 7)]!.totalCost, 40);
+    });
+
+    test('the same month of different years stays apart', () {
+      final b = MonthlyBreakdown.from(
+        costsByCategory: {
+          ExpenseCategory.service: [cost('2026-03-05', 100)],
+          ExpenseCategory.tax: [cost('2025-03-15', 200)],
+        },
+        odometerReadings: [
+          reading('2025-02-01', 1000),
+          reading('2025-03-01', 1400),
+          reading('2026-03-01', 9000),
+        ],
+      );
+
+      expect(b.months[DateTime(2026, 3)]!.totalCost, 100);
+      expect(b.months[DateTime(2025, 3)]!.totalCost, 200);
+      expect(b.months[DateTime(2025, 3)]!.distance, 400);
+      expect(b.months[DateTime(2026, 3)]!.distance, 7600);
     });
 
     test('dominant category is the highest-spend type that month', () {
@@ -36,8 +52,10 @@ void main() {
         },
         odometerReadings: const [],
       );
-      final march = b.months.firstWhere((m) => m.month == 3);
-      expect(march.dominantCategory, ExpenseCategory.repair);
+      expect(
+        b.months[DateTime(2026, 3)]!.dominantCategory,
+        ExpenseCategory.repair,
+      );
     });
 
     test('distance is the delta between consecutive odometer readings', () {
@@ -50,20 +68,34 @@ void main() {
           reading('2026-05-10', 1500), // +150 → May
         ],
       );
-      expect(b.months.firstWhere((m) => m.month == 4).distance, 350);
-      expect(b.months.firstWhere((m) => m.month == 5).distance, 150);
+      expect(b.months[DateTime(2026, 4)]!.distance, 350);
+      expect(b.months[DateTime(2026, 5)]!.distance, 150);
       expect(b.hasDistance, isTrue);
     });
 
-    test('always yields 12 months; empty input is all zeros', () {
+    test('empty input has no months', () {
       final b = MonthlyBreakdown.from(
         costsByCategory: const {},
         odometerReadings: const [],
       );
-      expect(b.months.length, 12);
+      expect(b.months, isEmpty);
       expect(b.hasCost, isFalse);
       expect(b.hasDistance, isFalse);
-      expect(b.months.every((m) => m.dominantCategory == null), isTrue);
+    });
+  });
+
+  group('trailingMonths', () {
+    test('ends with the current month and crosses the year boundary', () {
+      final window = trailingMonths(DateTime(2026, 9, 13, 17, 30));
+      expect(window, hasLength(12));
+      expect(window.first, DateTime(2025, 10));
+      expect(window.last, DateTime(2026, 9));
+    });
+
+    test('matches the keys records are bucketed under', () {
+      final window = trailingMonths(DateTime(2026, 1, 31));
+      expect(window.first, DateTime(2025, 2));
+      expect(window, contains(monthOf(DateTime(2025, 12, 31, 23, 59))));
     });
   });
 }

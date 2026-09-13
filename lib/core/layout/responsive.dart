@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart'
+    show FloatingActionButton, kFloatingActionButtonMargin;
 import 'package:flutter/widgets.dart';
 
 /// Layout helpers for adapting the (single-column, portrait-first) design to
@@ -12,6 +14,17 @@ const double kBottomSheetMaxWidth = 640;
 /// Max width for a centered full-screen content column (e.g. Settings), so its
 /// rows stay readable in landscape instead of running the whole width.
 const double kContentMaxWidth = 760;
+
+/// Bottom padding for a scroll view under a floating action button, so its last
+/// card can scroll fully above the button instead of ending behind it.
+double fabScrollClearance(BuildContext context) =>
+    MediaQuery.paddingOf(context).bottom +
+    _fabSize +
+    kFloatingActionButtonMargin +
+    16;
+
+/// A regular [FloatingActionButton]'s diameter; Material exports no constant.
+const double _fabSize = 56;
 
 /// First width at which a second column of cards fits.
 const double _wideBreakpoint = 600;

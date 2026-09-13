@@ -53,7 +53,7 @@ void main() {
         rec('2026-02-01', 1100, 10, full: false),
         rec('2026-03-01', 1300, 15),
       ]);
-      final march = stats.monthly.firstWhere((m) => m.month == 3);
+      final march = stats.monthly.firstWhere((m) => m.month == DateTime(2026, 3));
       expect(march.rawRatio, closeTo(300 / 25, 1e-9));
     });
 
@@ -66,9 +66,22 @@ void main() {
         rec('2026-03-01', 1400, 20),
       ]);
       // Only the 1200→1400 interval resolves: 200 km / 20 L.
-      final march = stats.monthly.firstWhere((m) => m.month == 3);
+      final march = stats.monthly.firstWhere((m) => m.month == DateTime(2026, 3));
       expect(march.rawRatio, closeTo(200 / 20, 1e-9));
-      expect(stats.monthly.where((m) => m.month == 2), isEmpty);
+      expect(stats.monthly.where((m) => m.month == DateTime(2026, 2)), isEmpty);
+    });
+
+    test('monthly economy keeps the same month of different years apart', () {
+      final stats = GasStats.from([
+        rec('2025-02-01', 1000, 18), // primer
+        rec('2025-03-01', 1200, 20),
+        rec('2026-03-01', 1500, 10),
+      ]);
+      expect(stats.monthly.map((m) => m.month), [
+        DateTime(2025, 3),
+        DateTime(2026, 3),
+      ]);
+      expect(stats.monthly.last.rawRatio, closeTo(300 / 10, 1e-9));
     });
 
     test('empty log yields no economy', () {

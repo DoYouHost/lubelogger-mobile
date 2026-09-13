@@ -182,8 +182,8 @@ class MonthlyBar {
   final double? value;
 }
 
-/// Twelve-month bar chart (Jan…Dec) with efficiency coloring: each bar is tinted
-/// on a red→orange→green scale by how good its value is relative to the others,
+/// Per-month bar chart with efficiency coloring: each bar is tinted on a
+/// red→orange→green scale by how good its value is relative to the others,
 /// respecting whether smaller or larger is better ([lowerIsBetter]).
 class MonthlyBars extends StatelessWidget {
   const MonthlyBars({

@@ -4,6 +4,7 @@ import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/format/calendar_month.dart';
 import '../../core/format/formatters.dart';
 import '../../core/format/gas_stats.dart';
 import '../../core/format/monthly_breakdown.dart';
@@ -86,6 +87,7 @@ class _DashboardBody extends ConsumerWidget {
     final breakdown = ref
         .watch(monthlyBreakdownProvider(vehicleId))
         .valueOrNull;
+    final window = trailingMonths(DateTime.now());
 
     // Charts flow two-up on wider (landscape) screens, single column on
     // portrait phones. Off-screen ones are left unbuilt: a chart is expensive to
@@ -152,7 +154,7 @@ class _DashboardBody extends ConsumerWidget {
           distanceLegend:
               '${l10n.legendDistance} (${units.distanceLabel})',
           emptyLabel: l10n.chartNoData,
-          months: _comboMonths(context, breakdown, units),
+          months: _comboMonths(context, window, breakdown, units),
         ),
       ),
       ChartCard(
@@ -193,7 +195,7 @@ class _DashboardBody extends ConsumerWidget {
         child: MonthlyBars(
           lowerIsBetter: units.lowerIsBetter,
           emptyLabel: l10n.chartNoData,
-          bars: _monthlyBars(stats, units),
+          bars: _monthlyBars(window, stats, units),
         ),
       ),
     ];
@@ -212,7 +214,7 @@ class _DashboardBody extends ConsumerWidget {
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, fabScrollClearance(context)),
           sliver: SliverResponsiveCards(
             maxColumns: 2,
             spacing: 16,
@@ -225,24 +227,22 @@ class _DashboardBody extends ConsumerWidget {
     );
   }
 
-  /// Twelve months (Jan…Dec) of total expenses (colored by dominant category)
-  /// and distance (converted to the display unit) for the combo chart.
+  /// Total expenses (colored by dominant category) and distance (converted to
+  /// the display unit) for each month of [window].
   List<ComboMonth> _comboMonths(
     BuildContext context,
+    List<DateTime> window,
     MonthlyBreakdown? breakdown,
     VehicleUnits units,
   ) {
     final t = DashTokens.of(context);
-    final byMonth = {
-      for (final e in breakdown?.months ?? const <MonthlyEntry>[]) e.month: e,
-    };
     return [
-      for (var month = 1; month <= 12; month++)
+      for (final month in window)
         () {
-          final entry = byMonth[month];
+          final entry = breakdown?.months[month];
           final dominant = entry?.dominantCategory;
           return ComboMonth(
-            label: _monthLabels[month - 1],
+            label: _monthLabels[month.month - 1],
             cost: entry?.totalCost ?? 0,
             barColor: dominant == null
                 ? t.accentGold
@@ -253,17 +253,21 @@ class _DashboardBody extends ConsumerWidget {
     ];
   }
 
-  /// Twelve slots (Jan…Dec); each month's raw ratio converted to the display
+  /// One slot per month of [window]: its raw ratio converted to the display
   /// unit, or null when that month has no economy data.
-  List<MonthlyBar> _monthlyBars(GasStats? stats, VehicleUnits units) {
+  List<MonthlyBar> _monthlyBars(
+    List<DateTime> window,
+    GasStats? stats,
+    VehicleUnits units,
+  ) {
     final byMonth = {
       for (final m in stats?.monthly ?? const <MonthlyEconomy>[])
         m.month: m.rawRatio,
     };
     return [
-      for (var month = 1; month <= 12; month++)
+      for (final month in window)
         MonthlyBar(
-          label: _monthLabels[month - 1],
+          label: _monthLabels[month.month - 1],
           value: byMonth[month] == null
               ? null
               : units.economyValue(byMonth[month]!, 1),
