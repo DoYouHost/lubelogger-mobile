@@ -201,3 +201,8 @@ doc/api/
 
 # Claude Code machine-local settings (permissions cache)
 .claude/settings.local.json
+
+# Points a shared package at a local checkout of app-shared while its tag is not
+# out yet. Committed, it would break every clone and CI, which have no sibling
+# checkout.
+pubspec_overrides.yaml

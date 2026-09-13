@@ -361,12 +361,14 @@ class FuelTab extends ConsumerWidget {
                     _odoUnit(stats.distanceSpan, units),
                   ),
                   accent: t.accentOrange,
+                  accentInk: t.accentOrangeInk,
                 ),
               DashPill(
                 label: (units.isElectric ? l10n.fuelPillEnergy : l10n.fuelPillFuel)(
                   '${Formatters.odometer(totalFuel)} ${units.consumptionLabel}',
                 ),
                 accent: t.accentOrange,
+                accentInk: t.accentOrangeInk,
               ),
               DashPill(
                 label: l10n.fuelPillCost(

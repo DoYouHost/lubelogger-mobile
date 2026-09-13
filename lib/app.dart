@@ -15,8 +15,8 @@ class LubeLoggerApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       title: 'LubeLogger',
-      theme: buildDashThemeData(Brightness.light),
-      darkTheme: buildDashThemeData(Brightness.dark),
+      theme: buildDashThemeData(Brightness.light, brand: lubeLoggerBrand),
+      darkTheme: buildDashThemeData(Brightness.dark, brand: lubeLoggerBrand),
       // Follow the system setting; the design is dark-first.
       themeMode: ThemeMode.system,
       // Locale auto-detected from the system; en is the fallback.
