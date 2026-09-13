@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'attachment.dart';
 import 'extra_field.dart';
 
@@ -21,12 +23,12 @@ class SupplyRecord {
   });
 
   factory SupplyRecord.fromJson(Map<String, dynamic> json) => SupplyRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         date: json['date'] is String
             ? DateTime.tryParse(json['date'] as String)
             : null,
         description: (json['description'] as String?) ?? '',
-        cost: _toDouble(json['cost']),
+        cost: toDouble(json['cost']),
         partNumber: (json['partNumber'] as String?) ?? '',
         partSupplier: (json['partSupplier'] as String?) ?? '',
         // Sent as a number under culture-invariant; keep a trimmed string for
@@ -50,18 +52,6 @@ class SupplyRecord {
   final List<Attachment> files;
 
   final List<ExtraField> extraFields;
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
 
   /// A numeric wire value as a display string, dropping a trailing `.0`
   /// (`2.0` → "2", `1.5` → "1.5"); already-string values pass through.

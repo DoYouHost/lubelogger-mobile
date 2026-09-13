@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/diagnostics/log_form.dart';
 import '../../../core/layout/responsive.dart';
@@ -301,7 +302,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {
-        final value = parseFormNumber(raw);
+        final value = parseUserDecimal(raw);
         if (value == null) {
           return (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
@@ -340,7 +341,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     final odometer = _hasOdometer
         ? ref
               .read(vehicleUnitsProvider(widget.vehicleId))
-              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
+              .toStoredDistance(parseUserDecimal(_odometer.text)!.toDouble())
         : null;
     try {
       if (existing == null) {
@@ -349,7 +350,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           vehicleId: widget.vehicleId,
           date: _date,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
@@ -362,7 +363,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           id: existing.id,
           date: _date,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),

@@ -4,13 +4,6 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 
-/// Parse a user-entered number, tolerating a comma decimal separator. Shared by
-/// the record forms' numeric field validators/submitters.
-num? parseFormNumber(String? raw) {
-  if (raw == null) return null;
-  return num.tryParse(raw.trim().replaceAll(',', '.'));
-}
-
 /// Digits with at most one decimal separator (`.` or `,`) — nothing else.
 final _decimalEntry = RegExp(r'^\d*[.,]?\d*$');
 

@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
@@ -159,7 +160,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
             ),
             validator: (raw) {
               // Only enforced while the field is shown (odometer/both metrics).
-              final value = parseFormNumber(raw);
+              final value = parseUserDecimal(raw);
               if (value == null) {
                 return (raw == null || raw.trim().isEmpty)
                     ? l10n.validationRequired
@@ -212,7 +213,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
     final dueOdometer = _needsOdometer
         ? ref
               .read(vehicleUnitsProvider(widget.vehicleId))
-              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
+              .toStoredDistance(parseUserDecimal(_odometer.text)!.toDouble())
         : null;
     try {
       if (existing == null) {

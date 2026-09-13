@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'attachment.dart';
 import 'extra_field.dart';
 
@@ -16,10 +18,10 @@ class NoteRecord {
   });
 
   factory NoteRecord.fromJson(Map<String, dynamic> json) => NoteRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         description: (json['description'] as String?) ?? '',
         noteText: (json['noteText'] as String?) ?? '',
-        pinned: _toBool(json['pinned']),
+        pinned: toBoolOrFalse(json['pinned']),
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
         extraFields: ExtraField.listFrom(json['extraFields']),
@@ -33,16 +35,4 @@ class NoteRecord {
   final List<Attachment> files;
 
   final List<ExtraField> extraFields;
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static bool _toBool(Object? v) => switch (v) {
-        final bool b => b,
-        final String s => s.toLowerCase() == 'true',
-        _ => false,
-      };
 }

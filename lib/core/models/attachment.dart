@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 /// A file attached to a record — LubeLogger's `UploadedFiles`. Uploading via
 /// `POST /api/documents/upload` returns these ([location] is a server path like
 /// `/documents/<guid>.pdf`); they're then sent back in a record's `files` list
@@ -31,11 +33,7 @@ class Attachment {
         'isPending': isPending,
       };
 
-  /// Parse a record's `files` array, skipping anything that isn't an object.
-  static List<Attachment> listFrom(Object? raw) => raw is List
-      ? [
-          for (final e in raw)
-            if (e is Map<String, dynamic>) Attachment.fromJson(e),
-        ]
-      : const [];
+  /// Parse a record's `files` array, skipping any element that does not parse.
+  static List<Attachment> listFrom(Object? raw) =>
+      parseJsonList(raw, Attachment.fromJson);
 }

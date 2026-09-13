@@ -1,6 +1,6 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
-
 
 /// Error codes for the API/auth layer. The core layer is UI-independent:
 /// translation to text happens at display time (see `lib/l10n/error_messages.dart`).
@@ -114,27 +114,19 @@ AppApiException mapDioException(DioException e) {
   if (e.error is AppApiException) {
     return e.error! as AppApiException;
   }
-  switch (e.type) {
-    case DioExceptionType.connectionTimeout:
-    case DioExceptionType.sendTimeout:
-    case DioExceptionType.receiveTimeout:
-    case DioExceptionType.transformTimeout:
-    case DioExceptionType.connectionError:
-      return NetworkException(AppErrorCode.serverUnreachable,
-          detail: e.message);
-    case DioExceptionType.badResponse:
-      final code = e.response?.statusCode;
-      if (code == 401) {
-        return const AuthException(AppErrorCode.unauthorized);
-      }
-      if (code == 403) {
-        return const AuthException(AppErrorCode.forbidden);
-      }
-      return ApiException(AppErrorCode.badResponse, statusCode: code);
-    case DioExceptionType.badCertificate:
-      return const NetworkException(AppErrorCode.badCertificate);
-    case DioExceptionType.cancel:
-    case DioExceptionType.unknown:
-      return NetworkException(AppErrorCode.connectionError, detail: e.message);
-  }
+  return switch (classifyDioException(e)) {
+    DioFailure.unreachable =>
+      NetworkException(AppErrorCode.serverUnreachable, detail: e.message),
+    DioFailure.unauthorized => const AuthException(AppErrorCode.unauthorized),
+    DioFailure.forbidden => const AuthException(AppErrorCode.forbidden),
+    // No code of its own here: a 429 reads as the status it is.
+    DioFailure.tooManyRequests ||
+    DioFailure.badResponse =>
+      ApiException(AppErrorCode.badResponse,
+          statusCode: e.response?.statusCode),
+    DioFailure.badCertificate =>
+      const NetworkException(AppErrorCode.badCertificate),
+    DioFailure.connectionError =>
+      NetworkException(AppErrorCode.connectionError, detail: e.message),
+  };
 }

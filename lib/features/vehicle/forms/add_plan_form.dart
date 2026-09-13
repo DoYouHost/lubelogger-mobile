@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
@@ -217,7 +218,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
         await repo.addPlanRecord(
           vehicleId: widget.vehicleId,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           type: _type,
           priority: _priority,
           progress: _progress,
@@ -229,7 +230,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
         await repo.updatePlanRecord(
           id: existing.id,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           type: _type,
           priority: _priority,
           progress: _progress,
@@ -381,7 +382,7 @@ class _CostField extends StatelessWidget {
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: l10n.colCost),
       validator: (raw) {
-        final value = parseFormNumber(raw);
+        final value = parseUserDecimal(raw);
         if (value == null) {
           return (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired

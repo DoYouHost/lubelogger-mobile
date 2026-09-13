@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/diagnostics/log_form.dart';
 import '../../../core/layout/responsive.dart';
@@ -188,7 +189,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   helperMaxLines: 2,
                 ),
                 validator: (raw) {
-                  final value = parseFormNumber(raw);
+                  final value = parseUserDecimal(raw);
                   if (value == null) {
                     return (raw == null || raw.trim().isEmpty)
                         ? l10n.validationRequired
@@ -312,7 +313,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
 
   /// Reading currently in the field, in stored units.
   double? get _enteredReading {
-    final value = parseFormNumber(_odometer.text);
+    final value = parseUserDecimal(_odometer.text);
     if (value == null || value <= 0) return null;
     return ref
         .read(vehicleUnitsProvider(widget.vehicleId))
@@ -342,7 +343,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     final repo = ref.read(vehiclesRepositoryProvider);
     final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
     final odometer = units.toStoredDistance(
-      parseFormNumber(_odometer.text)!.toDouble(),
+      parseUserDecimal(_odometer.text)!.toDouble(),
     );
     final existing = widget.existing;
     try {

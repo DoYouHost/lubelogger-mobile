@@ -1,5 +1,6 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:app_report_ui/app_report_ui.dart' show bugReportRoute;
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -193,7 +194,7 @@ class SettingsScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          l10n.settingsStoredDataSize(_bytes(cacheBytes ?? 0)),
+                          l10n.settingsStoredDataSize(formatBytes(cacheBytes ?? 0)),
                           style: TextStyle(
                             fontFamily: DashTokens.fontUi,
                             fontSize: 13,
@@ -389,12 +390,6 @@ class SettingsScreen extends ConsumerWidget {
     messenger.showSnackBar(
       SnackBar(content: Text(l10n.settingsStoredDataCleared)),
     );
-  }
-
-  static String _bytes(int value) {
-    if (value < 1024) return '$value B';
-    if (value < 1024 * 1024) return '${(value / 1024).round()} kB';
-    return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   /// A small pill labelling an account role (Admin / Root).

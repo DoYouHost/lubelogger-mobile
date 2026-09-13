@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart' as util;
+
 import '../demo/demo_config.dart';
 
 /// Connection profile for a LubeLogger server. Holds no secrets — the API key
@@ -36,41 +38,8 @@ class ServerProfile {
   ///
   /// The `https://` default suits LubeLogger, which is commonly reverse-proxied
   /// behind TLS. A plain-http LAN server still works: the user can type
-  /// `http://…` explicitly, and [baseUrlFromReached] adopts whatever URL the
+  /// `http://…` explicitly, and `baseUrlFromReached` adopts whatever URL the
   /// probe actually reached after any redirect.
-  static String normalizeBaseUrl(String raw) {
-    var url = raw.trim();
-    if (url.isEmpty) return url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://$url';
-    }
-    while (url.endsWith('/')) {
-      url = url.substring(0, url.length - 1);
-    }
-    if (url.endsWith('/api')) {
-      url = url.substring(0, url.length - '/api'.length);
-    }
-    return url;
-  }
-
-  /// Recover the base URL actually reached by a probe request, honoring any
-  /// http→https (or host) redirect the HTTP client followed transparently.
-  ///
-  /// [reached] is the final URI of the probe (e.g. `Response.realUri`);
-  /// [endpointSuffix] is the path that was appended to the base (e.g.
-  /// `/api/whoami`). Strips that suffix off `origin + path` so any base-path
-  /// prefix survives. Falls back to [requested] when [reached] is null or
-  /// doesn't end with the suffix.
-  static String baseUrlFromReached(
-    Uri? reached, {
-    required String requested,
-    required String endpointSuffix,
-  }) {
-    if (reached == null) return requested;
-    final full = reached.origin + reached.path;
-    if (full.endsWith(endpointSuffix)) {
-      return full.substring(0, full.length - endpointSuffix.length);
-    }
-    return requested;
-  }
+  static String normalizeBaseUrl(String raw) =>
+      util.normalizeBaseUrl(raw, defaultScheme: 'https', apiPath: '/api');
 }

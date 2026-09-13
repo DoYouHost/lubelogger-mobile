@@ -1,9 +1,10 @@
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/api/api_exceptions.dart';
-import 'package:lubelogger_mobile/core/demo/demo_http_adapter.dart';
+import 'package:lubelogger_mobile/core/demo/demo_backend.dart';
 import 'package:lubelogger_mobile/core/models/plan_record.dart';
 import 'package:lubelogger_mobile/data/vehicles_repository.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/add_plan_form.dart';
@@ -15,7 +16,11 @@ import 'package:lubelogger_mobile/providers.dart';
 void main() {
   VehiclesRepository repo() {
     final dio = Dio(BaseOptions(baseUrl: 'http://demo'))
-      ..httpClientAdapter = DemoHttpClientAdapter(latency: Duration.zero);
+      ..httpClientAdapter = DemoHttpClientAdapter(
+        DemoBackend.instance.handle,
+        uploads: DemoBackend.instance.upload,
+        latency: Duration.zero,
+      );
     return VehiclesRepository(dio);
   }
 

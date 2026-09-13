@@ -1,6 +1,7 @@
 // Numeric record-form entry: plain free-form typing, no leading zeros and no
 // fixed decimal places.
 
+import 'package:app_util/app_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/form_fields.dart';
@@ -56,7 +57,7 @@ void main() {
 
     test('round-trips through the form parser', () {
       for (final v in [0, 7, 45.5, 213.79, 320775.0]) {
-        expect(parseFormNumber(formatFormNumber(v)), v);
+        expect(parseUserDecimal(formatFormNumber(v)), v);
       }
     });
   });

@@ -1,6 +1,7 @@
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lubelogger_mobile/core/demo/demo_http_adapter.dart';
+import 'package:lubelogger_mobile/core/demo/demo_backend.dart';
 import 'package:lubelogger_mobile/core/format/gas_stats.dart';
 import 'package:lubelogger_mobile/core/format/vehicle_units.dart';
 import 'package:lubelogger_mobile/core/settings/units_settings.dart';
@@ -16,7 +17,11 @@ import 'package:lubelogger_mobile/data/vehicles_repository.dart';
 void main() {
   VehiclesRepository repo() {
     final dio = Dio(BaseOptions(baseUrl: 'http://demo'))
-      ..httpClientAdapter = DemoHttpClientAdapter(latency: Duration.zero);
+      ..httpClientAdapter = DemoHttpClientAdapter(
+        DemoBackend.instance.handle,
+        uploads: DemoBackend.instance.upload,
+        latency: Duration.zero,
+      );
     return VehiclesRepository(dio);
   }
 

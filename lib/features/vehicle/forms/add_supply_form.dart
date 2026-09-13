@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
@@ -75,7 +76,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
       _description.text = e.description;
       _partNumber.text = e.partNumber;
       _partSupplier.text = e.partSupplier;
-      final q = parseFormNumber(e.partQuantity);
+      final q = parseUserDecimal(e.partQuantity);
       if (q != null) _quantity.text = formatFormNumber(q);
       _cost.text = formatFormNumber(e.cost);
       _notes.text = e.notes;
@@ -201,7 +202,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {
-        final value = parseFormNumber(raw);
+        final value = parseUserDecimal(raw);
         if (value == null) {
           return (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
@@ -241,8 +242,8 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           vehicleId: widget.vehicleId,
           date: _date,
           description: _description.text.trim(),
-          partQuantity: parseFormNumber(_quantity.text)!,
-          cost: parseFormNumber(_cost.text)!,
+          partQuantity: parseUserDecimal(_quantity.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           partNumber: _partNumber.text.trim(),
           partSupplier: _partSupplier.text.trim(),
           notes: _notes.text.trim(),
@@ -255,8 +256,8 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           id: existing.id,
           date: _date,
           description: _description.text.trim(),
-          partQuantity: parseFormNumber(_quantity.text)!,
-          cost: parseFormNumber(_cost.text)!,
+          partQuantity: parseUserDecimal(_quantity.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           partNumber: _partNumber.text.trim(),
           partSupplier: _partSupplier.text.trim(),
           notes: _notes.text.trim(),

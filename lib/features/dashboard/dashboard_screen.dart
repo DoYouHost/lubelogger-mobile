@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -324,19 +325,12 @@ class _StatBlock extends ConsumerWidget {
         builder: (context, constraints) {
           // Fit as many stat cells across as possible without the mono value
           // wrapping mid-number. Measure the widest value at its real style
-          // (TextPainter) instead of guessing, so it adapts to font metrics,
-          // locale and currency width. Falls back to two rows of two.
+          // instead of guessing, so it adapts to font metrics, locale and
+          // currency width. Falls back to two rows of two.
           final valueStyle = _StatRow.valueStyle(t);
-          final scaler = MediaQuery.textScalerOf(context);
           var widest = 0.0;
           for (final row in rows) {
-            final painter = TextPainter(
-              text: TextSpan(text: row.value, style: valueStyle),
-              textDirection: TextDirection.ltr,
-              textScaler: scaler,
-              maxLines: 1,
-            )..layout();
-            widest = math.max(widest, painter.width);
+            widest = math.max(widest, textWidth(context, row.value, valueStyle));
           }
           const gap = 12.0;
           const cellSideRoom = 24.0; // breathing room around each value
@@ -382,7 +376,7 @@ class _StatRow extends StatelessWidget {
   final String? secondary;
 
   /// Style of the big mono value. Shared so the [_StatBlock] layout can measure
-  /// value widths (TextPainter) with the exact metrics used to render them.
+  /// value widths with the exact metrics used to render them.
   static TextStyle valueStyle(DashTokens t) => TextStyle(
     fontFamily: DashTokens.fontMono,
     fontSize: 26,

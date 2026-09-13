@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import '../api/endpoints.dart';
 import 'attachment.dart';
 import 'extra_field.dart';
@@ -20,17 +22,17 @@ class VehicleRecord {
   });
 
   factory VehicleRecord.fromJson(Map<String, dynamic> json) => VehicleRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         date: json['date'] is String
             ? DateTime.tryParse(json['date'] as String)
             : null,
         // Tax records omit odometer; a "0" reading is treated as absent too.
         odometer: () {
-          final o = _toDouble(json['odometer']);
+          final o = toDouble(json['odometer']);
           return o > 0 ? o : null;
         }(),
         description: (json['description'] as String?) ?? '',
-        cost: _toDouble(json['cost']),
+        cost: toDouble(json['cost']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
@@ -46,18 +48,6 @@ class VehicleRecord {
   final String tags;
   final List<Attachment> files;
   final List<ExtraField> extraFields;
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
 }
 
 /// The four generic (date + cost) record types, each mapping to its list

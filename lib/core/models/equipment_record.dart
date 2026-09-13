@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'attachment.dart';
 import 'extra_field.dart';
 
@@ -18,11 +20,11 @@ class EquipmentRecord {
   });
 
   factory EquipmentRecord.fromJson(Map<String, dynamic> json) => EquipmentRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         description: (json['description'] as String?) ?? '',
-        isEquipped: _toBool(json['isEquipped']),
+        isEquipped: toBoolOrFalse(json['isEquipped']),
         distanceTraveled: () {
-          final d = _toDouble(json['distanceTraveled']);
+          final d = toDouble(json['distanceTraveled']);
           return d > 0 ? d : null;
         }(),
         notes: (json['notes'] as String?) ?? '',
@@ -40,22 +42,4 @@ class EquipmentRecord {
   final List<Attachment> files;
 
   final List<ExtraField> extraFields;
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static bool _toBool(Object? v) => switch (v) {
-        final bool b => b,
-        final String s => s.toLowerCase() == 'true',
-        _ => false,
-      };
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
 }

@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 
 import '../api/api_client.dart';
@@ -46,7 +47,7 @@ class AuthService {
       await _credentials.writeApiKey(apiKey);
       return (
         who: WhoAmI.fromJson(body),
-        baseUrl: ServerProfile.baseUrlFromReached(
+        baseUrl: baseUrlFromReached(
           res.realUri,
           requested: baseUrl,
           endpointSuffix: Endpoints.whoami,

@@ -1,4 +1,5 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -6,7 +7,7 @@ import '../auth/credentials_store.dart';
 import '../cache/http_cache.dart';
 import '../cache/offline_interceptor.dart';
 import '../cache/write_queue.dart';
-import '../demo/demo_http_adapter.dart';
+import '../demo/demo_backend.dart';
 import '../diagnostics/report_config.dart';
 import '../settings/server_profile.dart';
 import 'retry_interceptor.dart';
@@ -55,7 +56,11 @@ class ApiClient {
     // Demo profile: serve everything from the in-process fake server, so no
     // request ever leaves the device. Covers every consumer of this Dio.
     if (profile.isDemo) {
-      this.dio.httpClientAdapter = DemoHttpClientAdapter();
+      this.dio.httpClientAdapter = DemoHttpClientAdapter(
+        DemoBackend.instance.handle,
+        uploads: DemoBackend.instance.upload,
+        latency: const Duration(milliseconds: 140),
+      );
     }
     // Ahead of the offline interceptor on purpose: a transient failure gets its
     // second attempt before it is allowed to count as the server being gone.

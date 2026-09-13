@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'vehicle.dart';
 
 /// Aggregated per-vehicle data from `GET /api/vehicle/info?vehicleId=` — the
@@ -21,16 +23,16 @@ class VehicleInfo {
   factory VehicleInfo.fromJson(Map<String, dynamic> json) => VehicleInfo(
         vehicle:
             Vehicle.fromJson(json['vehicleData'] as Map<String, dynamic>),
-        lastReportedOdometer: _toDouble(json['lastReportedOdometer']),
-        serviceRecordCost: _toDouble(json['serviceRecordCost']),
-        repairRecordCost: _toDouble(json['repairRecordCost']),
-        upgradeRecordCost: _toDouble(json['upgradeRecordCost']),
-        taxRecordCost: _toDouble(json['taxRecordCost']),
-        gasRecordCost: _toDouble(json['gasRecordCost']),
-        veryUrgentReminderCount: _toInt(json['veryUrgentReminderCount']),
-        urgentReminderCount: _toInt(json['urgentReminderCount']),
-        notUrgentReminderCount: _toInt(json['notUrgentReminderCount']),
-        pastDueReminderCount: _toInt(json['pastDueReminderCount']),
+        lastReportedOdometer: toDouble(json['lastReportedOdometer']),
+        serviceRecordCost: toDouble(json['serviceRecordCost']),
+        repairRecordCost: toDouble(json['repairRecordCost']),
+        upgradeRecordCost: toDouble(json['upgradeRecordCost']),
+        taxRecordCost: toDouble(json['taxRecordCost']),
+        gasRecordCost: toDouble(json['gasRecordCost']),
+        veryUrgentReminderCount: toInt(json['veryUrgentReminderCount']),
+        urgentReminderCount: toInt(json['urgentReminderCount']),
+        notUrgentReminderCount: toInt(json['notUrgentReminderCount']),
+        pastDueReminderCount: toInt(json['pastDueReminderCount']),
       );
 
   final Vehicle vehicle;
@@ -57,16 +59,4 @@ class VehicleInfo {
 
   /// Reminders needing attention now (past due or very urgent).
   int get alertReminderCount => pastDueReminderCount + veryUrgentReminderCount;
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
 }

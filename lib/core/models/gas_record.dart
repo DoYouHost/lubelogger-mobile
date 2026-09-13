@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'attachment.dart';
 import 'extra_field.dart';
 
@@ -28,15 +30,15 @@ class GasRecord {
   });
 
   factory GasRecord.fromJson(Map<String, dynamic> json) => GasRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         date: _toDate(json['date']),
-        odometer: _toDouble(json['odometer']),
-        fuelConsumed: _toDouble(json['fuelConsumed']),
-        cost: _toDouble(json['cost']),
-        isFillToFull: _toBool(json['isFillToFull']),
-        missedFuelUp: _toBool(json['missedFuelUp']),
-        startingSoc: _toInt(json['startingSoc']),
-        endingSoc: _toInt(json['endingSoc']),
+        odometer: toDouble(json['odometer']),
+        fuelConsumed: toDouble(json['fuelConsumed']),
+        cost: toDouble(json['cost']),
+        isFillToFull: toBoolOrFalse(json['isFillToFull']),
+        missedFuelUp: toBoolOrFalse(json['missedFuelUp']),
+        startingSoc: toInt(json['startingSoc']),
+        endingSoc: toInt(json['endingSoc']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
@@ -66,24 +68,6 @@ class GasRecord {
   final String tags;
 
   final List<ExtraField> extraFields;
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static bool _toBool(Object? v) => switch (v) {
-        final bool b => b,
-        final String s => s.toLowerCase() == 'true',
-        _ => false,
-      };
 
   static DateTime? _toDate(Object? v) =>
       v is String ? DateTime.tryParse(v) : null;

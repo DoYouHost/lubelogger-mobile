@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/diagnostics/log_form.dart';
 import '../../../core/layout/responsive.dart';
@@ -293,7 +294,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {
-        final value = parseFormNumber(raw);
+        final value = parseUserDecimal(raw);
         if (value == null) {
           return (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
@@ -328,7 +329,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     final repo = ref.read(vehiclesRepositoryProvider);
     final odometer = ref
         .read(vehicleUnitsProvider(widget.vehicleId))
-        .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble());
+        .toStoredDistance(parseUserDecimal(_odometer.text)!.toDouble());
     final existing = widget.existing;
     try {
       if (existing == null) {
@@ -336,8 +337,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
           vehicleId: widget.vehicleId,
           date: _date,
           odometer: odometer,
-          fuelConsumed: parseFormNumber(_fuel.text)!,
-          cost: parseFormNumber(_cost.text)!,
+          fuelConsumed: parseUserDecimal(_fuel.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           isFillToFull: _fillToFull,
           missedFuelUp: _missedFuelUp,
           startingSoc: _soc.start.round(),
@@ -353,8 +354,8 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
           id: existing.id,
           date: _date,
           odometer: odometer,
-          fuelConsumed: parseFormNumber(_fuel.text)!,
-          cost: parseFormNumber(_cost.text)!,
+          fuelConsumed: parseUserDecimal(_fuel.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           isFillToFull: _fillToFull,
           missedFuelUp: _missedFuelUp,
           startingSoc: _soc.start.round(),

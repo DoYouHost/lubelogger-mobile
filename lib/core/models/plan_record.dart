@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'attachment.dart';
 import 'extra_field.dart';
 
@@ -20,12 +22,12 @@ class PlanRecord {
   });
 
   factory PlanRecord.fromJson(Map<String, dynamic> json) => PlanRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         dateCreated: json['dateCreated'] is String
             ? DateTime.tryParse(json['dateCreated'] as String)
             : null,
         description: (json['description'] as String?) ?? '',
-        cost: _toDouble(json['cost']),
+        cost: toDouble(json['cost']),
         type: PlanType.parse(json['type']),
         priority: PlanPriority.parse(json['priority']),
         progress: PlanProgress.parse(json['progress']),
@@ -45,18 +47,6 @@ class PlanRecord {
   final List<Attachment> files;
 
   final List<ExtraField> extraFields;
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
 }
 
 /// What a planned item becomes once done — the API's `ImportMode` (a planner

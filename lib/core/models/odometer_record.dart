@@ -1,3 +1,5 @@
+import 'package:app_util/app_util.dart';
+
 import 'attachment.dart';
 import 'extra_field.dart';
 
@@ -22,12 +24,12 @@ class OdometerRecord {
   });
 
   factory OdometerRecord.fromJson(Map<String, dynamic> json) => OdometerRecord(
-        id: _toInt(json['id']),
+        id: toInt(json['id']),
         date: json['date'] is String
             ? DateTime.tryParse(json['date'] as String)
             : null,
-        odometer: _toDouble(json['odometer']),
-        initialOdometer: _toDouble(json['initialOdometer']),
+        odometer: toDouble(json['odometer']),
+        initialOdometer: toDouble(json['initialOdometer']),
         notes: (json['notes'] as String?) ?? '',
         tags: (json['tags'] as String?) ?? '',
         files: Attachment.listFrom(json['files']),
@@ -56,17 +58,5 @@ class OdometerRecord {
         final List<dynamic> l => l.map((e) => e.toString()).join(' '),
         final num n => n.toString(),
         _ => '',
-      };
-
-  static int _toInt(Object? v) => switch (v) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static double _toDouble(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
       };
 }

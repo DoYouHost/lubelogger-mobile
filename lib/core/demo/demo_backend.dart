@@ -1,5 +1,5 @@
-/// Result of a routed demo request: HTTP status + JSON-encodable body.
-typedef DemoResult = ({int status, Object? body});
+import 'package:app_util/app_util.dart';
+import 'package:dio/dio.dart';
 
 /// In-process fake LubeLogger server for demo mode (see [DemoConfig]).
 ///
@@ -54,10 +54,25 @@ class DemoBackend {
         _ => null,
       };
 
+  /// Answers a multipart attachment upload, which [handle] cannot route, with a
+  /// fabricated `UploadedFiles` array — one entry per file, echoing its name so
+  /// the record shows the file the reviewer picked.
+  DemoResult upload(FormData form) => (
+        status: 200,
+        body: [
+          for (final entry in form.files)
+            {
+              'name': entry.value.filename ?? 'attachment',
+              'location': '/documents/demo-${entry.value.filename ?? 'file'}',
+              'isPending': false,
+            },
+        ],
+      );
+
   // ── Routing ───────────────────────────────────────────────────────────────
 
   /// Handle one request. [rawBody] is the already-JSON-decoded Dio payload
-  /// (map/list/null); FormData uploads are answered by the adapter, not here.
+  /// (map/list/null); FormData uploads are answered by [upload], not here.
   DemoResult handle(String method, Uri uri, Object? rawBody) {
     final path = uri.path;
     if (!path.startsWith('/api')) return _notFound();
@@ -106,7 +121,7 @@ class DemoBackend {
       case 'makebackup':
         return _ok('/demo/backups/lubelogger_demo_backup.zip');
       case 'documents':
-        // Non-FormData fallback; real uploads are handled by the adapter.
+        // Non-FormData fallback; real uploads are answered by [upload].
         if (at(1, 'upload')) return _ok(const <Object>[]);
         return _ok(const <Object>[]);
       case 'vehicles':
@@ -114,7 +129,7 @@ class DemoBackend {
         if (at(1, 'add') && m == 'POST') return _addVehicle(body);
         if (at(1, 'update') && m == 'PUT') return _updateVehicle(body);
         if (at(1, 'delete') && m == 'DELETE') {
-          return _deleteVehicle(_int(q['id']));
+          return _deleteVehicle(toInt(q['id']));
         }
         return null;
       case 'vehicle':
@@ -123,25 +138,25 @@ class DemoBackend {
         if (sub == 'info' && m == 'GET') {
           // No vehicleId means the whole garage, as on the server — that form
           // is the single request the garage screen makes.
-          final id = _int(q['vehicleId']);
+          final id = toInt(q['vehicleId']);
           return _ok(id == 0
-              ? [for (final v in _vehicles) _vehicleInfo(_int(v['id']))]
+              ? [for (final v in _vehicles) _vehicleInfo(toInt(v['id']))]
               : [_vehicleInfo(id)]);
         }
         final coll = _collectionFor(sub);
         if (coll == null) return _notFound();
         final action = s.length > 2 ? s[2] : null;
         if (action == null && m == 'GET') {
-          return _ok(coll[_int(q['vehicleId'])] ?? const <Object>[]);
+          return _ok(coll[toInt(q['vehicleId'])] ?? const <Object>[]);
         }
         if (action == 'add' && m == 'POST') {
-          return _addRecord(sub, coll, _int(q['vehicleId']), body);
+          return _addRecord(sub, coll, toInt(q['vehicleId']), body);
         }
         if (action == 'update' && m == 'PUT') {
           return _updateRecord(sub, coll, body);
         }
         if (action == 'delete' && m == 'DELETE') {
-          return _deleteRecord(coll, _int(q['id']));
+          return _deleteRecord(coll, toInt(q['id']));
         }
         return null;
       default:
@@ -190,9 +205,9 @@ class DemoBackend {
   ) {
     final rejected = _rejectDonePlan(sub, body);
     if (rejected != null) return rejected;
-    final id = _int(body['id']);
+    final id = toInt(body['id']);
     for (final entry in coll.entries) {
-      final idx = entry.value.indexWhere((r) => _int(r['id']) == id);
+      final idx = entry.value.indexWhere((r) => toInt(r['id']) == id);
       if (idx < 0) continue;
       final rec = <String, dynamic>{...body, 'id': id};
       _fillDerivedFields(sub, entry.key, rec, existing: entry.value[idx]);
@@ -207,7 +222,7 @@ class DemoBackend {
     int id,
   ) {
     for (final list in coll.values) {
-      list.removeWhere((r) => _int(r['id']) == id);
+      list.removeWhere((r) => toInt(r['id']) == id);
     }
     return _ok({'success': true, 'message': ''});
   }
@@ -247,7 +262,7 @@ class DemoBackend {
   /// Mirrors the server's cascading delete: drop the vehicle and every record
   /// collection keyed by its id.
   DemoResult _deleteVehicle(int id) {
-    _vehicles.removeWhere((v) => _int(v['id']) == id);
+    _vehicles.removeWhere((v) => toInt(v['id']) == id);
     for (final coll in [
       _gas,
       _odometer,
@@ -267,8 +282,8 @@ class DemoBackend {
   }
 
   DemoResult _updateVehicle(Map<String, dynamic> body) {
-    final id = _int(body['id']);
-    final idx = _vehicles.indexWhere((v) => _int(v['id']) == id);
+    final id = toInt(body['id']);
+    final idx = _vehicles.indexWhere((v) => toInt(v['id']) == id);
     if (idx >= 0) {
       final existingImage = _vehicles[idx]['imageLocation'];
       _vehicles[idx] = _vehicleFromWrite(body, id)
@@ -287,7 +302,7 @@ class DemoBackend {
         .toList();
     return {
       'id': id,
-      'year': _int(body['year']),
+      'year': toInt(body['year']),
       'make': (body['make'] as String?) ?? '',
       'model': (body['model'] as String?) ?? '',
       'licensePlate': (body['licensePlate'] as String?) ?? '',
@@ -295,8 +310,8 @@ class DemoBackend {
       'tags': tags,
       'isElectric': fuelType == 'Electric',
       'isDiesel': fuelType == 'Diesel',
-      'useHours': _bool(body['useEngineHours']),
-      'odometerOptional': _bool(body['odometerOptional']),
+      'useHours': toBoolOrFalse(body['useEngineHours']),
+      'odometerOptional': toBoolOrFalse(body['odometerOptional']),
       'vehicleIdentifier': (body['identifier'] as String?) ?? 'LicensePlate',
       'extraFields': body['extraFields'] ?? const <Object>[],
     };
@@ -306,7 +321,7 @@ class DemoBackend {
 
   Map<String, dynamic> _vehicleInfo(int vehicleId) {
     final vehicle = _vehicles.firstWhere(
-      (v) => _int(v['id']) == vehicleId,
+      (v) => toInt(v['id']) == vehicleId,
       orElse: () => _vehicles.isNotEmpty ? _vehicles.first : <String, dynamic>{},
     );
     var veryUrgent = 0, urgent = 0, notUrgent = 0, pastDue = 0;
@@ -338,7 +353,7 @@ class DemoBackend {
   }
 
   double _sumCost(List<Map<String, dynamic>>? records) => [
-        for (final r in records ?? const []) _double(r['cost']),
+        for (final r in records ?? const []) toDouble(r['cost']),
       ].fold(0.0, (a, b) => a + b);
 
   /// Highest odometer across every reading source for a vehicle — mirrors the
@@ -353,7 +368,7 @@ class DemoBackend {
       _upgrade[vehicleId],
     ]) {
       for (final r in coll ?? const []) {
-        final o = _double(r['odometer']);
+        final o = toDouble(r['odometer']);
         if (o > best) best = o;
       }
     }
@@ -387,7 +402,7 @@ class DemoBackend {
       }
     }
     if (metric != 'date') {
-      final dueOdo = _double(rec['dueOdometer']);
+      final dueOdo = toDouble(rec['dueOdometer']);
       if (dueOdo > 0) {
         final dist = dueOdo - _lastOdometer(vehicleId);
         rank = worse(
@@ -876,25 +891,6 @@ class DemoBackend {
   }
 
   // ── Coercions ──────────────────────────────────────────────────────────────
-
-  static int _int(Object? v) => switch (v) {
-        final int i => i,
-        final num n => n.toInt(),
-        final String s => int.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static double _double(Object? v) => switch (v) {
-        final num n => n.toDouble(),
-        final String s => double.tryParse(s) ?? 0,
-        _ => 0,
-      };
-
-  static bool _bool(Object? v) => switch (v) {
-        final bool b => b,
-        final String s => s.toLowerCase() == 'true',
-        _ => false,
-      };
 
   static String _isoDate(DateTime dt) =>
       '${dt.year.toString().padLeft(4, '0')}-'
