@@ -1,25 +1,125 @@
+# Recipe naming: a bare verb is earned by the ones typed weekly and safe to run
+# twice (test, run, build, ship); a variant appends only what differs from the
+# silent defaults — APK, stable channel (build-aab, ship-dev). Machines and
+# objects read <subject>-<verb> (emu-boot, release-publish). Anything
+# irreversible on GitHub is purge-<deepest thing lost>, so `just purge<TAB>`
+# enumerates every no-undo command and nothing else.
+#
+# The listed description is the [doc] attribute, not the comment above it: just
+# shows only the LAST comment line. Attributes must touch the recipe line — a
+# comment between them is `error: extraneous attribute`, and it breaks the whole
+# file, not one recipe. Group names are numbered because bare `just` (via
+# --unsorted) reads in source order while `just --list` re-sorts alphabetically;
+# the digits are what keep the two agreeing.
+
 # Release artifacts live in build/dist (survives _clean-artifacts, which only
-# wipes build/app) so a later `just clean`/rebuild doesn't take them out from
-# under `release`.
+# wipes build/app) so a later rebuild doesn't take them out from under
+# `release-publish`.
 apk := "build/dist/app-release.apk"
 aab := "build/dist/app-release.aab"
 repo := "DoYouHost/lubelogger-mobile"
-# Shared headless GPU Android 14 emulator (TofuSadurki: lxc-docker-android).
-emu := "192.168.2.208:5555"
-# Default local AVD (Pixel 7, API 35). Recipes below take an `avd=` argument, so
-# `just emu-list` shows the alternatives.
-# Serials are resolved by AVD name, not hardcoded — the port depends on boot order.
+
+emulator_bin := "$HOME/Android/Sdk/emulator/emulator"
+# Default local AVD (Pixel 7, API 35). Every local recipe takes an `avd=`
+# argument, so `just emu-list` shows the alternatives. Serials are resolved by
+# AVD name, not hardcoded — the port depends on boot order.
 avd := "pixel35"
 
-# show available commands
+[doc('show available commands')]
 default:
-    @just --list
+    @just --list --unsorted
 
-# run tests
+# ---- 1-develop — runs the app and the tests, publishes nothing ----
+
+[doc('run unit and widget tests')]
+[group('1-develop')]
 test:
     flutter test
 
-# wipe build outputs + the Dart kernel snapshot so a release build can't pack a
+# Compare .arb files against the English template: find missing, outdated or mismatched keys.
+# usage: just l10n-status [*ARGS]
+[doc('check translation status and missing keys against app_en.arb')]
+[group('1-develop')]
+l10n-status *args:
+    python3 tool/check_l10n_sync.py {{args}}
+
+# Boots the AVD first if needed, then builds, installs and runs with hot reload.
+# This is the primary pre-commit verify loop.
+# usage: just run [AVD]
+[doc('run the app on a local AVD, booting it first')]
+[group('1-develop')]
+run avd=avd: (emu-boot avd)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    flutter run -d "$(just _emu-serial {{avd}})"
+
+# ---- 2-emulator — boots the emulator ----
+
+# An emulator takes whatever port is free, so the serial is looked up by name via
+# `emu avd name` rather than assumed to be 5554.
+_emu-serial avd:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for serial in $(adb devices | awk '/^emulator-/ {print $1}'); do
+        if [ "$(adb -s "$serial" emu avd name 2>/dev/null | head -1 | tr -d '\r')" = "{{avd}}" ]; then
+            echo "$serial"
+            exit 0
+        fi
+    done
+    exit 1
+
+# Idempotent (no-op if the AVD is already online); boots in the background and
+# blocks until Android finishes booting, so local recipes can depend on it.
+# usage: just emu-boot [AVD]
+[doc('boot a local AVD and wait for it to finish booting')]
+[group('2-emulator')]
+emu-boot avd=avd:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if serial=$(just _emu-serial {{avd}} 2>/dev/null); then
+        echo "{{avd}} already running ($serial)"
+        exit 0
+    fi
+    if ! "{{emulator_bin}}" -list-avds | grep -qx "{{avd}}"; then
+        echo "No such AVD: {{avd}}. Available:" >&2
+        just emu-list >&2
+        exit 1
+    fi
+    "{{emulator_bin}}" -avd {{avd}} >/dev/null 2>&1 &
+    disown
+    echo "Booting {{avd}}..."
+    for _ in $(seq 1 60); do
+        serial=$(just _emu-serial {{avd}} 2>/dev/null || true)
+        [ -n "${serial:-}" ] && break
+        sleep 2
+    done
+    [ -n "${serial:-}" ] || { echo "{{avd}} did not come up" >&2; exit 1; }
+    adb -s "$serial" wait-for-device
+    until [ "$(adb -s "$serial" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+        sleep 2
+    done
+    echo "{{avd}} ready ($serial)"
+
+[doc('list local AVDs, marking which are running')]
+[group('2-emulator')]
+emu-list:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for name in $("{{emulator_bin}}" -list-avds); do
+        serial=$(just _emu-serial "$name" 2>/dev/null || true)
+        if [ -n "$serial" ]; then
+            printf '  %-16s running   %s\n' "$name" "$serial"
+        else
+            printf '  %-16s stopped\n' "$name"
+        fi
+    done
+
+# ---- 3-build — produces the bytes that get published ----
+#
+# Both build recipes take the same optional version pair, e.g.
+# `just build-aab 0.3.3-dev.1 302001`.
+
+# Wipe build outputs + the Dart kernel snapshot so a release build can't pack a
 # stale snapshot (incremental release builds have been known to repeatably reuse
 # an outdated one — same code shipped, wrong bytes). Cheap insurance before any
 # release build.
@@ -66,124 +166,74 @@ _build kind name code:
     cp "$src" "build/dist/app-release.$ext"
     echo "-> build/dist/app-release.$ext"
 
-# Both take the same optional version pair, e.g. `just build-aab 0.3.0-dev.1 300000`.
-# build release APK
+[doc('build the release APK')]
+[group('3-build')]
 build name='' code='': (_build "apk" name code)
 
-# build Play bundle (Play accepts only AAB)
+[doc('build the Play bundle')]
+[group('3-build')]
 build-aab name='' code='': (_build "appbundle" name code)
 
-# clean build artifacts
+# Reads the manifest out of the bundle instead of echoing back what we handed to
+# gradle: what it baked in is the only number Play will judge. Takes explicit
+# paths from `ship`/`ship-dev` so it can only ever report the bundle that run
+# just built, never a leftover in build/dist.
+# usage: just aab-show [BUNDLE...]
+[doc('print the versions baked into the built Play bundles')]
+[group('3-build')]
+aab-show *paths:
+    @python3 tool/aab_versions.py {{paths}}
+
+[doc('delete local build outputs')]
+[group('3-build')]
 clean:
     flutter clean
 
-# connect to the remote GPU emulator on the nuc LXC (idempotent, needs LAN)
-emu-connect:
-    adb connect {{emu}}
+# ---- 4-release — writes to the checked-out branch and to GitHub ----
+#
+# `ship` and `ship-dev` produce the same two artifacts in the same order; they
+# differ only in where the version comes from. Both build the Play bundle
+# *before* publishing the GitHub release, so a bundle that fails to build cannot
+# leave a published release with nothing to promote.
 
-# run the app on the remote GPU emulator (screen view at http://192.168.2.208:8000)
-dev: emu-connect
-    flutter run -d {{emu}}
-
-# list local AVDs, marking which are running and on which serial
-emu-list:
+# A release is cut from whatever is checked out: `_bump` commits here and
+# `release-publish` pushes here, so shipping off `dev` leaves main alone. One
+# definition for both, because a bump landing on a different branch than the
+# push would publish a release without its own version commit.
+[no-exit-message]
+_branch:
     #!/usr/bin/env bash
     set -euo pipefail
-    for name in $("$HOME/Android/Sdk/emulator/emulator" -list-avds); do
-        serial=$(just _emu-serial "$name" 2>/dev/null || true)
-        if [ -n "$serial" ]; then
-            printf '  %-16s running   %s\n' "$name" "$serial"
-        else
-            printf '  %-16s stopped\n' "$name"
-        fi
-    done
-
-# print the adb serial of a running AVD (fails if it isn't running). An emulator
-# takes whatever port is free, so the serial is looked up by name via `emu avd
-# name` rather than assumed to be 5554.
-_emu-serial avd:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    for serial in $(adb devices | awk '/^emulator-/ {print $1}'); do
-        if [ "$(adb -s "$serial" emu avd name 2>/dev/null | head -1 | tr -d '\r')" = "{{avd}}" ]; then
-            echo "$serial"
-            exit 0
-        fi
-    done
-    exit 1
-
-# Idempotent (no-op if the AVD is already online); boots in the background and
-# blocks until Android finishes booting, so local recipes can depend on it.
-# boot a local AVD (default: pixel35) — `just emu-local other`
-emu-local avd=avd:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if serial=$(just _emu-serial {{avd}} 2>/dev/null); then
-        echo "{{avd}} already running ($serial)"
-        exit 0
-    fi
-    if ! "$HOME/Android/Sdk/emulator/emulator" -list-avds | grep -qx "{{avd}}"; then
-        echo "No such AVD: {{avd}}. Available:" >&2
-        just emu-list >&2
+    if ! branch=$(git symbolic-ref --short -q HEAD); then
+        echo "HEAD is detached — check out the branch you are releasing from." >&2
         exit 1
     fi
-    "$HOME/Android/Sdk/emulator/emulator" -avd {{avd}} >/dev/null 2>&1 &
-    disown
-    echo "Booting {{avd}}..."
-    for _ in $(seq 1 60); do
-        serial=$(just _emu-serial {{avd}} 2>/dev/null || true)
-        [ -n "${serial:-}" ] && break
-        sleep 2
-    done
-    [ -n "${serial:-}" ] || { echo "{{avd}} did not come up" >&2; exit 1; }
-    adb -s "$serial" wait-for-device
-    until [ "$(adb -s "$serial" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
-        sleep 2
-    done
-    echo "{{avd}} ready ($serial)"
+    echo "$branch"
 
-# Boots the emulator first if needed; builds, installs and runs with hot reload.
-# This is the primary pre-commit verify loop.
-# run the app (debug) on a local AVD (default: pixel35) — `just dev-local other`
-dev-local avd=avd: (emu-local avd)
-    #!/usr/bin/env bash
-    set -euo pipefail
-    flutter run -d "$(just _emu-serial {{avd}})"
-
-# one-time setup: open the device list in emu-view's dedicated Chrome profile so
-# "Fit to screen" + Save settings persists there (localStorage, per player=mse).
-# Then `just emu-view` picks it up. Configure -> keep Fit to screen ON -> Save.
-emu-config:
-    flatpak run com.google.Chrome \
-      --user-data-dir="$HOME/.config/chrome-emu" --no-first-run --no-default-browser-check \
-      --app='http://192.168.2.208:8000' >/dev/null 2>&1 &
-
-# ws-scrcpy deep-link skips the device list (MSE player, fixed scrcpy port 8886,
-# stable across restarts). URL is single-quoted so the shell keeps the &/#/%.
-# A dedicated --user-data-dir forces a separate Chrome instance so --window-size
-# is actually honored (a window in an already-running Chrome ignores size flags).
-# open the emulator screen straight into a dedicated phone-sized browser window
-emu-view:
-    flatpak run com.google.Chrome \
-      --user-data-dir="$HOME/.config/chrome-emu" --no-first-run --no-default-browser-check \
-      --window-size=500,1000 \
-      --app='http://192.168.2.208:8000/#!action=stream&udid=android-emulator%3A5555&player=mse&ws=ws%3A%2F%2F192.168.2.208%3A8000%2F%3Faction%3Dproxy-adb%26remote%3Dtcp%253A8886%26udid%3Dandroid-emulator%253A5555' \
-      >/dev/null 2>&1 &
-
-# bump version in pubspec.yaml and commit
 # versionCode = (major*10000 + minor*100 + patch) * 1000 (e.g. 1.2.3 → 10203000)
 # The trailing three zeros are the dev slots: `ship-dev` numbers the builds
 # between two releases into them (1.2.3-dev.7 → 10203007 - 1000, i.e. just under
 # 1.2.3 and just over 1.2.2), so a dev build can never block the release it
-# precedes. Widened from the old bare major*10000+minor*100+patch, which left no
-# integer at all between two consecutive patches. Every new code is a thousand
-# times the old one, so it still sorts above everything already on Play.
+# precedes.
+#
 # Idempotent: safe to re-run after a partially-completed `ship` — it skips the
 # edit/commit when the version is already bumped, so the pipeline can resume.
 _bump ver:
     #!/usr/bin/env bash
     set -euo pipefail
-    git pull --rebase --autostash origin main
+    branch=$(just _branch)
+    # A branch that exists only here — the first release cut from it — has
+    # nothing to rebase onto, and `git pull` would fail on the missing ref.
+    # `--exit-code` says 2 for that and 128 for "could not reach origin": only
+    # the first is a reason to skip the rebase, and swallowing the second would
+    # build the release on a tree that never caught up with the remote.
+    rc=0
+    git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1 || rc=$?
+    case $rc in
+        0) git pull --rebase --autostash origin "$branch" ;;
+        2) echo "origin has no $branch yet — first release from this branch" ;;
+        *) echo "Cannot read origin (git ls-remote exited $rc)." >&2; exit 1 ;;
+    esac
     major=$(echo "{{ver}}" | cut -d. -f1)
     minor=$(echo "{{ver}}" | cut -d. -f2)
     patch=$(echo "{{ver}}" | cut -d. -f3)
@@ -201,207 +251,63 @@ _bump ver:
         git commit -m "chore: bump version to {{ver}}"
     fi
 
-# create GitHub release and upload the APK (assumes build ran)
-# usage: just release 1.0.0
-release ver:
+# Upload the APK to a release, skipping it if already attached so a resumed run
+# cannot duplicate it. One fixed file and never a variadic: that is what keeps
+# the Play bundle off the GitHub release.
+#
+# Capture the asset list before filtering it: `gh ... | grep -q` deadlocks
+# against `set -o pipefail` — grep closes the pipe on its first match, gh dies
+# with SIGPIPE (141), and the `if` wrongly takes the "not found" branch.
+[no-exit-message]
+_upload-asset tag file:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Push the bump commit first; let GitHub create the tag together with the
-    # release in one server-side call. This avoids the race where we push a tag
-    # and immediately reference it before the server has indexed it.
-    git push origin HEAD:main
-    # Skip creating the release if it already exists (e.g. a previous run got
-    # this far before failing), so the pipeline can be resumed safely.
-    if gh release view "v{{ver}}" --repo {{repo}} >/dev/null 2>&1; then
-        echo "Release v{{ver}} already exists, skipping create"
-    else
-        # Empty notes on purpose: the Play/Obtainium changelog is written by hand
-        # afterwards, and --generate-notes would fill it with raw commit subjects.
-        gh release create "v{{ver}}" --repo {{repo}} --target main \
-            --title "v{{ver}}" --notes ""
-    fi
-    # Skip an asset that's already up so a resumed run doesn't duplicate it.
-    #
-    # Capture the asset list before filtering it: `gh ... | grep -q` deadlocks
-    # against `set -o pipefail` — grep closes the pipe on its first match, gh
-    # dies with SIGPIPE (141), and the `if` wrongly takes the "not found" branch.
-    assets=$(gh release view "v{{ver}}" --repo {{repo}} --json assets --jq '.assets[].name')
-    name=$(basename "{{apk}}")
+    tag={{ quote(tag) }}
+    file={{ quote(file) }}
+    assets=$(gh release view "$tag" --repo {{repo}} --json assets --jq '.assets[].name')
+    name=$(basename "$file")
     if grep -qxF "$name" <<<"$assets"; then
         echo "Asset $name already uploaded, skipping"
     else
-        gh release upload "v{{ver}}" --repo {{repo}} "{{apk}}"
+        gh release upload "$tag" --repo {{repo}} "$file"
     fi
-    # Sync the server-created tag back to the local repo.
-    git fetch --tags origin
 
-# Deletes uploaded artifacts (APKs) from old releases — tags, titles and notes
-# stay, only the binaries are stripped. Without VER the cutoff is the current
-# minor series: "older" = a smaller major.minor than the newest release's, so the
-# whole latest minor (e.g. all of v0.2.x) keeps its APK while v0.1.x and earlier
-# lose theirs. With VER everything at or below that release is stripped, the
-# newest minor included.
-# Irreversible on the server side. The original driver was Codeberg's release
-# storage quota, which GitHub does not impose; what is left is housekeeping, so
-# old releases stay findable without carrying binaries nobody installs.
-# strip artifacts from old releases
-# usage: just release-cleanup [0.9.0]
-release-cleanup ver='':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Capture the list first (piping gh straight into a filter risks a pipefail
-    # abort). Keep only real vMAJOR.MINOR.PATCH tags; a high --limit grabs every
-    # release in one page.
-    releases=$(gh release list --repo {{repo}} --limit 50 --json tagName --jq '.[].tagName')
-    tags=$(grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' <<<"$releases" || true)
-    if [ -z "$tags" ]; then
-        echo "No version releases found; nothing to clean."
-        exit 0
-    fi
-    if [ -n "{{ver}}" ]; then
-        # `sort -V` orders versions numerically (v0.9.0 < v0.10.0, which a plain
-        # lexical sort gets backwards). A tag is doomed when it sorts first
-        # against the cutoff — i.e. it is older than or equal to it.
-        doomed=$(for tag in $tags; do
-            v="${tag#v}"
-            if [ "$(printf '%s\n%s\n' "$v" "{{ver}}" | sort -V | head -1)" = "$v" ]; then
-                echo "$tag"
-            fi
-        done)
-        if [ -z "$doomed" ]; then
-            echo "No releases at or below v{{ver}}; nothing to clean."
-            exit 0
-        fi
-        echo "About to strip artifacts from releases at or below v{{ver}} (irreversible; releases and tags stay):"
-    else
-        # Latest minor = the max (major, minor) across all tags.
-        latest_major=-1; latest_minor=-1
-        for tag in $tags; do
-            v="${tag#v}"; major="${v%%.*}"; rest="${v#*.}"; minor="${rest%%.*}"
-            if (( major > latest_major )) || { (( major == latest_major )) && (( minor > latest_minor )); }; then
-                latest_major=$major; latest_minor=$minor
-            fi
-        done
-        # Keep the current minor (and anything newer); clean only older minors.
-        doomed=$(for tag in $tags; do
-            v="${tag#v}"; major="${v%%.*}"; rest="${v#*.}"; minor="${rest%%.*}"
-            if (( major < latest_major )) || { (( major == latest_major )) && (( minor < latest_minor )); }; then
-                echo "$tag"
-            fi
-        done)
-        if [ -z "$doomed" ]; then
-            echo "Only v${latest_major}.${latest_minor}.x releases exist; nothing to clean."
-            exit 0
-        fi
-        echo "Latest minor: v${latest_major}.${latest_minor}.x (kept). About to strip artifacts from older releases (irreversible; releases and tags stay):"
-    fi
-    printf '  %s\n' $doomed
-    echo "Keeping: $(comm -23 <(sort <<<"$tags") <(sort <<<"$doomed") | tr '\n' ' ')"
-    read -r -p "Type 'yes' to confirm: " answer
-    if [ "$answer" != "yes" ]; then
-        echo "Aborted."
-        exit 1
-    fi
-    for tag in $doomed; do
-        mapfile -t assets < <(gh release view "$tag" --repo {{repo}} --json assets --jq '.assets[].name')
-        if (( ${#assets[@]} == 0 )); then
-            echo "  $tag: no artifacts"
-            continue
-        fi
-        echo "  $tag: deleting ${assets[*]}"
-        # One call per asset: gh takes a single asset name.
-        for name in "${assets[@]}"; do
-            gh release delete-asset "$tag" "$name" --repo {{repo}} -y
-        done
-    done
-    echo "Cleanup done."
-
-# Deletes whole releases (entry, title, notes and artifacts) at VER and below —
-# unlike release-cleanup, which only strips artifacts. Tags are kept, so history
-# and `git describe` still work, and a release can be recreated from one; pass
-# --cleanup-tag to gh by hand if you really want the tags gone too.
-# Irreversible on the server side, hence the preview + typed confirmation.
-# delete whole releases from VER downwards: just release-purge 0.9.0
-release-purge ver:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Capture first (piping gh straight into a filter risks a pipefail abort);
-    # keep only real version tags.
-    releases=$(gh release list --repo {{repo}} --limit 100 --json tagName --jq '.[].tagName')
-    tags=$(grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' <<<"$releases" || true)
-    if [ -z "$tags" ]; then
-        echo "No version releases found; nothing to purge."
-        exit 0
-    fi
-    # `sort -V` orders versions numerically (v0.9.0 < v0.10.0, which a plain
-    # lexical sort gets backwards). A tag is doomed when it sorts first against
-    # the cutoff — i.e. it is older than or equal to it.
-    doomed=$(for tag in $tags; do
-        v="${tag#v}"
-        if [ "$(printf '%s\n%s\n' "$v" "{{ver}}" | sort -V | head -1)" = "$v" ]; then
-            echo "$tag"
-        fi
-    done)
-    if [ -z "$doomed" ]; then
-        echo "No releases at or below v{{ver}}; nothing to purge."
-        exit 0
-    fi
-    echo "About to DELETE these releases from GitHub (irreversible; tags stay):"
-    printf '  %s\n' $doomed
-    echo "Keeping: $(comm -23 <(sort <<<"$tags") <(sort <<<"$doomed") | tr '\n' ' ')"
-    read -r -p "Type 'yes' to confirm: " answer
-    if [ "$answer" != "yes" ]; then
-        echo "Aborted."
-        exit 1
-    fi
-    # One call per release: gh deletes a single tag.
-    for tag in $doomed; do
-        gh release delete "$tag" --repo {{repo}} -y
-    done
-    echo "Purged $(wc -l <<<"$doomed") releases."
-
-# bump version, test, build and release — full pipeline
-#
 # Produces everything a stable version needs: the APK for the GitHub release (and
 # Obtainium), plus the Play bundle in build/dist/, which you upload to Play by
-# hand. The bundle is built *before* the GitHub release, so one that fails to
-# build does not leave a published release with nothing to promote.
-#
-# usage: just ship 1.0.0
+# hand.
+# usage: just ship X.Y.Z
+[doc('bump, test, build and publish a stable release')]
+[group('4-release')]
 ship ver:
     just _bump {{ver}}
     just test
     just build
     just build-aab
-    just release {{ver}}
+    just release-publish {{ver}}
+    just aab-show {{aab}}
 
 # Test, build and publish the current commit as a dev prerelease.
 #
 #   versionName  X.Y.Z-dev.N    versionCode  (X.Y.Z as in _bump) - 1000 + N
 #
 # X.Y.Z is the release this build is heading for (default: the next patch after
-# the last tag) and N is how many builds it sits past that tag — so the number
-# says where the build is, and both parts stay ordered: every dev build is above
-# the last release and below the next one.
+# the last tag) and N counts the dev builds of that target — so every dev build
+# is above the last release and below the next one. Passing the whole
+# `X.Y.Z-dev.N` pins N instead of counting it, as long as that slot is free.
 #
-# pubspec.yaml is not touched and nothing is committed. The version travels as a
-# build flag, so main never carries a `-dev` version, the history stays free of
-# bump commits for throwaway builds, and the release points at a SHA instead.
+# pubspec.yaml is not touched and nothing is committed: the version travels as a
+# build flag, so the branch never carries a `-dev` version and the release
+# points at a SHA. Obtainium hides prereleases by default, so a tester opts in
+# with one switch and everyone else keeps seeing stable only.
 #
-# Obtainium hides prereleases by default, so a tester opts in with one switch and
-# everyone else keeps seeing stable only.
+# The Play bundle stays in build/dist/ for the internal testing track; pass
+# `bundle=no` when a build is only meant for Obtainium. The parameter is `bundle`
+# and not `aab` because a parameter shadows the global of the same name for the
+# whole recipe, which would expand `{{aab}}` to `yes`.
 #
-# The APK goes to the GitHub prerelease and the Play bundle stays in build/dist/
-# for you to upload to Play's internal testing track. That is what the dev slots
-# are for — a dev code sits above the last release and below the next one, so
-# internal testers get the dev build now and the stable release upgrades them
-# cleanly later. Pass `bundle=no` to skip it when a build is only for Obtainium.
-#
-# The parameter is `bundle` and not `aab`: a parameter shadows the global of the
-# same name for the whole recipe, so `{{aab}}` would expand to `yes` instead of
-# the bundle's path.
-#
-# usage: just ship-dev [0.3.0] [bundle=yes|no]
+# usage: just ship-dev [X.Y.Z | X.Y.Z-dev.N] [bundle=yes|no]
+[doc('publish a dev prerelease from the current commit')]
+[group('4-release')]
 ship-dev target='' bundle='yes':
     #!/usr/bin/env bash
     set -euo pipefail
@@ -425,13 +331,31 @@ ship-dev target='' bundle='yes':
         exit 1
     fi
     target='{{target}}'
+    # The full dev version is accepted as well as the bare target, because that
+    # is the string you have in hand — off the release page or the phone's about
+    # screen — when you re-run a build. Its N then replaces the counter below.
+    want_n=''
+    case "$target" in
+        *-dev.*)
+            want_n=${target##*-dev.}
+            target=${target%-dev.*}
+            ;;
+    esac
     if [ -z "$target" ]; then
         IFS=. read -r lmaj lmin lpat <<<"$base"
         target="$lmaj.$lmin.$((lpat + 1))"
     fi
     if ! grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$target"; then
-        echo "Target must be X.Y.Z, got '$target'." >&2
+        echo "Target must be X.Y.Z or X.Y.Z-dev.N, got '{{target}}'." >&2
         exit 1
+    fi
+    if [ -n "$want_n" ]; then
+        if ! grep -qE '^[0-9]+$' <<<"$want_n"; then
+            echo "Dev number must be a number, got '{{target}}'." >&2
+            exit 1
+        fi
+        # 10# so a padded `-dev.08` is decimal eight and not an octal error.
+        want_n=$((10#$want_n))
     fi
     # The dev slots sit *under* the target, so a target at or below the last
     # release would hand out a versionCode the phone has already installed.
@@ -453,12 +377,26 @@ ship-dev target='' bundle='yes':
     # as far as publishing it. Reuse it — same commit is the same build, and the
     # steps below skip whatever that run finished.
     n=$(dev_n --points-at HEAD)
-    if [ -z "$n" ]; then
+    if [ -n "$want_n" ]; then
+        # A number spelled out by hand may only name this commit's own build or a
+        # free slot; taking another commit's would republish under its name.
+        if [ -n "$n" ] && [ "$n" != "$want_n" ]; then
+            echo "HEAD is already published as v$target-dev.$n, not dev.$want_n." >&2
+            exit 1
+        fi
+        if [ -z "$n" ] && [ -n "$(git tag --list "v$target-dev.$want_n")" ]; then
+            echo "v$target-dev.$want_n already exists on another commit." >&2
+            exit 1
+        fi
+        n=$want_n
+    elif [ -z "$n" ]; then
         highest=$(dev_n)
         n=$(( ${highest:-0} + 1 ))
     fi
-    if [ "$n" -gt 999 ]; then
-        echo "$n dev builds under $target — past the 999 slots. Ship a release." >&2
+    # dev.0 would take the release's own code minus a thousand, i.e. the slot
+    # the previous release series ends on.
+    if [ "$n" -lt 1 ] || [ "$n" -gt 999 ]; then
+        echo "Dev number $n under $target is outside the 1..999 slots." >&2
         exit 1
     fi
     maj=$(cut -d. -f1 <<<"$target")
@@ -479,47 +417,206 @@ ship-dev target='' bundle='yes':
     # Renamed only here: unlike the bundle, this APK is published as a release
     # asset a tester downloads, so the file has to say which build it holds.
     mv {{apk}} "build/dist/app-$name.apk"
-    # Bundle before the release is published, not after: one that fails to build
-    # would otherwise leave a dev release on GitHub with nothing to upload to
-    # Play, and the next run would skip straight past the build it needs.
     if [ '{{bundle}}' != 'no' ]; then
         just build-aab "$name" "$code"
     fi
     tag="v$name"
-    # Resumable like `release`: skip whatever a failed earlier run already did.
+    # Resumable like `release-publish`: skip whatever a failed earlier run did.
     if gh release view "$tag" --repo {{repo}} >/dev/null 2>&1; then
         echo "Release $tag already exists, skipping create"
     else
-        # --generate-notes, unlike in `release`: raw commit subjects are exactly
-        # the changelog a dev channel wants. Play's own notes are the handwritten
-        # ones, and internal testing does not ask for them at all.
+        # --generate-notes, unlike in `release-publish`: raw commit subjects are
+        # exactly the changelog a dev channel wants. Play's own notes are the
+        # handwritten ones, and internal testing does not ask for them at all.
         gh release create "$tag" --repo {{repo}} --target "$sha" \
             --title "$tag" --prerelease --generate-notes
     fi
-    # Capture the asset list before filtering (see `release`: gh piped straight
-    # into grep dies of SIGPIPE and takes pipefail down with it).
-    assets=$(gh release view "$tag" --repo {{repo}} --json assets --jq '.assets[].name')
-    asset="app-$name.apk"
-    if grep -qxF "$asset" <<<"$assets"; then
-        echo "Asset $asset already uploaded, skipping"
-    else
-        gh release upload "$tag" --repo {{repo}} "build/dist/$asset"
-    fi
+    just _upload-asset "$tag" "build/dist/app-$name.apk"
     git fetch --tags origin
     echo "Published $tag"
     if [ '{{bundle}}' != 'no' ]; then
         echo "Upload to Play internal testing ($name):"
-        ls -1 {{aab}}
+        just aab-show {{aab}}
     fi
 
-# Deletes old dev prereleases whole — release, notes, APK and tag — keeping the
-# newest KEEP. Unlike release-cleanup, the tags go too: a dev tag marks a build
-# nobody can install any more, and `git describe` picking one over the release it
-# came after is actively misleading.
-# Stable releases are unreachable from here: the pattern only matches -dev tags.
-# Irreversible on the server side, hence the preview + typed confirmation.
-# usage: just dev-cleanup [5]
-dev-cleanup keep='5':
+# Assumes the APK is already built.
+# usage: just release-publish X.Y.Z
+[doc('publish the GitHub release for an already-built version')]
+[group('4-release')]
+release-publish ver:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    branch=$(just _branch)
+    sha=$(git rev-parse HEAD)
+    # Push the bump commit first; let GitHub create the tag together with the
+    # release in one server-side call. This avoids the race where we push a tag
+    # and immediately reference it before the server has indexed it.
+    git push origin "HEAD:refs/heads/$branch"
+    # Skip creating the release if it already exists (e.g. a previous run got
+    # this far before failing), so the pipeline can be resumed safely.
+    if gh release view "v{{ver}}" --repo {{repo}} >/dev/null 2>&1; then
+        echo "Release v{{ver}} already exists, skipping create"
+    else
+        # Empty notes on purpose: the Play/Obtainium changelog is written by hand
+        # afterwards, and --generate-notes would fill it with raw commit subjects.
+        gh release create "v{{ver}}" --repo {{repo}} --target "$sha" \
+            --title "v{{ver}}" --notes ""
+    fi
+    just _upload-asset "v{{ver}}" {{apk}}
+    # Sync the server-created tag back to the local repo.
+    git fetch --tags origin
+
+# ---- 5-danger — deletes what cannot be restored ----
+#
+# All three are irreversible on the server side, hence the preview + typed
+# confirmation. What is left is housekeeping, so old releases stay findable
+# without carrying binaries nobody installs.
+
+# Echo the subset of `tags` older than or EQUAL to `cutoff`, in input order.
+# `sort -V` orders versions numerically (v0.9.0 < v0.10.0, which a plain lexical
+# sort gets backwards). A tag is doomed when it sorts first against the cutoff;
+# the callers' contract is "VER and below", so equality is included. This
+# predicate decides which releases get destroyed — do not grow a second copy.
+[no-exit-message]
+_at-or-below cutoff tags:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cutoff={{ quote(cutoff) }}
+    tags={{ quote(tags) }}
+    for tag in $tags; do
+        v="${tag#v}"
+        if [ "$(printf '%s\n%s\n' "$v" "$cutoff" | sort -V | head -1)" = "$v" ]; then
+            echo "$tag"
+        fi
+    done
+
+# Preview an irreversible list and demand a typed `yes`. The Keeping line is what
+# catches an off-by-one in the cutoff before it executes.
+#
+# `printf ... $doomed` is deliberately unquoted: $doomed is a newline-separated
+# blob and the word split is what puts one item per line.
+#
+# Call it as a bare statement — never `|| true`, never inside an `if`: the
+# `exit 1` below IS the abort, and a caller that swallows it walks straight into
+# the deletion loop.
+[no-exit-message]
+_confirm headline doomed keeping:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    doomed={{ quote(doomed) }}
+    keeping={{ quote(keeping) }}
+    echo {{ quote(headline) }}
+    printf '  %s\n' $doomed
+    echo "Keeping: $keeping"
+    read -r -p "Type 'yes' to confirm: " answer
+    if [ "$answer" != "yes" ]; then
+        echo "Aborted."
+        exit 1
+    fi
+
+# Without VER the cutoff is the current minor series: "older" = a smaller
+# major.minor than the newest release's, so the whole latest minor (e.g. all of
+# v0.3.x) keeps its APKs while v0.2.x and earlier lose theirs. With VER
+# everything at or below that release is stripped, the newest minor included.
+# usage: just purge-assets [X.Y.Z]
+[doc('DELETE the APKs of old releases, releases and tags stay')]
+[group('5-danger')]
+purge-assets ver='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Capture the list first (piping gh straight into a filter risks a pipefail
+    # abort). Keep only real vMAJOR.MINOR.PATCH tags; a high --limit grabs every
+    # release in one page.
+    releases=$(gh release list --repo {{repo}} --limit 50 --json tagName --jq '.[].tagName')
+    tags=$(grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' <<<"$releases" || true)
+    if [ -z "$tags" ]; then
+        echo "No version releases found; nothing to clean."
+        exit 0
+    fi
+    if [ -n "{{ver}}" ]; then
+        doomed=$(just _at-or-below "{{ver}}" "$tags")
+        if [ -z "$doomed" ]; then
+            echo "No releases at or below v{{ver}}; nothing to clean."
+            exit 0
+        fi
+        headline="About to strip artifacts from releases at or below v{{ver}} (irreversible; releases and tags stay):"
+    else
+        # Latest minor = the max (major, minor) across all tags.
+        latest_major=-1; latest_minor=-1
+        for tag in $tags; do
+            v="${tag#v}"; major="${v%%.*}"; rest="${v#*.}"; minor="${rest%%.*}"
+            if (( major > latest_major )) || { (( major == latest_major )) && (( minor > latest_minor )); }; then
+                latest_major=$major; latest_minor=$minor
+            fi
+        done
+        # Keep the current minor (and anything newer); clean only older minors.
+        doomed=$(for tag in $tags; do
+            v="${tag#v}"; major="${v%%.*}"; rest="${v#*.}"; minor="${rest%%.*}"
+            if (( major < latest_major )) || { (( major == latest_major )) && (( minor < latest_minor )); }; then
+                echo "$tag"
+            fi
+        done)
+        if [ -z "$doomed" ]; then
+            echo "Only v${latest_major}.${latest_minor}.x releases exist; nothing to clean."
+            exit 0
+        fi
+        headline="Latest minor: v${latest_major}.${latest_minor}.x (kept). About to strip artifacts from older releases (irreversible; releases and tags stay):"
+    fi
+    just _confirm "$headline" "$doomed" "$(comm -23 <(sort <<<"$tags") <(sort <<<"$doomed") | tr '\n' ' ')"
+    for tag in $doomed; do
+        mapfile -t assets < <(gh release view "$tag" --repo {{repo}} --json assets --jq '.assets[].name')
+        if (( ${#assets[@]} == 0 )); then
+            echo "  $tag: no artifacts"
+            continue
+        fi
+        echo "  $tag: deleting ${assets[*]}"
+        # One call per asset: gh takes a single asset name.
+        for name in "${assets[@]}"; do
+            gh release delete-asset "$tag" "$name" --repo {{repo}} -y
+        done
+    done
+    echo "Cleanup done."
+
+# Deletes whole releases (entry, title, notes and artifacts), unlike
+# purge-assets. Tags are kept, so history and `git describe` still work and a
+# release can be recreated from one; pass --cleanup-tag to gh by hand if you
+# really want the tags gone too.
+# usage: just purge-releases X.Y.Z
+[doc('DELETE whole releases at VER and below, tags stay')]
+[group('5-danger')]
+purge-releases ver:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Capture first (piping gh straight into a filter risks a pipefail abort);
+    # keep only real version tags.
+    releases=$(gh release list --repo {{repo}} --limit 100 --json tagName --jq '.[].tagName')
+    tags=$(grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' <<<"$releases" || true)
+    if [ -z "$tags" ]; then
+        echo "No version releases found; nothing to purge."
+        exit 0
+    fi
+    doomed=$(just _at-or-below "{{ver}}" "$tags")
+    if [ -z "$doomed" ]; then
+        echo "No releases at or below v{{ver}}; nothing to purge."
+        exit 0
+    fi
+    just _confirm "About to DELETE these releases from GitHub (irreversible; tags stay):" "$doomed" \
+        "$(comm -23 <(sort <<<"$tags") <(sort <<<"$doomed") | tr '\n' ' ')"
+    # One call per release: gh deletes a single tag.
+    for tag in $doomed; do
+        gh release delete "$tag" --repo {{repo}} -y
+    done
+    echo "Purged $(wc -l <<<"$doomed") releases."
+
+# Keeps the newest KEEP dev prereleases and deletes the rest whole — release,
+# notes, APK and tag. The tags go too, unlike purge-assets and purge-releases: a
+# dev tag marks a build nobody can install any more, and `git describe` picking
+# one over the release it came after is actively misleading. Stable releases are
+# unreachable from here — the pattern only matches -dev tags.
+# usage: just purge-dev-tags [KEEP]
+[doc('DELETE old dev prereleases and their tags')]
+[group('5-danger')]
+purge-dev-tags keep='5':
     #!/usr/bin/env bash
     set -euo pipefail
     # gh lists newest first, and that is the right order here: a dev build is
@@ -536,14 +633,8 @@ dev-cleanup keep='5':
         echo "Only $(wc -l <<<"$devs") dev prerelease(s), keeping {{keep}}; nothing to clean."
         exit 0
     fi
-    echo "About to DELETE these dev prereleases and their tags (irreversible):"
-    printf '  %s\n' $doomed
-    echo "Keeping: $(head -n {{keep}} <<<"$devs" | tr '\n' ' ')"
-    read -r -p "Type 'yes' to confirm: " answer
-    if [ "$answer" != "yes" ]; then
-        echo "Aborted."
-        exit 1
-    fi
+    just _confirm "About to DELETE these dev prereleases and their tags (irreversible):" "$doomed" \
+        "$(head -n {{keep}} <<<"$devs" | tr '\n' ' ')"
     for tag in $doomed; do
         gh release delete "$tag" --repo {{repo}} --cleanup-tag -y
     done
