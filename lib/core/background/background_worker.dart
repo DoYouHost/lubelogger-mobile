@@ -1,3 +1,4 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -8,10 +9,10 @@ import '../auth/credentials_store.dart';
 import '../cache/photo_cache.dart';
 import '../cache/sync_service.dart';
 import '../cache/write_queue.dart';
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 import '../notifications/reminder_worker.dart';
 import '../settings/settings_repository.dart';
+import '../diagnostics/diagnostics_wiring.dart';
+import '../diagnostics/report_config.dart';
 import '../diagnostics/session_facts.dart';
 
 /// Unique WorkManager task id. Still named after the reminder check, which is
@@ -96,8 +97,10 @@ Future<void> runBackgroundPass() async {
   // "my edit never arrived" has no other witness. Null when nothing is being
   // recorded, which is the normal case.
   final recording = await DiagnosticRecorder.startBackground(
-    settings: settings,
+    sessions: SettingsSessionStore(settings),
     stream: LogStream.worker,
+    redactor: lubeloggerRedactor,
+    sessionLimit: recordingLimit,
     loadSecrets: () => sessionSecrets(
       profile: settings.loadProfile(),
       credentials: SecureCredentialsStore(),

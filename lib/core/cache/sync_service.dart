@@ -1,8 +1,7 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 
 import '../../data/vehicles_repository.dart';
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 import '../models/vehicle_record.dart';
 import 'offline_interceptor.dart';
 import 'photo_cache.dart';

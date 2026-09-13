@@ -1,9 +1,8 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/vehicles_repository.dart';
 import '../app_localizations_loader.dart';
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 import '../models/vehicle.dart';
 import 'notification_service.dart';
 import 'reminder_notifications.dart';

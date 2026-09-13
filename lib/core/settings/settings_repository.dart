@@ -1,9 +1,8 @@
 import 'dart:convert';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 import '../models/vehicle_tab.dart';
 import 'server_profile.dart';
 import 'units_settings.dart';

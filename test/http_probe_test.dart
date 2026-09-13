@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/api/api_client.dart';
-import 'package:lubelogger_mobile/core/diagnostics/diagnostic_recorder.dart';
-import 'package:lubelogger_mobile/core/diagnostics/log_event.dart';
-import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
+import 'package:lubelogger_mobile/core/diagnostics/diagnostics_wiring.dart';
 import 'package:lubelogger_mobile/core/settings/settings_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,7 +58,7 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    recorder = DiagnosticRecorder(
+    recorder = lubeloggerRecorder(
       settings: SettingsRepository(prefs),
       loadFacts: () async => const SessionFacts(app: '0.2.7+207'),
       // In memory only: nothing here is testing the durable mirror.
@@ -273,7 +272,10 @@ void main() {
 
   test('the API key never reaches a record', () async {
     dio.httpClientAdapter = _FakeAdapter(
-      (_) => _json({'detail': 'key sekretny-klucz-123 rejected'}, status: 403),
+      (_) => _json(
+        {'success': false, 'message': 'key sekretny-klucz-123 rejected'},
+        status: 403,
+      ),
     );
     await recorder.start();
     DiagnosticRecorder.active!.redactor
@@ -313,7 +315,7 @@ void main() {
 
   test('the session header carries the server fingerprint, not the URL',
       () async {
-    final fingerprinted = DiagnosticRecorder(
+    final fingerprinted = lubeloggerRecorder(
       settings: SettingsRepository(await SharedPreferences.getInstance()),
       loadFacts: () async => SessionFacts(
         app: '0.2.7+207',

@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 
 import '../cache/offline_interceptor.dart';
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 
 /// How many times a request may be sent in total, first attempt included.
 const int kDefaultMaxAttempts = 3;

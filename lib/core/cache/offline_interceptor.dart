@@ -1,10 +1,9 @@
 import 'dart:io';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 import 'http_cache.dart';
 import 'write_queue.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lubelogger_mobile/core/diagnostics/log_redactor.dart';
+import 'package:lubelogger_mobile/core/diagnostics/report_config.dart';
 
 /// Every `logTag` / `logSurface` identifier in the app, with the file it is in.
 ///
@@ -38,7 +38,7 @@ void main() {
   // called `garage` would turn `garage.card` into `[HOST].card` — and an id that
   // does match is written to a public issue verbatim, so it had better be a name
   // this app chose rather than something read off the screen.
-  final shape = LogRedactor.ourKeys['id']!;
+  final shape = lubeloggerOurKeys['id']!;
 
   test('every control identifier is a dotted, unlocalized name', () {
     final tags = _declaredTags();

@@ -1039,6 +1039,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bugReportCancelSend => 'Cancel sending';
 
   @override
+  String get bugReportRequestFailedNotYet =>
+      'The relay is not accepting reports right now. Try again later.';
+
+  @override
+  String get bugReportRequestFailedRefused =>
+      'The relay refused this request. You can open the issue yourself on GitHub.';
+
+  @override
+  String get bugReportRequestFailedUnreachable =>
+      'Could not reach the relay. Check the connection and try again.';
+
+  @override
+  String get bugReportRequestFailedDemo =>
+      'Demo mode does not publish reports.';
+
+  @override
+  String get bugReportQueuedBug =>
+      'This countdown is for the bug report you already sent.';
+
+  @override
+  String get bugReportQueuedChange =>
+      'This countdown is for the change request you already sent.';
+
+  @override
+  String get bugReportQueuedFeature =>
+      'This countdown is for the feature request you already sent.';
+
+  @override
   String get bugReportStepRecord => 'Start recording';
 
   @override

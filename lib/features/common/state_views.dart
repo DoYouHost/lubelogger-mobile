@@ -1,8 +1,6 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/diagnostics/diagnostic_recorder.dart';
-import '../../core/diagnostics/log_event.dart';
-import '../../core/diagnostics/log_tag.dart';
 import '../../core/theme/dash_theme.dart';
 
 /// Records that a screen gave up and showed one of these instead of content.
