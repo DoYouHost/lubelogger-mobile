@@ -24,9 +24,7 @@ class SupplyRecord {
 
   factory SupplyRecord.fromJson(Map<String, dynamic> json) => SupplyRecord(
         id: toInt(json['id']),
-        date: json['date'] is String
-            ? DateTime.tryParse(json['date'] as String)
-            : null,
+        date: calendarDateFromJson(json['date']),
         description: (json['description'] as String?) ?? '',
         cost: toDouble(json['cost']),
         partNumber: (json['partNumber'] as String?) ?? '',

@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,12 +10,26 @@ final _decimalEntry = RegExp(r'^\d*[.,]?\d*$');
 
 /// Free-form decimal entry: the field keeps whatever the user types as long as
 /// it stays a plain number — no forced width, leading zeros or fixed decimals.
-/// Edits that would break that are rejected outright.
+/// Typed edits that would break that are rejected outright.
+///
+/// A paste is the exception. A number copied from a receipt or a spreadsheet
+/// arrives grouped ("1 250,50", "1,250.50"), which is not a plain number but is
+/// one [parseUserDecimal] reads, so it is rewritten plain rather than refused.
+/// Only multi-character insertions take that path: typing "1,2." has to stay
+/// rejected rather than turn into "12".
 final List<TextInputFormatter> decimalInputFormatters = [
-  TextInputFormatter.withFunction(
-    (oldValue, newValue) =>
-        _decimalEntry.hasMatch(newValue.text) ? newValue : oldValue,
-  ),
+  TextInputFormatter.withFunction((oldValue, newValue) {
+    if (_decimalEntry.hasMatch(newValue.text)) return newValue;
+    final pasted = newValue.text.length - oldValue.text.length > 1
+        ? parseUserDecimal(newValue.text)
+        : null;
+    if (pasted == null || pasted < 0) return oldValue;
+    final plain = formatFormNumber(pasted);
+    return TextEditingValue(
+      text: plain,
+      selection: TextSelection.collapsed(offset: plain.length),
+    );
+  }),
 ];
 
 /// Free-form whole-number entry (odometers, quantities of whole units).

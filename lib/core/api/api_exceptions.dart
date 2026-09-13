@@ -126,7 +126,8 @@ AppApiException mapDioException(DioException e) {
           statusCode: e.response?.statusCode),
     DioFailure.badCertificate =>
       const NetworkException(AppErrorCode.badCertificate),
-    DioFailure.connectionError =>
+    DioFailure.cancelled ||
+    DioFailure.unknown =>
       NetworkException(AppErrorCode.connectionError, detail: e.message),
   };
 }

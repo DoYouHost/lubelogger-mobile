@@ -23,9 +23,7 @@ class PlanRecord {
 
   factory PlanRecord.fromJson(Map<String, dynamic> json) => PlanRecord(
         id: toInt(json['id']),
-        dateCreated: json['dateCreated'] is String
-            ? DateTime.tryParse(json['dateCreated'] as String)
-            : null,
+        dateCreated: calendarDateFromJson(json['dateCreated']),
         description: (json['description'] as String?) ?? '',
         cost: toDouble(json['cost']),
         type: PlanType.parse(json['type']),

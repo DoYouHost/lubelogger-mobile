@@ -25,9 +25,7 @@ class OdometerRecord {
 
   factory OdometerRecord.fromJson(Map<String, dynamic> json) => OdometerRecord(
         id: toInt(json['id']),
-        date: json['date'] is String
-            ? DateTime.tryParse(json['date'] as String)
-            : null,
+        date: calendarDateFromJson(json['date']),
         odometer: toDouble(json['odometer']),
         initialOdometer: toDouble(json['initialOdometer']),
         notes: (json['notes'] as String?) ?? '',

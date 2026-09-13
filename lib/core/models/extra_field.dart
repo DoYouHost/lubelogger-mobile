@@ -71,7 +71,7 @@ class ExtraField {
       value: (json['value'] as String?) ?? '',
       isRequired: toBoolOrFalse(json['isRequired']),
       fieldType: parsed ?? ExtraFieldType.text,
-      wireFieldType: parsed == null ? _toIntOrNull(rawType) : null,
+      wireFieldType: parsed == null ? toIntOrNull(rawType) : null,
     );
   }
 
@@ -114,12 +114,6 @@ class ExtraField {
 
   static List<Map<String, dynamic>> jsonList(List<ExtraField> fields) =>
       [for (final f in fields) f.toJson()];
-
-  static int? _toIntOrNull(Object? raw) => switch (raw) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s.trim()),
-        _ => null,
-      };
 }
 
 /// Reconciles a record's stored fields with the household's current [template],

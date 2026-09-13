@@ -31,7 +31,7 @@ class GasRecord {
 
   factory GasRecord.fromJson(Map<String, dynamic> json) => GasRecord(
         id: toInt(json['id']),
-        date: _toDate(json['date']),
+        date: calendarDateFromJson(json['date']),
         odometer: toDouble(json['odometer']),
         fuelConsumed: toDouble(json['fuelConsumed']),
         cost: toDouble(json['cost']),
@@ -68,7 +68,4 @@ class GasRecord {
   final String tags;
 
   final List<ExtraField> extraFields;
-
-  static DateTime? _toDate(Object? v) =>
-      v is String ? DateTime.tryParse(v) : null;
 }

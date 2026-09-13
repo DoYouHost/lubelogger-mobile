@@ -21,9 +21,7 @@ class ReminderRecord {
         description: (json['description'] as String?) ?? '',
         urgency: ReminderUrgency.parse(json['urgency']),
         metric: ReminderMetric.parse(json['metric']),
-        dueDate: json['dueDate'] is String
-            ? DateTime.tryParse(json['dueDate'] as String)
-            : null,
+        dueDate: calendarDateFromJson(json['dueDate']),
         dueOdometer: () {
           final o = toDouble(json['dueOdometer']);
           return o > 0 ? o : null;

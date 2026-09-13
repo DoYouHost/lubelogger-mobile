@@ -241,7 +241,7 @@ class DemoBackend {
         rec['urgency'] = _computeUrgency(vehicleId, rec);
       case 'planrecords':
         rec['dateCreated'] =
-            existing?['dateCreated'] ?? _isoDate(DateTime.now());
+            existing?['dateCreated'] ?? calendarDateToJson(DateTime.now());
       case 'odometerrecords':
         rec.putIfAbsent('initialOdometer', () => _lastOdometer(vehicleId));
     }
@@ -471,8 +471,8 @@ class DemoBackend {
 
   void _seed() {
     final now = DateTime.now();
-    String ago(int days) => _isoDate(now.subtract(Duration(days: days)));
-    String ahead(int days) => _isoDate(now.add(Duration(days: days)));
+    String ago(int days) => calendarDateToJson(now.subtract(Duration(days: days)));
+    String ahead(int days) => calendarDateToJson(now.add(Duration(days: days)));
 
     _vehicles.addAll([
       {
@@ -889,11 +889,4 @@ class DemoBackend {
     rec['urgency'] = _computeUrgency(vehicleId, rec);
     return rec;
   }
-
-  // ── Coercions ──────────────────────────────────────────────────────────────
-
-  static String _isoDate(DateTime dt) =>
-      '${dt.year.toString().padLeft(4, '0')}-'
-      '${dt.month.toString().padLeft(2, '0')}-'
-      '${dt.day.toString().padLeft(2, '0')}';
 }

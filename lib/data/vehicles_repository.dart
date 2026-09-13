@@ -585,7 +585,7 @@ class VehiclesRepository {
           queryParameters: {'vehicleId': vehicleId},
           options: Options(contentType: Headers.jsonContentType),
           data: {
-            'date': _isoDate(date),
+            'date': calendarDateToJson(date),
             'odometer': _intString(odometer),
             'notes': notes,
             'tags': tags,
@@ -617,7 +617,7 @@ class VehiclesRepository {
           options: Options(contentType: Headers.jsonContentType),
           data: {
             'id': id.toString(),
-            'date': _isoDate(date),
+            'date': calendarDateToJson(date),
             'odometer': _intString(odometer),
             'initialOdometer': _intString(initialOdometer),
             'notes': notes,
@@ -830,7 +830,7 @@ class VehiclesRepository {
     required List<ExtraField> extraFields,
   }) =>
       {
-        'date': _isoDate(date),
+        'date': calendarDateToJson(date),
         'odometer': _intString(odometer),
         'fuelConsumed': fuelConsumed.toString(),
         'cost': cost.toString(),
@@ -858,7 +858,7 @@ class VehiclesRepository {
     required List<ExtraField> extraFields,
   }) =>
       {
-        'date': _isoDate(date),
+        'date': calendarDateToJson(date),
         if (odometer != null) 'odometer': _intString(odometer),
         'description': description,
         'cost': cost.toString(),
@@ -883,7 +883,7 @@ class VehiclesRepository {
     List<ExtraField> extraFields,
   ) =>
       {
-        'date': _isoDate(date),
+        'date': calendarDateToJson(date),
         'description': description,
         'partNumber': partNumber,
         'partSupplier': partSupplier,
@@ -932,7 +932,7 @@ class VehiclesRepository {
       {
         'description': description,
         'metric': metric.wireName,
-        if (dueDate != null) 'dueDate': _isoDate(dueDate),
+        if (dueDate != null) 'dueDate': calendarDateToJson(dueDate),
         if (dueOdometer != null) 'dueOdometer': _intString(dueOdometer),
         'notes': notes,
         'tags': tags,
@@ -1009,12 +1009,6 @@ class VehiclesRepository {
   /// Odometer values are stored as integers server-side (`int.Parse`); emit a
   /// whole-number string so a `317240.0`-style double never reaches the parser.
   static String _intString(num value) => value.round().toString();
-
-  /// `yyyy-MM-dd` — unambiguous for the server's invariant `DateTime.Parse`.
-  static String _isoDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
 
   /// A write's `OperationResponse` reports failure in-band with HTTP 200
   /// (`{success:false, message}`); surface it as an [ApiException].

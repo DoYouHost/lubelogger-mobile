@@ -36,6 +36,24 @@ void main() {
       expect(typeDecimal('-5'), '5');
     });
 
+    test('a pasted grouped number is rewritten plain', () {
+      String paste(String text) => decimalInputFormatters.first
+          .formatEditUpdate(
+            TextEditingValue.empty,
+            TextEditingValue(
+              text: text,
+              selection: TextSelection.collapsed(offset: text.length),
+            ),
+          )
+          .text;
+
+      expect(paste('1 250,50'), '1250.5');
+      expect(paste('1,250.50'), '1250.5');
+      expect(paste('1\u00a0250'), '1250');
+      expect(paste('12 apples'), '', reason: 'not a number, so refused');
+      expect(paste('-5 000'), '', reason: 'the forms take no negatives');
+    });
+
     test('never pads or shifts digits', () {
       expect(typeDecimal('2'), '2');
       expect(typeDecimal('21'), '21');

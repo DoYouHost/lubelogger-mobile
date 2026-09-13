@@ -23,9 +23,7 @@ class VehicleRecord {
 
   factory VehicleRecord.fromJson(Map<String, dynamic> json) => VehicleRecord(
         id: toInt(json['id']),
-        date: json['date'] is String
-            ? DateTime.tryParse(json['date'] as String)
-            : null,
+        date: calendarDateFromJson(json['date']),
         // Tax records omit odometer; a "0" reading is treated as absent too.
         odometer: () {
           final o = toDouble(json['odometer']);
