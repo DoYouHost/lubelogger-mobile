@@ -1,11 +1,9 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../../core/diagnostics/diagnostic_recorder.dart';
-import '../../../core/diagnostics/log_event.dart';
-import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/models/attachment.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';

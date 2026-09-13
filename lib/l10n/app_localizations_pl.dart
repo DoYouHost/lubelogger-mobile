@@ -1052,6 +1052,33 @@ class AppLocalizationsPl extends AppLocalizations {
   String get bugReportCancelSend => 'Anuluj wysyłanie';
 
   @override
+  String get bugReportRequestFailedNotYet =>
+      'Relay w tej chwili nie przyjmuje zgłoszeń. Spróbuj później.';
+
+  @override
+  String get bugReportRequestFailedRefused =>
+      'Relay odmówił przyjęcia tego zgłoszenia. Możesz otworzyć je samodzielnie na GitHubie.';
+
+  @override
+  String get bugReportRequestFailedUnreachable =>
+      'Nie udało się połączyć z relayem. Sprawdź połączenie i spróbuj ponownie.';
+
+  @override
+  String get bugReportRequestFailedDemo => 'Tryb demo nie publikuje zgłoszeń.';
+
+  @override
+  String get bugReportQueuedBug =>
+      'To odliczanie dotyczy wysłanego już zgłoszenia błędu.';
+
+  @override
+  String get bugReportQueuedChange =>
+      'To odliczanie dotyczy wysłanej już prośby o zmianę.';
+
+  @override
+  String get bugReportQueuedFeature =>
+      'To odliczanie dotyczy wysłanej już prośby o funkcję.';
+
+  @override
   String get bugReportStepRecord => 'Włącz nagrywanie';
 
   @override

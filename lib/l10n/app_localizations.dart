@@ -1916,6 +1916,48 @@ abstract class AppLocalizations {
   /// **'Cancel sending'**
   String get bugReportCancelSend;
 
+  /// No description provided for @bugReportRequestFailedNotYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay is not accepting reports right now. Try again later.'**
+  String get bugReportRequestFailedNotYet;
+
+  /// No description provided for @bugReportRequestFailedRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The relay refused this request. You can open the issue yourself on GitHub.'**
+  String get bugReportRequestFailedRefused;
+
+  /// No description provided for @bugReportRequestFailedUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the relay. Check the connection and try again.'**
+  String get bugReportRequestFailedUnreachable;
+
+  /// No description provided for @bugReportRequestFailedDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode does not publish reports.'**
+  String get bugReportRequestFailedDemo;
+
+  /// No description provided for @bugReportQueuedBug.
+  ///
+  /// In en, this message translates to:
+  /// **'This countdown is for the bug report you already sent.'**
+  String get bugReportQueuedBug;
+
+  /// No description provided for @bugReportQueuedChange.
+  ///
+  /// In en, this message translates to:
+  /// **'This countdown is for the change request you already sent.'**
+  String get bugReportQueuedChange;
+
+  /// No description provided for @bugReportQueuedFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'This countdown is for the feature request you already sent.'**
+  String get bugReportQueuedFeature;
+
   /// No description provided for @bugReportStepRecord.
   ///
   /// In en, this message translates to:

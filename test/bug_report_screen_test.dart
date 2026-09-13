@@ -1,13 +1,14 @@
+import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_client/app_report_client.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lubelogger_mobile/core/diagnostics/diagnostic_recorder.dart';
-import 'package:lubelogger_mobile/core/diagnostics/log_event.dart';
-import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
+import 'package:lubelogger_mobile/core/diagnostics/diagnostics_wiring.dart';
 import 'package:lubelogger_mobile/features/bug_report/bug_report_controller.dart';
 import 'package:lubelogger_mobile/features/bug_report/bug_report_screen.dart';
 import 'package:lubelogger_mobile/features/bug_report/log_export.dart';
@@ -40,28 +41,65 @@ class _OfflineRelay implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// Puts the screen in whatever send state a test needs — including one a
+/// previous run left in the outbox — without a relay or a file behind it.
+class _ScriptedSender implements ReportSender {
+  final _states = StreamController<SendState>.broadcast();
+
+  void emit(SendState state) => _states.add(state);
+
+  @override
+  Stream<SendState> get states => _states.stream;
+
+  @override
+  Future<void> prepare() async {}
+
+  @override
+  Future<void> flush() async {}
+
+  @override
+  Future<void> cancel() async => emit(const SendState.idle());
+
+  @override
+  Future<void> submit({required String description, required String log}) async {}
+
+  @override
+  Future<void> submitRequest({
+    required ReportKind kind,
+    required String description,
+    required ReportEnvelope envelope,
+  }) async {}
+
+  @override
+  void dispose() => _states.close();
+}
+
 void main() {
   late AppLocalizations l10n;
   late List<({String fileName, String log})> saved;
   late LogSaveResult saveResult;
 
-  Future<ProviderContainer> pumpScreen(WidgetTester tester) async {
+  Future<ProviderContainer> pumpScreen(
+    WidgetTester tester, {
+    ReportSender? sender,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        bareDioProvider.overrideWithValue(
+        relayDioProvider.overrideWithValue(
           Dio()..httpClientAdapter = _OfflineRelay(),
         ),
         // In-memory recording: no package info, no support directory, no files.
         diagnosticRecorderProvider.overrideWith(
-          (ref) => DiagnosticRecorder(
+          (ref) => lubeloggerRecorder(
             settings: ref.watch(settingsRepositoryProvider),
             loadFacts: () async => const SessionFacts(app: '0.2.7+207'),
             resolveDirectory: () async => null,
           ),
         ),
+        if (sender != null) reportSenderProvider.overrideWithValue(sender),
         logFileSaverProvider.overrideWithValue(
           ({required String fileName, required String log, String? dialogTitle}) async {
             saved.add((fileName: fileName, log: log));
@@ -200,6 +238,9 @@ void main() {
     // What describes the whole session is shown above the records, so the phone
     // and the time zone the header carries are reviewed like everything else.
     expect(find.textContaining('app 0.2.7+207'), findsOneWidget);
+    // …while what only describes the file is left out of it.
+    expect(find.textContaining(RegExp(r'\bstream \w')), findsNothing);
+    expect(find.textContaining(RegExp(r'\bts \d')), findsNothing);
 
     // The records themselves are below the fold on a small screen.
     await tester.drag(find.byType(ListView), const Offset(0, -400));
@@ -275,5 +316,76 @@ void main() {
 
     // Back to the start: nothing left to review, nothing left on the phone.
     expect(find.text(l10n.bugReportStart), findsOneWidget);
+  });
+  group('a report on its way out', () {
+    // The countdown ticks every second, so these pump frames by hand and end
+    // on an idle state rather than settling on a timer that never stops.
+    Future<void> show(WidgetTester tester) async {
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('one queued by an earlier run shows on the bug tab', (
+      tester,
+    ) async {
+      final sender = _ScriptedSender();
+      await pumpScreen(tester, sender: sender);
+
+      sender.emit(
+        SendState.waiting(DateTime.now().add(const Duration(minutes: 2))),
+      );
+      await show(tester);
+
+      expect(find.text(l10n.bugReportSendWaitingBody), findsOneWidget);
+      expect(find.text(l10n.bugReportStart), findsOneWidget);
+      // Same kind as the tab, so nothing to explain.
+      expect(find.text(l10n.bugReportQueuedBug), findsNothing);
+
+      await tester.tap(find.text(l10n.bugReportCancelSend));
+      await show(tester);
+      expect(find.text(l10n.bugReportSendWaitingBody), findsNothing);
+    });
+
+    testWidgets('a countdown seen from another tab names its report', (
+      tester,
+    ) async {
+      final sender = _ScriptedSender();
+      await pumpScreen(tester, sender: sender);
+      await tester.tap(find.text(l10n.bugReportKindChange));
+      await tester.pumpAndSettle();
+
+      sender.emit(
+        SendState.waiting(
+          DateTime.now().add(const Duration(minutes: 2)),
+          kind: ReportKind.feature,
+        ),
+      );
+      await show(tester);
+
+      expect(find.text(l10n.bugReportQueuedFeature), findsOneWidget);
+
+      sender.emit(const SendState.idle());
+      await show(tester);
+    });
+
+    testWidgets('a failed request is not told to save a log it never had', (
+      tester,
+    ) async {
+      final sender = _ScriptedSender();
+      await pumpScreen(tester, sender: sender);
+      await tester.tap(find.text(l10n.bugReportKindFeature));
+      await tester.pumpAndSettle();
+
+      sender.emit(
+        const SendState.failed(
+          RelayFailure.unreachable,
+          kind: ReportKind.feature,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.bugReportRequestFailedUnreachable), findsOneWidget);
+      expect(find.text(l10n.bugReportSendFailedUnreachable), findsNothing);
+    });
   });
 }

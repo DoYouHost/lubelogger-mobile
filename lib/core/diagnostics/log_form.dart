@@ -1,8 +1,5 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/widgets.dart';
-
-import 'diagnostic_recorder.dart';
-import 'log_event.dart';
-import 'log_tag.dart';
 
 /// Runs [form]'s validators and records the verdict under the surface the form
 /// is on.

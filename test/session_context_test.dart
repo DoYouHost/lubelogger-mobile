@@ -1,9 +1,8 @@
 import 'dart:convert';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lubelogger_mobile/core/diagnostics/diagnostic_recorder.dart';
-import 'package:lubelogger_mobile/core/diagnostics/log_event.dart';
-import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
+import 'package:lubelogger_mobile/core/diagnostics/diagnostics_wiring.dart';
 import 'package:lubelogger_mobile/core/models/vehicle_tab.dart';
 import 'package:lubelogger_mobile/core/settings/settings_repository.dart';
 import 'package:lubelogger_mobile/core/settings/units_settings.dart';
@@ -21,12 +20,11 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     settings = SettingsRepository(await SharedPreferences.getInstance());
-    recorder = DiagnosticRecorder(
+    recorder = lubeloggerRecorder(
       settings: settings,
-      loadFacts: () async => SessionFacts(
+      loadFacts: () async => const SessionFacts(
         app: '0.2.7+207',
-        environment: const {'tz': '+02:00', 'device': 'Xiaomi 2201123G'},
-        settings: settings.diagnosticsSnapshot(),
+        extra: {'tz': '+02:00', 'device': 'Xiaomi 2201123G'},
       ),
       resolveDirectory: () async => null,
     );
@@ -51,39 +49,6 @@ void main() {
       expect(header['app'], '0.2.7+207');
       expect(header['tz'], '+02:00');
       expect(header['device'], 'Xiaomi 2201123G');
-    });
-
-    test('a fact survives the round trip the worker puts it through', () {
-      // The background isolate does not build a header — it reads the UI's off
-      // disk and writes it back tagged as its own stream. A fact this class does
-      // not know by name would be dropped there, and only in the file that the
-      // report is actually assembled from.
-      final original = LogHeader(
-        ts: DateTime.utc(2026, 8, 7),
-        session: 'abc',
-        app: '0.2.7+207',
-        extra: const {'tz': '+02:00', 'sdk': 34},
-      );
-
-      final reread = LogHeader.tryParse(
-        original.toJsonLine(),
-        session: 'abc',
-      )!.copyWith(stream: LogStream.worker);
-
-      expect(reread.extra['tz'], '+02:00');
-      expect(reread.extra['sdk'], 34);
-      expect(reread.toJson()['stream'], 'worker');
-    });
-
-    test('an unknown fact cannot overwrite a field the header owns', () {
-      final header = LogHeader(
-        ts: DateTime.utc(2026, 8, 7),
-        session: 'abc',
-        app: '0.2.7+207',
-        extra: const {'session': 'forged', 'tz': '+02:00'},
-      );
-      expect(header.toJson()['session'], 'abc');
-      expect(header.toJson()['tz'], '+02:00');
     });
   });
 

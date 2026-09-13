@@ -13,8 +13,23 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  # Used directly by the report relay client (SHA-256 for the proof of work).
-  # Already resolved transitively; declared so the import is honest.
+  # Bug-report transport, outbox and redactor, shared with bambuddy-mobile.
+  # Pinned by tag, so a change over there reaches a release here only through a
+  # commit in this repo. Must be the ref `app_diagnostics` names for its own
+  # copy: one package resolved from two refs fails version solving.
+  app_report_client:
+    git:
+      url: https://github.com/DoYouHost/app-shared.git
+      ref: v0.2.0
+      path: packages/app_report_client
+  # The recording session, the log record and the probes. Same repository, same
+  # pinning rule.
+  app_diagnostics:
+    git:
+      url: https://github.com/DoYouHost/app-shared.git
+      ref: v0.3.0
+      path: packages/app_diagnostics
+  # SHA-256 keys for the HTTP cache.
   crypto: ^3.0.6
   dio: ^5.7.0
   flutter_riverpod: ^2.6.1

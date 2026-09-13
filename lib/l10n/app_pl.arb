@@ -389,6 +389,13 @@
   "bugReportRequestRequired": "Napisz, o co prosisz — z pustego zgłoszenia nic nie wynika.",
   "bugReportRequestSentBody": "Dziękujemy. Zgłoszenie jest otwarte.",
   "bugReportCancelSend": "Anuluj wysyłanie",
+  "bugReportRequestFailedNotYet": "Relay w tej chwili nie przyjmuje zgłoszeń. Spróbuj później.",
+  "bugReportRequestFailedRefused": "Relay odmówił przyjęcia tego zgłoszenia. Możesz otworzyć je samodzielnie na GitHubie.",
+  "bugReportRequestFailedUnreachable": "Nie udało się połączyć z relayem. Sprawdź połączenie i spróbuj ponownie.",
+  "bugReportRequestFailedDemo": "Tryb demo nie publikuje zgłoszeń.",
+  "bugReportQueuedBug": "To odliczanie dotyczy wysłanego już zgłoszenia błędu.",
+  "bugReportQueuedChange": "To odliczanie dotyczy wysłanej już prośby o zmianę.",
+  "bugReportQueuedFeature": "To odliczanie dotyczy wysłanej już prośby o funkcję.",
 
   "bugReportStepRecord": "Włącz nagrywanie",
   "bugReportStepReproduce": "Odtwórz problem",

@@ -1,7 +1,7 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import '../../core/layout/responsive.dart';
 
-import '../../core/diagnostics/log_tag.dart';
 import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';
 import '../../core/theme/dash_theme.dart';

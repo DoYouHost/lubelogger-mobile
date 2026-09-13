@@ -1,11 +1,10 @@
 import 'dart:async';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_client/app_report_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/diagnostics/log_store.dart' show recordingLimit;
-import '../../core/diagnostics/log_summary.dart';
-import '../../core/diagnostics/report_envelope.dart';
-import '../../core/diagnostics/report_sender.dart';
+import '../../core/diagnostics/report_config.dart';
 import '../../providers.dart';
 
 enum BugReportPhase { idle, recording, review }
@@ -204,7 +203,12 @@ class BugReportController extends Notifier<BugReportState> {
         .submitRequest(
           kind: state.kind,
           description: description,
-          envelope: requestEnvelope(facts),
+          envelope: requestEnvelope(
+            formatVersion: reportLogSchema,
+            app: facts.app,
+            server: facts.server,
+            locale: facts.locale,
+          ),
         );
   }
 

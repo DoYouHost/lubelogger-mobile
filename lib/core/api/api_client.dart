@@ -1,3 +1,4 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -6,7 +7,7 @@ import '../cache/http_cache.dart';
 import '../cache/offline_interceptor.dart';
 import '../cache/write_queue.dart';
 import '../demo/demo_http_adapter.dart';
-import '../diagnostics/http_probe.dart';
+import '../diagnostics/report_config.dart';
 import '../settings/server_profile.dart';
 import 'retry_interceptor.dart';
 
@@ -33,7 +34,7 @@ Dio createBareDio() => Dio(
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),
       ),
-    )..interceptors.add(HttpProbe());
+    )..interceptors.add(HttpProbe(config: lubeloggerHttpProbe));
 
 /// Authenticated HTTP client for a single [ServerProfile].
 class ApiClient {

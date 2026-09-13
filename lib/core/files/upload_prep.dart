@@ -1,10 +1,9 @@
 import 'dart:io';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 
 /// A picked file on its way to `POST /api/documents/upload`.
 typedef UploadFile = ({String path, String name});

@@ -539,6 +539,13 @@
   "bugReportRequestRequired": "Write what you are asking for — an empty request cannot be acted on.",
   "bugReportRequestSentBody": "Thank you. The issue is open.",
   "bugReportCancelSend": "Cancel sending",
+  "bugReportRequestFailedNotYet": "The relay is not accepting reports right now. Try again later.",
+  "bugReportRequestFailedRefused": "The relay refused this request. You can open the issue yourself on GitHub.",
+  "bugReportRequestFailedUnreachable": "Could not reach the relay. Check the connection and try again.",
+  "bugReportRequestFailedDemo": "Demo mode does not publish reports.",
+  "bugReportQueuedBug": "This countdown is for the bug report you already sent.",
+  "bugReportQueuedChange": "This countdown is for the change request you already sent.",
+  "bugReportQueuedFeature": "This countdown is for the feature request you already sent.",
 
   "bugReportStepRecord": "Start recording",
   "bugReportStepReproduce": "Reproduce the problem",

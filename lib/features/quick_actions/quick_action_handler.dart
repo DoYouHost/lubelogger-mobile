@@ -1,8 +1,7 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/diagnostics/diagnostic_recorder.dart';
-import '../../core/diagnostics/log_event.dart';
 import '../../core/models/vehicle_info.dart';
 import '../../core/quick_actions_service.dart';
 import '../../l10n/app_localizations.dart';
