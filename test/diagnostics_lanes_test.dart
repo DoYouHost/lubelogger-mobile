@@ -1,14 +1,13 @@
 import 'dart:convert';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/core/api/api_exceptions.dart';
-import 'package:lubelogger_mobile/core/diagnostics/diagnostic_recorder.dart';
+import 'package:lubelogger_mobile/core/diagnostics/diagnostics_wiring.dart';
 import 'package:lubelogger_mobile/core/diagnostics/image_probe.dart';
 import 'package:lubelogger_mobile/core/diagnostics/log_form.dart';
-import 'package:lubelogger_mobile/core/diagnostics/log_tag.dart';
-import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
 import 'package:lubelogger_mobile/core/settings/settings_repository.dart';
 import 'package:lubelogger_mobile/features/common/state_views.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/record_form_scaffold.dart';
@@ -25,7 +24,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    recorder = DiagnosticRecorder(
+    recorder = lubeloggerRecorder(
       settings: SettingsRepository(await SharedPreferences.getInstance()),
       loadFacts: () async => const SessionFacts(app: '0.2.7+207'),
       resolveDirectory: () async => null,

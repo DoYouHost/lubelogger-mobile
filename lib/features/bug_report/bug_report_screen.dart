@@ -1,16 +1,13 @@
 import 'dart:async';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_client/app_report_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/diagnostics/log_store.dart' show recordingLimit;
-import '../../core/diagnostics/log_summary.dart';
-import '../../core/diagnostics/log_tag.dart';
-import '../../core/diagnostics/relay_client.dart';
-import '../../core/diagnostics/report_envelope.dart';
-import '../../core/diagnostics/report_sender.dart';
+import '../../core/diagnostics/report_config.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
@@ -981,10 +978,17 @@ class _SummaryCard extends StatelessWidget {
 
   final LogSummary summary;
 
+  /// The header without the two keys that mean nothing to a reader.
+  Map<String, Object?> get _sessionFacts => {
+    for (final e in summary.header.entries)
+      if (e.key != 'v' && e.key != 'session') e.key: e.value,
+  };
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
+    final sessionFacts = _sessionFacts;
 
     return Container(
       width: double.infinity,
@@ -1044,7 +1048,7 @@ class _SummaryCard extends StatelessWidget {
                 ),
             ],
           ),
-          if (summary.sessionFacts.isNotEmpty) ...[
+          if (sessionFacts.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
               // The header describes the whole session and is not one of the
@@ -1052,7 +1056,7 @@ class _SummaryCard extends StatelessWidget {
               // the time zone and the server's version is to open the raw log —
               // and the screen before this one promises the user they are there.
               [
-                for (final e in summary.sessionFacts.entries)
+                for (final e in sessionFacts.entries)
                   '${e.key} ${e.value}',
               ].join('  ·  '),
               style: TextStyle(

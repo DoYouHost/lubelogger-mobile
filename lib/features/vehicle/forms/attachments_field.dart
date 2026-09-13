@@ -1,13 +1,11 @@
 import 'dart:io';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exceptions.dart';
-import '../../../core/diagnostics/diagnostic_recorder.dart';
-import '../../../core/diagnostics/log_event.dart';
-import '../../../core/diagnostics/log_tag.dart';
 import '../../../core/files/upload_prep.dart';
 import '../../../core/models/attachment.dart';
 import '../../../core/theme/dash_theme.dart';

@@ -1,7 +1,6 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 
-import '../diagnostics/diagnostic_recorder.dart';
-import '../diagnostics/log_event.dart';
 
 /// Error codes for the API/auth layer. The core layer is UI-independent:
 /// translation to text happens at display time (see `lib/l10n/error_messages.dart`).

@@ -1,9 +1,9 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/diagnostics/image_probe.dart';
-import '../../core/diagnostics/log_tag.dart';
 import '../../core/models/vehicle.dart';
 import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';

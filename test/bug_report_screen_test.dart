@@ -1,13 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lubelogger_mobile/core/diagnostics/diagnostic_recorder.dart';
-import 'package:lubelogger_mobile/core/diagnostics/log_event.dart';
-import 'package:lubelogger_mobile/core/diagnostics/session_facts.dart';
+import 'package:lubelogger_mobile/core/diagnostics/diagnostics_wiring.dart';
 import 'package:lubelogger_mobile/features/bug_report/bug_report_controller.dart';
 import 'package:lubelogger_mobile/features/bug_report/bug_report_screen.dart';
 import 'package:lubelogger_mobile/features/bug_report/log_export.dart';
@@ -56,7 +55,7 @@ void main() {
         ),
         // In-memory recording: no package info, no support directory, no files.
         diagnosticRecorderProvider.overrideWith(
-          (ref) => DiagnosticRecorder(
+          (ref) => lubeloggerRecorder(
             settings: ref.watch(settingsRepositoryProvider),
             loadFacts: () async => const SessionFacts(app: '0.2.7+207'),
             resolveDirectory: () async => null,

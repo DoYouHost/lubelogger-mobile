@@ -1,3 +1,4 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/foundation.dart'
     show LicenseEntryWithLineBreaks, LicenseRegistry;
 import 'package:flutter/material.dart';
@@ -8,8 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/app_localizations_loader.dart';
-import 'core/diagnostics/diagnostic_recorder.dart';
-import 'core/diagnostics/log_event.dart';
 import 'core/diagnostics/session_facts.dart';
 import 'core/format/formatters.dart';
 import 'core/notifications/notification_service.dart';

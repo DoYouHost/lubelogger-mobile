@@ -1,11 +1,10 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:dio/dio.dart';
 
 import '../core/api/api_client.dart';
 import '../core/api/api_exceptions.dart';
 import '../core/api/endpoints.dart';
 import '../core/cache/offline_interceptor.dart';
-import '../core/diagnostics/diagnostic_recorder.dart';
-import '../core/diagnostics/log_event.dart';
 import '../core/auth/whoami.dart';
 import '../core/models/attachment.dart';
 import '../core/models/equipment_record.dart';

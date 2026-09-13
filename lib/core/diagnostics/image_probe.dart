@@ -1,7 +1,5 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/widgets.dart';
-
-import 'diagnostic_recorder.dart';
-import 'log_event.dart';
 
 /// Records vehicle photos that will not load.
 ///

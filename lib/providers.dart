@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_client/app_report_client.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,12 +18,8 @@ import 'core/cache/offline_interceptor.dart';
 import 'core/cache/photo_cache.dart';
 import 'core/cache/sync_service.dart';
 import 'core/cache/write_queue.dart';
-import 'core/diagnostics/diagnostic_recorder.dart';
-import 'core/diagnostics/log_event.dart';
-import 'core/diagnostics/relay_client.dart';
-import 'core/diagnostics/relay_identity.dart';
-import 'core/diagnostics/report_outbox.dart';
-import 'core/diagnostics/report_sender.dart';
+import 'core/diagnostics/diagnostics_wiring.dart';
+import 'core/diagnostics/report_config.dart';
 import 'core/diagnostics/session_facts.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/vehicle_units.dart';
@@ -458,7 +456,6 @@ final sessionFactsProvider = Provider<Future<SessionFacts> Function()>(
   (ref) => () => loadSessionFacts(
     profile: ref.read(serverProfileProvider),
     credentials: ref.read(credentialsStoreProvider),
-    settings: ref.read(settingsRepositoryProvider),
     // Read through the repository only when a profile exists: without one
     // [apiClientProvider] throws by design, and a recording started from the
     // setup screen has no server to ask anyway.
@@ -474,7 +471,7 @@ final sessionFactsProvider = Provider<Future<SessionFacts> Function()>(
 /// app, which matters: [DiagnosticRecorder.active] is process-wide state and
 /// two recorders would fight over it.
 final diagnosticRecorderProvider = Provider<DiagnosticRecorder>(
-  (ref) => DiagnosticRecorder(
+  (ref) => lubeloggerRecorder(
     settings: ref.watch(settingsRepositoryProvider),
     loadFacts: ref.watch(sessionFactsProvider),
   ),
@@ -486,7 +483,7 @@ final diagnosticRecorderProvider = Provider<DiagnosticRecorder>(
 /// must see none of the auth interceptors, none of the credentials and none of
 /// the base URL the user configured.
 final relayClientProvider = Provider<RelayClient>(
-  (ref) => RelayClient(ref.watch(bareDioProvider)),
+  (ref) => RelayClient(ref.watch(bareDioProvider), baseUrl: relayBaseUrl),
 );
 
 final reportOutboxProvider =
@@ -502,6 +499,7 @@ final reportSenderProvider = Provider<ReportSender>((ref) {
     // Read, not watched: rebuilding this provider on a profile change would
     // hand out a second sender over the same outbox slot.
     demoMode: () => ref.read(serverProfileProvider)?.isDemo ?? false,
+    formatVersion: reportLogSchema,
   );
   ref.onDispose(sender.dispose);
   return sender;

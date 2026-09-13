@@ -1,3 +1,4 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/format/formatters.dart';
@@ -6,7 +7,6 @@ import '../../../core/settings/units_settings.dart';
 import '../../../core/format/vehicle_units.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../core/diagnostics/image_probe.dart';
-import '../../../core/diagnostics/log_tag.dart';
 import '../../common/vehicle_image.dart';
 
 /// A single vehicle in the garage list (design screen #2): a photo with floating

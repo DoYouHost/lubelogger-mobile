@@ -1,74 +1,13 @@
 import 'dart:io';
 import 'dart:ui' show Brightness, PlatformDispatcher;
 
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/widgets.dart' show MediaQueryData;
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../auth/credentials_store.dart';
 import '../settings/server_profile.dart';
-import '../settings/settings_repository.dart';
-import 'log_event.dart';
-
-/// Everything the recorder needs to describe a session, plus the exact secrets
-/// it must never let through. Gathered once when recording starts — package info
-/// and secure storage are both async, and neither changes mid-session.
-class SessionFacts {
-  const SessionFacts({
-    required this.app,
-    this.os,
-    this.locale,
-    this.server,
-    this.serverUrl,
-    this.demo = false,
-    this.secrets = const {},
-    this.environment = const {},
-    this.settings = const {},
-  });
-
-  final String app;
-  final String? os;
-  final String? locale;
-
-  /// LubeLogger version, as the server reports it at `/api/version`. Empty when
-  /// the server could not be reached or answered something unparseable — which
-  /// is itself worth seeing in a report.
-  final String? server;
-
-  final ServerFingerprint? serverUrl;
-
-  /// Store-review demo mode.
-  final bool demo;
-
-  /// Exact value → redaction label, handed to the session's redactor.
-  final Map<String, String> secrets;
-
-  /// The device and the moment, as scalars for the session header — see
-  /// [deviceEnvironment].
-  final Map<String, Object?> environment;
-
-  /// The user's own app settings at the moment recording started, written as one
-  /// record rather than into the header: they can change mid-session, and
-  /// [SettingsRepository.diagnosticsSnapshot] nests.
-  final Map<String, Object?> settings;
-
-  LogHeader toHeader({
-    required DateTime ts,
-    required String session,
-    LogStream stream = LogStream.ui,
-  }) => LogHeader(
-    ts: ts,
-    session: session,
-    app: app,
-    stream: stream,
-    os: os,
-    locale: locale,
-    server: server,
-    serverUrl: serverUrl,
-    demo: demo,
-    extra: environment,
-  );
-}
 
 /// When the process started, stamped by `main()`.
 ///
@@ -203,13 +142,9 @@ Future<Map<String, String>> sessionSecrets({
 /// the header is written once at the top of the log: which LubeLogger build
 /// produced the behaviour below is the first question every report raises. A
 /// failure to read it is swallowed — a recording must start regardless.
-///
-/// [settings] is the app's own configuration, read here so the snapshot cannot
-/// drift from the moment the header describes.
 Future<SessionFacts> loadSessionFacts({
   required ServerProfile? profile,
   required CredentialsStore credentials,
-  SettingsRepository? settings,
   Future<String?> Function()? readServerVersion,
 }) async {
   final info = await PackageInfo.fromPlatform();
@@ -226,10 +161,11 @@ Future<SessionFacts> loadSessionFacts({
         ? null
         : await _quietly(readServerVersion),
     serverUrl: ServerFingerprint.tryParse(profile?.baseUrl),
-    demo: profile?.isDemo ?? false,
     secrets: secrets,
-    environment: await deviceEnvironment(),
-    settings: settings?.diagnosticsSnapshot() ?? const {},
+    extra: {
+      if (profile?.isDemo ?? false) 'demo': true,
+      ...await deviceEnvironment(),
+    },
   );
 }
 
