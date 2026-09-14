@@ -61,6 +61,10 @@ void main() {
       expect(record['src'], 'http');
       expect(record['lvl'], 'warn');
       expect(record['cause'], 'serverUnreachable');
+      // Which call the screen carried on without: with several in flight, the
+      // surrounding `http` records cannot say.
+      expect(record['method'], 'GET');
+      expect(record['path'], '/api/vehicle/info');
     });
 
     test('a parse failure is caught too — the probe never sees one', () async {
