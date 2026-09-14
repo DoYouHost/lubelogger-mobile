@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
 
@@ -18,10 +17,9 @@ Future<int?> showVehiclePicker(
   BuildContext context,
   List<VehicleInfo> vehicles,
 ) {
-  return showModalBottomSheet<int>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    showDragHandle: true,
+  return dashSheet<int>(
+    context,
+    scrollControlled: false,
     builder: (_) => _VehiclePickerSheet(vehicles: vehicles),
   );
 }

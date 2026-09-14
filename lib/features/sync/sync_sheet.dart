@@ -2,17 +2,13 @@ import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/layout/responsive.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import 'pending_write_label.dart';
 
-Future<void> showSyncSheet(BuildContext context) => showModalBottomSheet<void>(
-      context: context,
-      constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-      showDragHandle: true,
-      isScrollControlled: true,
+Future<void> showSyncSheet(BuildContext context) => dashSheet<void>(
+      context,
       builder: (_) => const _SyncSheet(),
     );
 

@@ -10,7 +10,6 @@ import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
-import '../common/state_views.dart';
 import '../sync/sync_sheet.dart';
 import 'add_vehicle_form.dart';
 import 'widgets/vehicle_card.dart';
@@ -106,6 +105,9 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
             child: garage.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, _) => AsyncErrorView(
+                // Its own scroll view, so the enclosing RefreshIndicator still
+                // has something to pull.
+                scrollable: true,
                 message: l10n.garageLoadError,
                 onRetry: _refresh,
                 retryLabel: l10n.retry,

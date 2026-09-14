@@ -169,7 +169,7 @@ void main() {
     await save(tester);
 
     expect(find.text('Reading goes backwards'), findsOneWidget);
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Cancel'));
     await tester.pumpAndSettle();
     expect(adapter.writes, isEmpty);
   });
@@ -181,7 +181,7 @@ void main() {
 
     await type(tester, '6765');
     await save(tester);
-    await tester.tap(find.widgetWithText(TextButton, 'Save anyway'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Save anyway'));
     await tester.pumpAndSettle();
 
     expect(adapter.writes, hasLength(1));

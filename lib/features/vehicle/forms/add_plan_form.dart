@@ -1,6 +1,5 @@
 import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -27,11 +26,8 @@ Future<bool?> showAddPlanForm(
   int vehicleId, {
   PlanRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.plan',
       _AddPlanForm(vehicleId: vehicleId, existing: existing),

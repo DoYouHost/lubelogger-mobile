@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/layout/responsive.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../common/state_views.dart';
 import 'record_filter.dart';
 
 /// One icon + value pair in a [RecordCard]'s meta row (design: odometer,
@@ -308,6 +307,9 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
       child: widget.async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => AsyncErrorView(
+          // Its own scroll view, so the enclosing RefreshIndicator still
+          // has something to pull.
+          scrollable: true,
           message: l10n.dashLoadError,
           onRetry: widget.onRefresh,
           retryLabel: l10n.retry,

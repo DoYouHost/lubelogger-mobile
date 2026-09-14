@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/format/chart_range.dart';
-import '../../../core/layout/responsive.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -49,11 +48,8 @@ Future<ChartRange?> showChartRangeSheet(
   required ChartWindow currentWindow,
   required String Function(DateTime) formatDate,
 }) async {
-  final picked = await showModalBottomSheet<Object>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    showDragHandle: true,
-    isScrollControlled: true,
+  final picked = await dashSheet<Object>(
+    context,
     builder: (_) => _RangeSheet(
       chartTitle: chartTitle,
       current: current,

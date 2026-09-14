@@ -9,7 +9,7 @@ import 'package:lubelogger_mobile/core/diagnostics/diagnostics_wiring.dart';
 import 'package:lubelogger_mobile/core/diagnostics/image_probe.dart';
 import 'package:lubelogger_mobile/core/diagnostics/log_form.dart';
 import 'package:lubelogger_mobile/core/settings/settings_repository.dart';
-import 'package:lubelogger_mobile/features/common/state_views.dart';
+import 'package:dash_kit/dash_kit.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/record_form_scaffold.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -45,7 +45,8 @@ class SettingsScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: dashAppBar(context, title: l10n.settingsTitle),
-        body: ContentConstraint(
+        body: MaxContentWidth(
+          maxWidth: kContentMaxWidth,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [

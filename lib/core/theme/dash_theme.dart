@@ -1,7 +1,7 @@
-import 'package:dash_ui/dash_ui.dart';
+import 'package:dash_kit/dash_kit.dart';
 import 'package:flutter/material.dart';
 
-export 'package:dash_ui/dash_ui.dart';
+export 'package:dash_kit/dash_kit.dart';
 
 /// LubeLogger's Amber Gold in the shared design system.
 ///

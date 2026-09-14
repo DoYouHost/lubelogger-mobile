@@ -13,6 +13,9 @@ List<(String file, String id)> _declaredTags() {
   final call = RegExp(
     r"""(?:logTag|logSurface)\(\s*'([^']*)'|\.(?:tagged|surface)\(\s*'([^']*)'""",
   );
+  // The shared dialog names its two buttons from the id it is handed, so that
+  // id is a tag declared here like any other.
+  final handedOver = RegExp(r"""confirmDialog\([^;]*?id: '([^']*)'""", dotAll: true);
   final comment = RegExp(r'^\s*//.*$', multiLine: true);
   final found = <(String, String)>[];
   for (final entity in Directory('lib').listSync(recursive: true)) {
@@ -20,6 +23,9 @@ List<(String file, String id)> _declaredTags() {
     final source = entity.readAsStringSync().replaceAll(comment, '');
     for (final match in call.allMatches(source)) {
       found.add((entity.path, match.group(1) ?? match.group(2)!));
+    }
+    for (final match in handedOver.allMatches(source)) {
+      found.add((entity.path, match.group(1)!));
     }
   }
   found.sort((a, b) => '${a.$1}${a.$2}'.compareTo('${b.$1}${b.$2}'));
@@ -62,6 +68,8 @@ void main() {
         if (id.contains(r'$')) '$file: "$id"',
     ];
     expect(interpolated, [
+      // Twice: the destructive confirmation and the merely risky one.
+      'lib/features/common/confirm_dialog.dart: "confirm.\$what"',
       'lib/features/common/confirm_dialog.dart: "confirm.\$what"',
       'lib/features/settings/settings_screen.dart: "settings.\$id"',
       'lib/features/vehicle/add_record_sheet.dart: "add_sheet.\${tab.name}"',

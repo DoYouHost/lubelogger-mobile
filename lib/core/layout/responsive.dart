@@ -6,11 +6,6 @@ import 'package:flutter/widgets.dart';
 /// wider viewports — phone landscape and tablets — so horizontal space is used
 /// instead of stretching one column edge-to-edge.
 
-/// Max width for modal bottom sheets. When the screen is wider the sheet is
-/// centered at this width rather than spanning the full landscape width, which
-/// would leave forms with uncomfortably long fields.
-const double kBottomSheetMaxWidth = 640;
-
 /// Max width for a centered full-screen content column (e.g. Settings), so its
 /// rows stay readable in landscape instead of running the whole width.
 const double kContentMaxWidth = 760;
@@ -118,29 +113,6 @@ class SliverResponsiveCards extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// Centers [child] and caps its width at [maxWidth], for full-screen scrollable
-/// content that would otherwise stretch across a landscape/tablet width.
-class ContentConstraint extends StatelessWidget {
-  const ContentConstraint({
-    super.key,
-    required this.child,
-    this.maxWidth = kContentMaxWidth,
-  });
-
-  final Widget child;
-  final double maxWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: child,
-      ),
     );
   }
 }

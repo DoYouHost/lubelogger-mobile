@@ -1,6 +1,5 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
-import '../../core/layout/responsive.dart';
 
 import '../../core/models/vehicle_record.dart';
 import '../../core/models/vehicle_tab.dart';
@@ -27,10 +26,9 @@ Future<void> showAddRecordSheet(
 ) async {
   if (tabs.isEmpty) return;
 
-  final picked = await showModalBottomSheet<VehicleTab>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    showDragHandle: true,
+  final picked = await dashSheet<VehicleTab>(
+    context,
+    scrollControlled: false,
     builder: (_) => _AddRecordGrid(options: tabs),
   );
   if (picked == null || !context.mounted) return;

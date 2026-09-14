@@ -1,7 +1,6 @@
 import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/diagnostics/log_form.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -28,11 +27,8 @@ Future<bool?> showAddOdometerForm(
   int vehicleId, {
   OdometerRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.odometer',
       _AddOdometerForm(vehicleId: vehicleId, existing: existing),

@@ -12,7 +12,6 @@ import '../../core/format/vehicle_units.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
-import '../common/state_views.dart';
 import 'widgets/chart_palette.dart';
 import 'widgets/chart_range_sheet.dart';
 import 'widgets/dashboard_charts.dart';
@@ -49,6 +48,9 @@ class DashboardTab extends ConsumerWidget {
       child: infoAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => AsyncErrorView(
+          // Its own scroll view, so the enclosing RefreshIndicator still
+          // has something to pull.
+          scrollable: true,
           message: l10n.dashLoadError,
           onRetry: refresh,
           retryLabel: l10n.retry,

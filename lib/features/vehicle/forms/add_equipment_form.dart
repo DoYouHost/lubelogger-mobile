@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -25,11 +24,8 @@ Future<bool?> showAddEquipmentForm(
   int vehicleId, {
   EquipmentRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.equipment',
       _AddEquipmentForm(vehicleId: vehicleId, existing: existing),

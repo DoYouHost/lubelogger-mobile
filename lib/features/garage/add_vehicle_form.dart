@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/layout/responsive.dart';
 import '../common/confirm_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +22,8 @@ import '../vehicle/forms/record_form_scaffold.dart';
 /// own info provider. When editing, a delete action (LubeLogger 1.7.0+) removes
 /// the vehicle and all its records after a confirmation.
 Future<int?> showVehicleForm(BuildContext context, {Vehicle? existing}) {
-  return showModalBottomSheet<int>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<int>(
+    context,
     builder: (_) =>
         logSurface('form.vehicle', _VehicleForm(existing: existing)),
   );
