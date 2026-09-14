@@ -21,9 +21,10 @@ import 'core/cache/write_queue.dart';
 import 'core/diagnostics/diagnostics_wiring.dart';
 import 'core/diagnostics/report_config.dart';
 import 'core/diagnostics/session_facts.dart';
+import 'core/format/chart_range.dart';
+import 'core/format/expense_timeline.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/vehicle_units.dart';
-import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
 import 'core/models/equipment_record.dart';
 import 'core/models/extra_field.dart';
@@ -118,6 +119,64 @@ class VisibleTabsNotifier extends Notifier<Set<VehicleTab>> {
     state = next;
   }
 }
+
+/// The range every dashboard chart opens on, from Settings.
+final chartDefaultRangeProvider =
+    NotifierProvider<ChartDefaultRangeNotifier, ChartRangePreset>(
+  ChartDefaultRangeNotifier.new,
+);
+
+class ChartDefaultRangeNotifier extends Notifier<ChartRangePreset> {
+  @override
+  ChartRangePreset build() =>
+      ref.watch(settingsRepositoryProvider).loadChartDefaultRange();
+
+  Future<void> set(ChartRangePreset preset) async {
+    await ref.read(settingsRepositoryProvider).saveChartDefaultRange(preset);
+    state = preset;
+  }
+}
+
+/// The dashboard charts whose range can be switched.
+enum DashboardChart { expensesByType, expensesDistance, economy }
+
+/// One chart on one vehicle's dashboard. Per vehicle because a custom range
+/// fitted to one vehicle's history is usually empty on another.
+typedef ChartKey = ({int vehicleId, DashboardChart chart});
+
+/// Ranges picked on individual charts. Kept for the app's lifetime only, and
+/// dropped when the default changes: a new default the charts didn't follow
+/// would look like the setting did nothing.
+final chartRangeOverridesProvider =
+    NotifierProvider<ChartRangeOverridesNotifier, Map<ChartKey, ChartRange>>(
+  ChartRangeOverridesNotifier.new,
+);
+
+class ChartRangeOverridesNotifier extends Notifier<Map<ChartKey, ChartRange>> {
+  @override
+  Map<ChartKey, ChartRange> build() {
+    ref.watch(chartDefaultRangeProvider);
+    return const {};
+  }
+
+  /// Shows [key] over [range]; the default preset clears the override.
+  void set(ChartKey key, ChartRange range) {
+    final followsDefault =
+        range == PresetRange(ref.read(chartDefaultRangeProvider));
+    state = {
+      for (final e in state.entries)
+        if (e.key != key) e.key: e.value,
+      if (!followsDefault) key: range,
+    };
+  }
+}
+
+/// The range a chart is currently shown over.
+final chartRangeProvider = Provider.family<ChartRange, ChartKey>(
+  (ref, key) =>
+      ref.watch(chartRangeOverridesProvider)[key] ??
+      PresetRange(ref.watch(chartDefaultRangeProvider)),
+);
 
 /// The order record tabs appear in — on the vehicle screen (after the always-
 /// first Dashboard) and in the FAB add sheet. A full permutation of
@@ -677,7 +736,7 @@ final odometerRecordsProvider =
 /// Date of the vehicle's highest-odometer reading among fuel-ups and dedicated
 /// odometer records — the "as of" date shown under the dashboard's "Last
 /// Reported Odometer" stat. Reads [odometerReadingsProvider], the same timeline
-/// [MonthlyBreakdown] charts (gas + odometer records only), not the server's
+/// [ExpenseTimeline] charts (gas + odometer records only), not the server's
 /// `lastReportedOdometer`, which also considers service/repair/upgrade
 /// mileage — a rare enough source for the current max that this stays a close
 /// approximation without fetching those record types just for a date label.
@@ -737,13 +796,13 @@ final equipmentRecordsProvider =
       cachedRead(ref, (repo) => repo.equipmentRecords(vehicleId)),
 );
 
-/// Monthly expense (by category) + distance breakdown for one vehicle,
-/// aggregated per month for the combo chart.
+/// Every dated expense (by category) and distance gain of one vehicle, which the
+/// dashboard charts slice into the range each one shows.
 ///
 /// Every list it needs is already a provider of its own, so it composes those
 /// instead of re-fetching: opening the dashboard and then a record tab reads
 /// each endpoint once.
-final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
+final expenseTimelineProvider = FutureProvider.family<ExpenseTimeline, int>(
   (ref, vehicleId) async {
     Future<List<VehicleRecord>> records(RecordKind kind) =>
         ref.watch(vehicleRecordsProvider((
@@ -763,7 +822,7 @@ final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
     List<DatedCost> costs(List<VehicleRecord> records) =>
         [for (final r in records) DatedCost(date: r.date, cost: r.cost)];
 
-    return MonthlyBreakdown.from(
+    return ExpenseTimeline.from(
       costsByCategory: {
         ExpenseCategory.service: costs(service),
         ExpenseCategory.repair: costs(repair),
@@ -780,7 +839,7 @@ final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
 
 /// Drops every request behind one vehicle's screens, for pull-to-refresh.
 ///
-/// The stats and the monthly breakdown derive from these lists rather than
+/// The stats and the expense timeline derive from these lists rather than
 /// fetching their own copies, so they follow — invalidating *them* would only
 /// recompute from the same cache.
 ///

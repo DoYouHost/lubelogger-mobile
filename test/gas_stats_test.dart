@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lubelogger_mobile/core/format/chart_range.dart';
 import 'package:lubelogger_mobile/core/format/gas_stats.dart';
 import 'package:lubelogger_mobile/core/models/gas_record.dart';
 
@@ -17,6 +18,13 @@ GasRecord rec(
       cost: 0,
       isFillToFull: full,
       missedFuelUp: missed,
+    );
+
+/// Calendar months [first] through [last] of 2025–2026, as a chart window.
+ChartWindow months(DateTime first, DateTime last) => ChartWindow(
+      start: first,
+      end: DateTime(last.year, last.month + 1, 0),
+      bucket: ChartBucket.month,
     );
 
 void main() {
@@ -53,8 +61,9 @@ void main() {
         rec('2026-02-01', 1100, 10, full: false),
         rec('2026-03-01', 1300, 15),
       ]);
-      final march = stats.monthly.firstWhere((m) => m.month == DateTime(2026, 3));
-      expect(march.rawRatio, closeTo(300 / 25, 1e-9));
+      final byMonth =
+          stats.economyByBucket(months(DateTime(2026, 3), DateTime(2026, 3)));
+      expect(byMonth.single, closeTo(300 / 25, 1e-9));
     });
 
     test('missed fuel-up resets the accumulator', () {
@@ -66,22 +75,39 @@ void main() {
         rec('2026-03-01', 1400, 20),
       ]);
       // Only the 1200→1400 interval resolves: 200 km / 20 L.
-      final march = stats.monthly.firstWhere((m) => m.month == DateTime(2026, 3));
-      expect(march.rawRatio, closeTo(200 / 20, 1e-9));
-      expect(stats.monthly.where((m) => m.month == DateTime(2026, 2)), isEmpty);
+      final byMonth =
+          stats.economyByBucket(months(DateTime(2026, 2), DateTime(2026, 3)));
+      expect(byMonth.first, isNull);
+      expect(byMonth.last, closeTo(200 / 20, 1e-9));
     });
 
-    test('monthly economy keeps the same month of different years apart', () {
+    test('economy keeps the same month of different years apart', () {
       final stats = GasStats.from([
         rec('2025-02-01', 1000, 18), // primer
         rec('2025-03-01', 1200, 20),
         rec('2026-03-01', 1500, 10),
       ]);
-      expect(stats.monthly.map((m) => m.month), [
-        DateTime(2025, 3),
-        DateTime(2026, 3),
+      final byMonth =
+          stats.economyByBucket(months(DateTime(2025, 3), DateTime(2026, 3)));
+      expect(byMonth.first, closeTo(200 / 20, 1e-9));
+      expect(byMonth.last, closeTo(300 / 10, 1e-9));
+      expect(byMonth.whereType<double>(), hasLength(2));
+    });
+
+    test('fill-ups in one slot are averaged, the window average spans all', () {
+      final stats = GasStats.from([
+        rec('2026-03-01', 1000, 18), // primer
+        rec('2026-03-10', 1200, 20), // 10
+        rec('2026-03-20', 1500, 20), // 15
+        rec('2026-04-05', 1700, 10), // 20
       ]);
-      expect(stats.monthly.last.rawRatio, closeTo(300 / 10, 1e-9));
+      final window = months(DateTime(2026, 3), DateTime(2026, 4));
+      expect(stats.economyByBucket(window), [12.5, 20]);
+      expect(stats.averageRatioIn(window), closeTo(15, 1e-9));
+      expect(
+        stats.averageRatioIn(months(DateTime(2026, 5), DateTime(2026, 5))),
+        isNull,
+      );
     });
 
     test('empty log yields no economy', () {
@@ -89,7 +115,7 @@ void main() {
       expect(stats.hasEconomy, isFalse);
       expect(stats.averageRawRatio, isNull);
       expect(stats.distanceSpan, 0);
-      expect(stats.monthly, isEmpty);
+      expect(stats.economyPoints, isEmpty);
     });
   });
 

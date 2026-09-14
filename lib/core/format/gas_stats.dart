@@ -1,5 +1,5 @@
 import '../models/gas_record.dart';
-import 'calendar_month.dart';
+import 'chart_range.dart';
 
 /// Energy drawn from the battery since the previous charge, ported from
 /// LubeLogger's `GasHelper`. An electric record logs the energy put *in*, so the
@@ -26,20 +26,10 @@ List<GasRecord> _chronological(List<GasRecord> records) => [...records]..sort((
   return byOdometer != 0 ? byOdometer : a.endingSoc.compareTo(b.endingSoc);
 });
 
-/// One month's fuel economy, as a raw distance/volume ratio (stored distance
-/// units per stored volume unit). The screen converts it to the user's chosen
-/// unit + measurement base for display.
-class MonthlyEconomy {
-  const MonthlyEconomy({required this.month, required this.rawRatio});
-
-  /// First day of the month, see [monthOf].
-  final DateTime month;
-
-  /// Average of the per-record distance÷volume ratios for this month, in raw
-  /// stored units. Mirrors LubeLogger's report, which averages per-record
-  /// economy in MPG-space before converting to the display unit.
-  final double rawRatio;
-}
+/// The fuel economy resolved at one fill-up, as a raw distance/volume ratio
+/// (stored distance units per stored volume unit). The screen converts it to
+/// the user's chosen unit + measurement base for display.
+typedef EconomyPoint = ({DateTime date, double rawRatio});
 
 /// Fuel statistics derived from a vehicle's refuel log, ported from LubeLogger's
 /// `GasHelper.GetGasRecordViewModels` / `GetAverageGasMileage` and the monthly
@@ -55,7 +45,7 @@ class GasStats {
     required this.totalRawDistance,
     required this.totalRawVolume,
     required this.distanceSpan,
-    required this.monthly,
+    required this.economyPoints,
   });
 
   /// Distance (raw units) counted toward the lifetime average.
@@ -68,9 +58,8 @@ class GasStats {
   /// dashboard's "Distance Traveled".
   final double distanceSpan;
 
-  /// Per-month average economy (raw ratio), oldest first, only for months with
-  /// data.
-  final List<MonthlyEconomy> monthly;
+  /// Every dated fill-up that resolved an economy, oldest first.
+  final List<EconomyPoint> economyPoints;
 
   bool get hasEconomy => totalRawDistance > 0 && totalRawVolume > 0;
 
@@ -78,12 +67,42 @@ class GasStats {
   double? get averageRawRatio =>
       hasEconomy ? totalRawDistance / totalRawVolume : null;
 
+  /// Mean ratio of the fill-ups in each slot of [window], null for a slot
+  /// without one. Averaging per-record ratios mirrors LubeLogger's monthly
+  /// report, which averages in MPG-space before converting to the display unit.
+  List<double?> economyByBucket(ChartWindow window) {
+    final starts = window.bucketStarts;
+    final sums = List<double>.filled(starts.length, 0);
+    final counts = List<int>.filled(starts.length, 0);
+    for (final p in economyPoints) {
+      final i = window.indexOf(p.date, starts);
+      if (i == null) continue;
+      sums[i] += p.rawRatio;
+      counts[i]++;
+    }
+    return [
+      for (var i = 0; i < starts.length; i++)
+        counts[i] == 0 ? null : sums[i] / counts[i],
+    ];
+  }
+
+  /// Mean ratio of every fill-up inside [window], or null when there is none.
+  double? averageRatioIn(ChartWindow window) {
+    final inside = [
+      for (final p in economyPoints)
+        if (window.contains(p.date)) p.rawRatio,
+    ];
+    return inside.isEmpty
+        ? null
+        : inside.reduce((a, b) => a + b) / inside.length;
+  }
+
   factory GasStats.from(List<GasRecord> records, {bool isElectric = false}) {
     double avgDistance = 0; // Σ delta for records included in the average.
     double avgVolume = 0; // Σ fuel for records included in the average.
     double minOdometer = double.infinity;
     double maxOdometer = 0;
-    final ratiosByMonth = <DateTime, List<double>>{};
+    final economyPoints = <EconomyPoint>[];
 
     for (final (i, row) in fuelRows(records, isElectric: isElectric).indexed) {
       final r = row.record;
@@ -105,24 +124,15 @@ class GasStats {
       }
 
       if (ratio != null && r.date != null) {
-        (ratiosByMonth[monthOf(r.date!)] ??= []).add(ratio);
+        economyPoints.add((date: r.date!, rawRatio: ratio));
       }
     }
-
-    final monthly = [
-      for (final entry in ratiosByMonth.entries)
-        MonthlyEconomy(
-          month: entry.key,
-          rawRatio:
-              entry.value.reduce((a, b) => a + b) / entry.value.length,
-        ),
-    ]..sort((a, b) => a.month.compareTo(b.month));
 
     return GasStats(
       totalRawDistance: avgDistance,
       totalRawVolume: avgVolume,
       distanceSpan: maxOdometer > minOdometer ? maxOdometer - minOdometer : 0,
-      monthly: monthly,
+      economyPoints: economyPoints,
     );
   }
 }

@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/format/chart_range.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../common/vehicle_tab_ui.dart';
+import '../dashboard/widgets/chart_range_sheet.dart';
 
 /// Basic settings: display units (currency / distance / fuel economy) and the
 /// server connection (with log out).
@@ -30,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
     final remindersOn = ref.watch(reminderNotificationsProvider);
     final remindersCtl = ref.read(reminderNotificationsProvider.notifier);
     final backgroundRefresh = ref.watch(backgroundRefreshProvider);
+    final chartRange = ref.watch(chartDefaultRangeProvider);
     final cacheBytes = ref.watch(cacheSizeProvider).valueOrNull;
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
@@ -151,6 +154,23 @@ class SettingsScreen extends ConsumerWidget {
                         onChanged: (v) => visibleTabsCtl.setVisible(tab, v),
                       );
                     },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _Section(
+                id: 'charts',
+                title: l10n.settingsCharts,
+                footnote: l10n.settingsChartsNote,
+                children: [
+                  _SettingRow(
+                    label: l10n.settingsChartDefaultRange,
+                    control: _Dropdown<ChartRangePreset>(
+                      value: chartRange,
+                      items: ChartRangePreset.values,
+                      labelOf: (p) => chartPresetLabel(p, l10n),
+                      onChanged: ref.read(chartDefaultRangeProvider.notifier).set,
+                    ),
                   ),
                 ],
               ),
