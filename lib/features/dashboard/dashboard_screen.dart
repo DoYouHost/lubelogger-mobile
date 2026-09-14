@@ -360,29 +360,47 @@ class _StatBlock extends ConsumerWidget {
       ),
     ];
 
-    Widget column(List<_StatRow> items) => Column(
-      children: [
-        for (final (i, row) in items.indexed) ...[
-          if (i > 0)
-            Padding(
-              padding: const EdgeInsets.only(left: _StatRow.textInset),
-              child: Divider(height: 1, thickness: 1, color: t.hairline),
-            ),
-          row,
-        ],
-      ],
+    final divider = Padding(
+      padding: const EdgeInsets.only(left: _StatRow.textInset),
+      child: Divider(height: 1, thickness: 1, color: t.hairline),
     );
 
-    final content = context.isWideLayout
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: column(rows.sublist(0, 2))),
-              const SizedBox(width: 16),
-              Expanded(child: column(rows.sublist(2))),
+    // Two columns only once each has room for a long label beside a long
+    // value; lines are paired so both cells of a line share its height and
+    // the dividers meet.
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final lines = constraints.maxWidth >= 2 * _StatRow.minWidth + 16
+            ? [for (var i = 0; i < rows.length; i += 2) rows.sublist(i, i + 2)]
+            : [for (final row in rows) [row]];
+        return Column(
+          children: [
+            for (final (i, line) in lines.indexed) ...[
+              if (i > 0)
+                Row(
+                  children: [
+                    for (final (j, _) in line.indexed) ...[
+                      if (j > 0) const SizedBox(width: 16),
+                      Expanded(child: divider),
+                    ],
+                  ],
+                ),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final (j, row) in line.indexed) ...[
+                      if (j > 0) const SizedBox(width: 16),
+                      Expanded(child: row),
+                    ],
+                  ],
+                ),
+              ),
             ],
-          )
-        : column(rows);
+          ],
+        );
+      },
+    );
 
     final radius = BorderRadius.circular(16);
     return DecoratedBox(
@@ -448,6 +466,9 @@ class _StatRow extends StatelessWidget {
 
   /// Where the label starts, past the icon chip; row dividers start here too.
   static const double textInset = _chipSize + 12;
+
+  /// Narrowest a row gets side by side with another.
+  static const double minWidth = 330;
   static const double _chipSize = 30;
 
   final IconData icon;
@@ -460,61 +481,66 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48),
-      child: Row(
-        children: [
-          Container(
-            width: _chipSize,
-            height: _chipSize,
-            decoration: BoxDecoration(
-              color: t.accent.withValues(alpha: t.isDark ? 0.12 : 0.14),
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: t.accent.withValues(alpha: 0.22)),
+    return MergeSemantics(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: [
+            Container(
+              width: _chipSize,
+              height: _chipSize,
+              decoration: BoxDecoration(
+                color: t.accent.withValues(alpha: t.isDark ? 0.12 : 0.14),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: t.accent.withValues(alpha: 0.22)),
+              ),
+              child: Icon(icon, size: 17, color: t.accentInk),
             ),
-            child: Icon(icon, size: 17, color: t.accentInk),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: DashTokens.fontUi,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: t.textSecondary,
-                    ),
-                  ),
-                  if (secondary != null)
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      secondary!,
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: DashTokens.fontMono,
-                        fontSize: 10.5,
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: t.textTertiary,
+                        color: t.textSecondary,
                       ),
                     ),
-                ],
+                    if (secondary != null)
+                      Text(
+                        secondary!,
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontMono,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: t.textTertiary,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: DashTokens.fontMono,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: t.textPrimary,
+            const SizedBox(width: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: DashTokens.fontMono,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: t.textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -694,6 +694,20 @@ class _ExpensePainter extends CustomPainter {
         for (final c in chartCategoryOrder)
           if ((data[i].costs[c] ?? 0) > 0) c,
       ];
+      if (segments.isEmpty) continue;
+      // A spend too small for the scale still shows, as a sliver in the colour
+      // of its biggest category.
+      if (costBottom - yCost(data[i].totalCost) < _minBar) {
+        final biggest = segments.reduce(
+          (a, b) => data[i].costs[a]! >= data[i].costs[b]! ? a : b,
+        );
+        final color = categoryColor(biggest, t);
+        canvas.drawRect(
+          Rect.fromLTWH(x, costBottom - _minBar, barWidth, _minBar),
+          Paint()..color = dim ? color.withValues(alpha: 0.35) : color,
+        );
+        continue;
+      }
       for (final (si, c) in segments.indexed) {
         final value = data[i].costs[c]!;
         // 2 px of surface between stacked segments, none under the first.
@@ -744,7 +758,10 @@ class _ExpensePainter extends CustomPainter {
       for (var i = 0; i < data.length; i++) {
         if (data[i].distance <= 0) continue;
         final cx = left + slot * (i + 0.5);
-        final top = yDistance(data[i].distance);
+        final top = math.min(
+          yDistance(data[i].distance),
+          panelBottom - _minBar,
+        );
         final alpha = selected == null
             ? 0.45
             : selected == i
@@ -1149,6 +1166,7 @@ bool _sameAxis(List<TimeSlot> a, List<TimeSlot> b) =>
     a.length == b.length && (a.isEmpty || a.first.title == b.first.title);
 
 const double _axisBand = 22;
+const double _minBar = 2;
 const double _keyGap = 8;
 const double _keyHeight = 18;
 const double _yearBand = 13;
