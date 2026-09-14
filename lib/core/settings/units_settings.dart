@@ -16,7 +16,10 @@ enum MeasurementSystem {
   metric(kmPerUnit: 1, litresPerUnit: 1),
   imperial(kmPerUnit: 1.609344, litresPerUnit: 3.785411784);
 
-  const MeasurementSystem({required this.kmPerUnit, required this.litresPerUnit});
+  const MeasurementSystem({
+    required this.kmPerUnit,
+    required this.litresPerUnit,
+  });
 
   /// Kilometres per one stored distance unit.
   final double kmPerUnit;
@@ -120,19 +123,20 @@ class UnitsSettings {
   });
 
   factory UnitsSettings.fromJson(Map<String, dynamic> json) => UnitsSettings(
-        base: _byName(MeasurementSystem.values, json['base']) ??
-            MeasurementSystem.metric,
-        currency: _byName(CurrencyOption.values, json['currency']) ??
-            CurrencyOption.auto,
-        distance: _byName(DistanceUnit.values, json['distance']) ??
-            DistanceUnit.km,
-        economy: _byName(FuelEconomyUnit.values, json['economy']) ??
-            FuelEconomyUnit.l100km,
-        dateOrder:
-            _byName(DateOrder.values, json['dateOrder']) ?? DateOrder.dmy,
-        dateSeparator: _byName(DateSeparator.values, json['dateSeparator']) ??
-            DateSeparator.slash,
-      );
+    base:
+        _byName(MeasurementSystem.values, json['base']) ??
+        MeasurementSystem.metric,
+    currency:
+        _byName(CurrencyOption.values, json['currency']) ?? CurrencyOption.auto,
+    distance: _byName(DistanceUnit.values, json['distance']) ?? DistanceUnit.km,
+    economy:
+        _byName(FuelEconomyUnit.values, json['economy']) ??
+        FuelEconomyUnit.l100km,
+    dateOrder: _byName(DateOrder.values, json['dateOrder']) ?? DateOrder.dmy,
+    dateSeparator:
+        _byName(DateSeparator.values, json['dateSeparator']) ??
+        DateSeparator.slash,
+  );
 
   /// How the server stores raw values (metric km/L vs imperial mi/US-gal).
   final MeasurementSystem base;
@@ -146,13 +150,13 @@ class UnitsSettings {
   String formatDate(DateTime date) => dateOrder.format(date, dateSeparator);
 
   Map<String, dynamic> toJson() => {
-        'base': base.name,
-        'currency': currency.name,
-        'distance': distance.name,
-        'economy': economy.name,
-        'dateOrder': dateOrder.name,
-        'dateSeparator': dateSeparator.name,
-      };
+    'base': base.name,
+    'currency': currency.name,
+    'distance': distance.name,
+    'economy': economy.name,
+    'dateOrder': dateOrder.name,
+    'dateSeparator': dateSeparator.name,
+  };
 
   UnitsSettings copyWith({
     MeasurementSystem? base,
@@ -161,15 +165,14 @@ class UnitsSettings {
     FuelEconomyUnit? economy,
     DateOrder? dateOrder,
     DateSeparator? dateSeparator,
-  }) =>
-      UnitsSettings(
-        base: base ?? this.base,
-        currency: currency ?? this.currency,
-        distance: distance ?? this.distance,
-        economy: economy ?? this.economy,
-        dateOrder: dateOrder ?? this.dateOrder,
-        dateSeparator: dateSeparator ?? this.dateSeparator,
-      );
+  }) => UnitsSettings(
+    base: base ?? this.base,
+    currency: currency ?? this.currency,
+    distance: distance ?? this.distance,
+    economy: economy ?? this.economy,
+    dateOrder: dateOrder ?? this.dateOrder,
+    dateSeparator: dateSeparator ?? this.dateSeparator,
+  );
 
   static T? _byName<T extends Enum>(List<T> values, Object? name) {
     for (final v in values) {

@@ -25,15 +25,15 @@ void main() {
   }
 
   PlanRecord plan(PlanProgress progress) => PlanRecord(
-        id: 5,
-        dateCreated: DateTime(2026, 1, 2),
-        description: 'Fit winter tyres',
-        cost: 480,
-        type: PlanType.upgrade,
-        priority: PlanPriority.normal,
-        progress: progress,
-        notes: '',
-      );
+    id: 5,
+    dateCreated: DateTime(2026, 1, 2),
+    description: 'Fit winter tyres',
+    cost: 480,
+    type: PlanType.upgrade,
+    priority: PlanPriority.normal,
+    progress: progress,
+    notes: '',
+  );
 
   Future<void> openForm(WidgetTester tester, PlanRecord existing) async {
     await tester.pumpWidget(
@@ -78,29 +78,31 @@ void main() {
 
   // One test, because the demo backend is a per-process singleton and the
   // delete below is what makes the seeded plan disappear.
-  test('a finished plan is refused on update but can still be deleted',
-      () async {
-    final r = repo();
-    final done = (await r.planRecords(2)).firstWhere(
-      (p) => p.progress == PlanProgress.done,
-    );
+  test(
+    'a finished plan is refused on update but can still be deleted',
+    () async {
+      final r = repo();
+      final done = (await r.planRecords(
+        2,
+      )).firstWhere((p) => p.progress == PlanProgress.done);
 
-    await expectLater(
-      r.updatePlanRecord(
-        id: done.id,
-        description: done.description,
-        cost: done.cost,
-        type: done.type,
-        priority: done.priority,
-        progress: PlanProgress.done,
-        notes: done.notes,
-      ),
-      throwsA(isA<AppApiException>()),
-    );
+      await expectLater(
+        r.updatePlanRecord(
+          id: done.id,
+          description: done.description,
+          cost: done.cost,
+          type: done.type,
+          priority: done.priority,
+          progress: PlanProgress.done,
+          notes: done.notes,
+        ),
+        throwsA(isA<AppApiException>()),
+      );
 
-    await r.deletePlanRecord(done.id);
-    expect((await r.planRecords(2)).any((p) => p.id == done.id), isFalse);
-  });
+      await r.deletePlanRecord(done.id);
+      expect((await r.planRecords(2)).any((p) => p.id == done.id), isFalse);
+    },
+  );
 
   testWidgets('editing a finished plan is blocked, with the reason shown', (
     tester,
@@ -112,15 +114,14 @@ void main() {
       findsOneWidget,
     );
     expect(
-      tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
           .onPressed,
       isNull,
     );
     // Read-only means read-only: not just the progress field.
     expect(
-      tester
-          .widget<TextFormField>(find.byType(TextFormField).first)
-          .enabled,
+      tester.widget<TextFormField>(find.byType(TextFormField).first).enabled,
       isFalse,
     );
   });
@@ -133,14 +134,13 @@ void main() {
       findsNothing,
     );
     expect(
-      tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Save'))
           .onPressed,
       isNotNull,
     );
     expect(
-      tester
-          .widget<TextFormField>(find.byType(TextFormField).first)
-          .enabled,
+      tester.widget<TextFormField>(find.byType(TextFormField).first).enabled,
       isTrue,
     );
   });

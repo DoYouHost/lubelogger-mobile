@@ -9,7 +9,9 @@ const expensesByType = (vehicleId: 1, chart: DashboardChart.expensesByType);
 const expensesDistance = (vehicleId: 1, chart: DashboardChart.expensesDistance);
 
 void main() {
-  Future<ProviderContainer> container([Map<String, Object> prefs = const {}]) async {
+  Future<ProviderContainer> container([
+    Map<String, Object> prefs = const {},
+  ]) async {
     SharedPreferences.setMockInitialValues(prefs);
     final c = ProviderContainer(
       overrides: [
@@ -38,28 +40,34 @@ void main() {
     expect(reloaded.read(chartDefaultRangeProvider), ChartRangePreset.year);
   });
 
-  test('a stored name the app no longer knows falls back to the default',
-      () async {
-    final c = await container({'chart_default_range': 'decade'});
-    expect(c.read(chartDefaultRangeProvider), ChartRangePreset.threeMonths);
-  });
+  test(
+    'a stored name the app no longer knows falls back to the default',
+    () async {
+      final c = await container({'chart_default_range': 'decade'});
+      expect(c.read(chartDefaultRangeProvider), ChartRangePreset.threeMonths);
+    },
+  );
 
-  test('a range picked on one chart leaves other charts and vehicles alone',
-      () async {
-    final c = await container();
-    final custom = CustomRange(DateTime(2020, 7, 1), DateTime(2020, 8, 1));
-    c.read(chartRangeOverridesProvider.notifier).set(economy, custom);
+  test(
+    'a range picked on one chart leaves other charts and vehicles alone',
+    () async {
+      final c = await container();
+      final custom = CustomRange(DateTime(2020, 7, 1), DateTime(2020, 8, 1));
+      c.read(chartRangeOverridesProvider.notifier).set(economy, custom);
 
-    expect(c.read(chartRangeProvider(economy)), custom);
-    expect(
-      c.read(chartRangeProvider(expensesByType)),
-      const PresetRange(ChartRangePreset.threeMonths),
-    );
-    expect(
-      c.read(chartRangeProvider((vehicleId: 2, chart: DashboardChart.economy))),
-      const PresetRange(ChartRangePreset.threeMonths),
-    );
-  });
+      expect(c.read(chartRangeProvider(economy)), custom);
+      expect(
+        c.read(chartRangeProvider(expensesByType)),
+        const PresetRange(ChartRangePreset.threeMonths),
+      );
+      expect(
+        c.read(
+          chartRangeProvider((vehicleId: 2, chart: DashboardChart.economy)),
+        ),
+        const PresetRange(ChartRangePreset.threeMonths),
+      );
+    },
+  );
 
   test('picking the default preset drops the override', () async {
     final c = await container();
@@ -71,10 +79,9 @@ void main() {
 
   test('changing the default resets every chart to it', () async {
     final c = await container();
-    c.read(chartRangeOverridesProvider.notifier).set(
-      expensesDistance,
-      const PresetRange(ChartRangePreset.oneMonth),
-    );
+    c
+        .read(chartRangeOverridesProvider.notifier)
+        .set(expensesDistance, const PresetRange(ChartRangePreset.oneMonth));
     await c
         .read(chartDefaultRangeProvider.notifier)
         .set(ChartRangePreset.sixMonths);

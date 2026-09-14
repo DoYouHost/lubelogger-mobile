@@ -16,8 +16,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 /// App router. Without a saved profile every route redirects to `/setup`; once
 /// a profile is saved the app opens at `/`.
 final routerProvider = Provider<GoRouter>((ref) {
-  final hasProfile =
-      ref.watch(serverProfileProvider.select((p) => p != null));
+  final hasProfile = ref.watch(serverProfileProvider.select((p) => p != null));
   // Diagnostic log: the probe follows the location, the observer catches what
   // never touches it (sheets, dialogs, dropdowns). Both write through
   // `DiagnosticRecorder.active`, which is null unless a recording runs.

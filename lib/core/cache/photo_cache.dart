@@ -10,10 +10,8 @@ import 'http_cache.dart';
 typedef FetchedPhoto = ({Uint8List bytes, String? contentType});
 
 /// Fetches one photo. Injected so a test can answer without a network.
-typedef PhotoFetcher = Future<FetchedPhoto> Function(
-  Uri url,
-  Map<String, String> headers,
-);
+typedef PhotoFetcher =
+    Future<FetchedPhoto> Function(Uri url, Map<String, String> headers);
 
 /// Vehicle photos on disk, beside the lists in [HttpCache].
 ///
@@ -30,8 +28,8 @@ class PhotoCache {
     this.apiKey,
     Future<Directory> Function()? supportDirectory,
     PhotoFetcher? fetch,
-  })  : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
-        _fetch = fetch ?? httpGetPhoto;
+  }) : _supportDirectory = supportDirectory ?? getApplicationSupportDirectory,
+       _fetch = fetch ?? httpGetPhoto;
 
   final String baseUrl;
 
@@ -99,9 +97,9 @@ class PhotoCache {
   }
 
   Future<Directory> _open() => _directory ??= () async {
-        final root = await serverCacheDirectory(baseUrl, _supportDirectory);
-        return Directory('${root.path}/photos');
-      }();
+    final root = await serverCacheDirectory(baseUrl, _supportDirectory);
+    return Directory('${root.path}/photos');
+  }();
 }
 
 /// Default [PhotoFetcher]: a plain GET, outside dio.

@@ -17,7 +17,7 @@ class RecordMetaItem {
   /// [tooltip] is what says so out loud, for a long press and for a screen
   /// reader.
   const RecordMetaItem.flag(this.icon, {required String this.tooltip})
-      : value = '';
+    : value = '';
 
   final IconData icon;
   final String value;
@@ -204,11 +204,7 @@ class _MetaItem extends StatelessWidget {
 /// Cards are handed over as a builder rather than a list so the tab body can
 /// keep them lazy — see [SliverResponsiveCards].
 class RecordsContent {
-  const RecordsContent({
-    required this.count,
-    required this.card,
-    this.header,
-  });
+  const RecordsContent({required this.count, required this.card, this.header});
 
   final int count;
   final IndexedWidgetBuilder card;
@@ -239,7 +235,7 @@ class RecordsTabBody<T> extends StatefulWidget {
   final IconData emptyIcon;
   final String emptyLabel;
   final RecordsContent Function(List<T> records, RecordListControls<T> filter)
-      builder;
+  builder;
   final RecordFacets<T>? facets;
 
   @override
@@ -266,13 +262,13 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
   }
 
   void _toggleTag(String tag) => setState(() {
-        if (!_tags.remove(tag)) _tags.add(tag);
-      });
+    if (!_tags.remove(tag)) _tags.add(tag);
+  });
 
   void _clearFilters() => setState(() {
-        _tags.clear();
-        _query.clear();
-      });
+    _tags.clear();
+    _query.clear();
+  });
 
   RecordListControls<T> _controls(RecordFacets<T> facets) {
     final needles = _query.text.trim().toLowerCase().split(RegExp(r'\s+'))
@@ -290,8 +286,10 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
         // `?tags=` query does the opposite, but that one is typed, not tapped.)
         if (!_tags.every(recordTags.contains)) return false;
         if (needles.isEmpty) return true;
-        final haystack =
-            [...facets.searchIn(record), ...recordTags].join(' ').toLowerCase();
+        final haystack = [
+          ...facets.searchIn(record),
+          ...recordTags,
+        ].join(' ').toLowerCase();
         // All words must appear, in any order or field — typing two words to
         // narrow is the reflex, and requiring them adjacent breaks it.
         return needles.every(haystack.contains);

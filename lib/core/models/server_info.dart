@@ -10,12 +10,12 @@ class ServerInfo {
   });
 
   factory ServerInfo.fromJson(Map<String, dynamic> json) => ServerInfo(
-        currentVersion: (json['currentVersion'] as String?) ?? '',
-        locale: (json['locale'] as String?) ?? 'en-US',
-        currencySymbol: (json['currencySymbol'] as String?) ?? r'$',
-        decimalSeparator: (json['decimalSeparator'] as String?) ?? '.',
-        dateFormat: (json['dateFormat'] as String?) ?? 'M/d/yyyy',
-      );
+    currentVersion: (json['currentVersion'] as String?) ?? '',
+    locale: (json['locale'] as String?) ?? 'en-US',
+    currencySymbol: (json['currencySymbol'] as String?) ?? r'$',
+    decimalSeparator: (json['decimalSeparator'] as String?) ?? '.',
+    dateFormat: (json['dateFormat'] as String?) ?? 'M/d/yyyy',
+  );
 
   final String currentVersion;
   final String locale;

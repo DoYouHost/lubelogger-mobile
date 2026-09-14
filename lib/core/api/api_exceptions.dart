@@ -101,13 +101,12 @@ Future<T?> guardOrNull<T>(Future<T?> Function() body) async {
   }
 }
 
-void _logDegraded(String cause, int? status) =>
-    DiagnosticRecorder.active?.add(
-      LogSource.http,
-      'degraded',
-      lvl: LogLevel.warn,
-      fields: {'cause': cause, 'status': status},
-    );
+void _logDegraded(String cause, int? status) => DiagnosticRecorder.active?.add(
+  LogSource.http,
+  'degraded',
+  lvl: LogLevel.warn,
+  fields: {'cause': cause, 'status': status},
+);
 
 /// Maps a [DioException] to a typed application exception.
 AppApiException mapDioException(DioException e) {
@@ -115,19 +114,23 @@ AppApiException mapDioException(DioException e) {
     return e.error! as AppApiException;
   }
   return switch (classifyDioException(e)) {
-    DioFailure.unreachable =>
-      NetworkException(AppErrorCode.serverUnreachable, detail: e.message),
+    DioFailure.unreachable => NetworkException(
+      AppErrorCode.serverUnreachable,
+      detail: e.message,
+    ),
     DioFailure.unauthorized => const AuthException(AppErrorCode.unauthorized),
     DioFailure.forbidden => const AuthException(AppErrorCode.forbidden),
     // No code of its own here: a 429 reads as the status it is.
-    DioFailure.tooManyRequests ||
-    DioFailure.badResponse =>
-      ApiException(AppErrorCode.badResponse,
-          statusCode: e.response?.statusCode),
-    DioFailure.badCertificate =>
-      const NetworkException(AppErrorCode.badCertificate),
-    DioFailure.cancelled ||
-    DioFailure.unknown =>
-      NetworkException(AppErrorCode.connectionError, detail: e.message),
+    DioFailure.tooManyRequests || DioFailure.badResponse => ApiException(
+      AppErrorCode.badResponse,
+      statusCode: e.response?.statusCode,
+    ),
+    DioFailure.badCertificate => const NetworkException(
+      AppErrorCode.badCertificate,
+    ),
+    DioFailure.cancelled || DioFailure.unknown => NetworkException(
+      AppErrorCode.connectionError,
+      detail: e.message,
+    ),
   };
 }

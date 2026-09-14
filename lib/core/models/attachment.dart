@@ -12,10 +12,10 @@ class Attachment {
   });
 
   factory Attachment.fromJson(Map<String, dynamic> json) => Attachment(
-        name: (json['name'] as String?) ?? '',
-        location: (json['location'] as String?) ?? '',
-        isPending: json['isPending'] == true,
-      );
+    name: (json['name'] as String?) ?? '',
+    location: (json['location'] as String?) ?? '',
+    isPending: json['isPending'] == true,
+  );
 
   /// Original file name, shown to the user.
   final String name;
@@ -28,10 +28,10 @@ class Attachment {
   final bool isPending;
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'location': location,
-        'isPending': isPending,
-      };
+    'name': name,
+    'location': location,
+    'isPending': isPending,
+  };
 
   /// Parse a record's `files` array, skipping any element that does not parse.
   static List<Attachment> listFrom(Object? raw) =>

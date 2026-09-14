@@ -36,15 +36,32 @@ void main() {
   }
 
   group('CategoryShareChart', () {
-    testWidgets('lists every category, muting the ones at zero', (tester) async {
+    testWidgets('lists every category, muting the ones at zero', (
+      tester,
+    ) async {
       await pump(
         tester,
         const CategoryShareChart(
           emptyLabel: 'nothing',
           items: [
-            ShareItem(label: 'Fuel', value: 75, color: Colors.amber, valueLabel: r'$75'),
-            ShareItem(label: 'Repairs', value: 25, color: Colors.purple, valueLabel: r'$25'),
-            ShareItem(label: 'Tax', value: 0, color: Colors.teal, valueLabel: r'$0'),
+            ShareItem(
+              label: 'Fuel',
+              value: 75,
+              color: Colors.amber,
+              valueLabel: r'$75',
+            ),
+            ShareItem(
+              label: 'Repairs',
+              value: 25,
+              color: Colors.purple,
+              valueLabel: r'$25',
+            ),
+            ShareItem(
+              label: 'Tax',
+              value: 0,
+              color: Colors.teal,
+              valueLabel: r'$0',
+            ),
           ],
         ),
       );
@@ -55,14 +72,20 @@ void main() {
       expect(find.text('—'), findsOneWidget);
     });
 
-    testWidgets('nothing spent in the range shows the empty label',
-        (tester) async {
+    testWidgets('nothing spent in the range shows the empty label', (
+      tester,
+    ) async {
       await pump(
         tester,
         const CategoryShareChart(
           emptyLabel: 'nothing',
           items: [
-            ShareItem(label: 'Fuel', value: 0, color: Colors.amber, valueLabel: r'$0'),
+            ShareItem(
+              label: 'Fuel',
+              value: 0,
+              color: Colors.amber,
+              valueLabel: r'$0',
+            ),
           ],
         ),
       );
@@ -118,8 +141,9 @@ void main() {
       expect(find.text('nothing'), findsOneWidget);
     });
 
-    testWidgets('totals the range and names only the categories in it',
-        (tester) async {
+    testWidgets('totals the range and names only the categories in it', (
+      tester,
+    ) async {
       await pump(
         tester,
         chart([
@@ -136,8 +160,9 @@ void main() {
       expect(find.text('nothing'), findsNothing);
     });
 
-    testWidgets('leaves distance out when the range has none, tooltip too',
-        (tester) async {
+    testWidgets('leaves distance out when the range has none, tooltip too', (
+      tester,
+    ) async {
       await pump(
         tester,
         chart([
@@ -167,8 +192,9 @@ void main() {
       expect(find.text('Jan 2026'), findsNothing);
     });
 
-    testWidgets('tapping a slot shows its breakdown, tapping again hides it',
-        (tester) async {
+    testWidgets('tapping a slot shows its breakdown, tapping again hides it', (
+      tester,
+    ) async {
       await pump(
         tester,
         chart([
@@ -204,14 +230,16 @@ void main() {
       emptyLabel: 'nothing',
     );
 
-    testWidgets('no fill-ups in the range shows the empty label',
-        (tester) async {
+    testWidgets('no fill-ups in the range shows the empty label', (
+      tester,
+    ) async {
       await pump(tester, chart([null, null, null, null]));
       expect(find.text('nothing'), findsOneWidget);
     });
 
-    testWidgets('a slot without a fill-up gets no tooltip, a filled one does',
-        (tester) async {
+    testWidgets('a slot without a fill-up gets no tooltip, a filled one does', (
+      tester,
+    ) async {
       await pump(tester, chart([null, 7.0, 7.5, 7.1]));
 
       await tapSlot(tester, EconomyChart, last: false);
@@ -224,8 +252,9 @@ void main() {
       expect(find.text('7.1'), findsOneWidget);
     });
 
-    testWidgets('a refresh that empties the selected slot drops the tooltip',
-        (tester) async {
+    testWidgets('a refresh that empties the selected slot drops the tooltip', (
+      tester,
+    ) async {
       await pump(tester, chart([6.9, 7.0, 7.5, 7.1]));
       await tapSlot(tester, EconomyChart, last: true);
       await tester.pump();
@@ -235,8 +264,9 @@ void main() {
       expect(find.text('Jan 2026'), findsNothing);
     });
 
-    testWidgets('keeps its height when data replaces the empty state',
-        (tester) async {
+    testWidgets('keeps its height when data replaces the empty state', (
+      tester,
+    ) async {
       Future<double> heightOf(Widget w) async {
         await pump(tester, Center(child: w));
         return tester.getSize(find.byType(EconomyChart)).height;
@@ -282,8 +312,9 @@ void main() {
       return result;
     }
 
-    testWidgets('marks the default and returns the preset tapped',
-        (tester) async {
+    testWidgets('marks the default and returns the preset tapped', (
+      tester,
+    ) async {
       final picked = await open(
         tester,
         current: const PresetRange(ChartRangePreset.threeMonths),

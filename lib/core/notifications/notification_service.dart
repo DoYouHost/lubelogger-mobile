@@ -11,16 +11,17 @@ typedef NotificationTapCallback = void Function(String? payload);
 /// caller) so this stays free of any `BuildContext`.
 class NotificationService {
   NotificationService([FlutterLocalNotificationsPlugin? plugin])
-      : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _plugin;
 
   /// Android channel id for reminder notifications.
   static const remindersChannelId = 'reminders';
 
-  AndroidFlutterLocalNotificationsPlugin? get _android =>
-      _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+  AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
 
   /// Initialize the plugin and (re)create the reminders channel. Idempotent by
   /// channel id, so calling it from both isolates just keeps the channel's
@@ -34,15 +35,18 @@ class NotificationService {
     const android = AndroidInitializationSettings('ic_stat_reminder');
     await _plugin.initialize(
       settings: const InitializationSettings(android: android),
-      onDidReceiveNotificationResponse:
-          onTap == null ? null : (response) => onTap(response.payload),
+      onDidReceiveNotificationResponse: onTap == null
+          ? null
+          : (response) => onTap(response.payload),
     );
-    await _android?.createNotificationChannel(AndroidNotificationChannel(
-      remindersChannelId,
-      channelName,
-      description: channelDescription,
-      importance: Importance.high,
-    ));
+    await _android?.createNotificationChannel(
+      AndroidNotificationChannel(
+        remindersChannelId,
+        channelName,
+        description: channelDescription,
+        importance: Importance.high,
+      ),
+    );
   }
 
   /// Request the Android 13+ `POST_NOTIFICATIONS` runtime permission. Returns

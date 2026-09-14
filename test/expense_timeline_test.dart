@@ -20,18 +20,23 @@ void main() {
     test('sums costs per slot across categories', () {
       final t = ExpenseTimeline.from(
         costsByCategory: {
-          ExpenseCategory.service: [cost('2026-03-05', 100), cost('2026-03-20', 50)],
-          ExpenseCategory.fuel: [cost('2026-03-10', 30), cost('2026-05-01', 40)],
+          ExpenseCategory.service: [
+            cost('2026-03-05', 100),
+            cost('2026-03-20', 50),
+          ],
+          ExpenseCategory.fuel: [
+            cost('2026-03-10', 30),
+            cost('2026-05-01', 40),
+          ],
         },
         odometerReadings: const [],
       );
       final b = t.bucketed(months('2026-03-01', '2026-05-31'));
 
-      expect([for (final e in b) e.start], [
-        DateTime(2026, 3),
-        DateTime(2026, 4),
-        DateTime(2026, 5),
-      ]);
+      expect(
+        [for (final e in b) e.start],
+        [DateTime(2026, 3), DateTime(2026, 4), DateTime(2026, 5)],
+      );
       expect([for (final e in b) e.totalCost], [180, 0, 40]);
       expect(b.first.byCategory[ExpenseCategory.service], 150);
     });
@@ -56,20 +61,22 @@ void main() {
       expect(b.last.distance, 7600);
     });
 
-    test('distance is the gain between consecutive readings, on the later date',
-        () {
-      final t = ExpenseTimeline.from(
-        costsByCategory: const {},
-        odometerReadings: [
-          reading('2026-03-25', 1000), // primer: no prior reading
-          reading('2026-04-01', 1200),
-          reading('2026-04-20', 1350),
-          reading('2026-05-10', 1500),
-        ],
-      );
-      final b = t.bucketed(months('2026-03-01', '2026-05-31'));
-      expect([for (final e in b) e.distance], [0, 350, 150]);
-    });
+    test(
+      'distance is the gain between consecutive readings, on the later date',
+      () {
+        final t = ExpenseTimeline.from(
+          costsByCategory: const {},
+          odometerReadings: [
+            reading('2026-03-25', 1000), // primer: no prior reading
+            reading('2026-04-01', 1200),
+            reading('2026-04-20', 1350),
+            reading('2026-05-10', 1500),
+          ],
+        );
+        final b = t.bucketed(months('2026-03-01', '2026-05-31'));
+        expect([for (final e in b) e.distance], [0, 350, 150]);
+      },
+    );
 
     test('records outside the window are left out of slots and totals', () {
       final t = ExpenseTimeline.from(

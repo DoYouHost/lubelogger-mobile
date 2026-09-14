@@ -85,35 +85,36 @@ class ExtraField {
   final int? wireFieldType;
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'value': value,
-        'isRequired': isRequired,
-        'fieldType': wireFieldType ?? fieldType.wireValue,
-      };
+    'name': name,
+    'value': value,
+    'isRequired': isRequired,
+    'fieldType': wireFieldType ?? fieldType.wireValue,
+  };
 
   ExtraField copyWith({String? value}) => ExtraField(
-        name: name,
-        value: value ?? this.value,
-        isRequired: isRequired,
-        fieldType: fieldType,
-        wireFieldType: wireFieldType,
-      );
+    name: name,
+    value: value ?? this.value,
+    isRequired: isRequired,
+    fieldType: fieldType,
+    wireFieldType: wireFieldType,
+  );
 
   /// This field's value carried onto [definition]'s name, kind and
   /// required-ness — the per-field half of [mergeExtraFields].
   ExtraField withDefinition(ExtraField definition) => ExtraField(
-        name: definition.name,
-        value: value,
-        isRequired: definition.isRequired,
-        fieldType: definition.fieldType,
-        wireFieldType: definition.wireFieldType,
-      );
+    name: definition.name,
+    value: value,
+    isRequired: definition.isRequired,
+    fieldType: definition.fieldType,
+    wireFieldType: definition.wireFieldType,
+  );
 
   static List<ExtraField> listFrom(Object? raw) =>
       parseJsonList(raw, ExtraField.fromJson);
 
-  static List<Map<String, dynamic>> jsonList(List<ExtraField> fields) =>
-      [for (final f in fields) f.toJson()];
+  static List<Map<String, dynamic>> jsonList(List<ExtraField> fields) => [
+    for (final f in fields) f.toJson(),
+  ];
 }
 
 /// Reconciles a record's stored fields with the household's current [template],

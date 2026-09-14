@@ -97,8 +97,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         DashboardTab(vehicleId: vehicleId),
         (ref) => invalidateVehicleData(ref.invalidate, vehicleId),
       ),
-      for (final tab in orderedVisible)
-        _recordTab(tab, l10n, vehicleId),
+      for (final tab in orderedVisible) _recordTab(tab, l10n, vehicleId),
     ];
 
     final controller = _controllerFor(_tabs.length);
@@ -190,7 +189,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
 
   /// The generic (date + cost) record tab + its refresh, shared by
   /// service / repair / upgrade / tax.
-  (Widget, void Function(WidgetRef)) _genericTab(int vehicleId, RecordKind kind) => (
+  (Widget, void Function(WidgetRef)) _genericTab(
+    int vehicleId,
+    RecordKind kind,
+  ) => (
     GenericRecordsTab(vehicleId: vehicleId, kind: kind),
     (ref) => ref.invalidate(
       vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)),
@@ -318,9 +320,7 @@ class _Avatar extends StatelessWidget {
                     .round(),
               ),
               fit: BoxFit.cover,
-              errorBuilder: ImageProbe.errorBuilder(
-                Center(child: placeholder),
-              ),
+              errorBuilder: ImageProbe.errorBuilder(Center(child: placeholder)),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),
             ),

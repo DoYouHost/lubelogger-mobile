@@ -74,8 +74,10 @@ void main() {
 
   group('quarters', () {
     test('start in January, April, July and October', () {
-      final w = CustomRange(DateTime(2023, 5, 1), DateTime(2026, 2, 1))
-          .resolve(now);
+      final w = CustomRange(
+        DateTime(2023, 5, 1),
+        DateTime(2026, 2, 1),
+      ).resolve(now);
       expect(w.bucketStarts.first, DateTime(2023, 4));
       expect(w.bucketStarts.last, DateTime(2026, 1));
     });

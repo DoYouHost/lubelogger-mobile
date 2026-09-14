@@ -184,8 +184,13 @@ void main() {
     ) async {
       await pump(tester, [oil, brakes, tyres]);
 
-      final cards = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data);
-      expect(cards, containsAllInOrder(['Tyre rotation', 'Brake pads', 'Oil change']));
+      final cards = tester
+          .widgetList<Text>(find.byType(Text))
+          .map((t) => t.data);
+      expect(
+        cards,
+        containsAllInOrder(['Tyre rotation', 'Brake pads', 'Oil change']),
+      );
     });
 
     testWidgets('by cost puts the dearest on top, and the toggle flips it', (
@@ -198,16 +203,20 @@ void main() {
       await tester.tap(find.text('Cost').last);
       await tester.pumpAndSettle();
 
-      var order = tester
-          .widgetList<Text>(find.byType(Text))
-          .map((t) => t.data);
-      expect(order, containsAllInOrder(['Brake pads', 'Oil change', 'Tyre rotation']));
+      var order = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data);
+      expect(
+        order,
+        containsAllInOrder(['Brake pads', 'Oil change', 'Tyre rotation']),
+      );
 
       await tester.tap(find.byIcon(Icons.arrow_downward));
       await tester.pumpAndSettle();
 
       order = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data);
-      expect(order, containsAllInOrder(['Tyre rotation', 'Oil change', 'Brake pads']));
+      expect(
+        order,
+        containsAllInOrder(['Tyre rotation', 'Oil change', 'Brake pads']),
+      );
     });
 
     testWidgets('by description starts ascending, not Z to A', (tester) async {
@@ -222,7 +231,10 @@ void main() {
       final order = tester
           .widgetList<Text>(find.byType(Text))
           .map((t) => t.data);
-      expect(order, containsAllInOrder(['Brake pads', 'Oil change', 'Tyre rotation']));
+      expect(
+        order,
+        containsAllInOrder(['Brake pads', 'Oil change', 'Tyre rotation']),
+      );
     });
 
     testWidgets('survives a search that hides part of the list', (
@@ -231,8 +243,10 @@ void main() {
       await pump(tester, [oil, brakes, tyres]);
 
       await search(tester, 'a'); // in every description
-      expect(shown(tester, ['Oil change', 'Brake pads', 'Tyre rotation']),
-          hasLength(3));
+      expect(
+        shown(tester, ['Oil change', 'Brake pads', 'Tyre rotation']),
+        hasLength(3),
+      );
     });
   });
 

@@ -135,7 +135,9 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
               if (v != PlanType.unknown)
                 DropdownMenuItem(value: v, child: Text(_typeLabel(v, l10n))),
           ],
-          onChanged: _enabled ? (v) => setState(() => _type = v ?? _type) : null,
+          onChanged: _enabled
+              ? (v) => setState(() => _type = v ?? _type)
+              : null,
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<PlanPriority>(

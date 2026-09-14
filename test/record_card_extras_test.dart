@@ -15,23 +15,20 @@ import 'package:lubelogger_mobile/providers.dart';
 void main() {
   const vehicleId = 1;
 
-  VehicleRecord record({
-    required int id,
-    int files = 0,
-    String notes = '',
-  }) => VehicleRecord(
-    id: id,
-    date: DateTime(2026, 4, 5),
-    odometer: 1000,
-    description: 'record $id',
-    cost: 10,
-    notes: notes,
-    tags: '',
-    files: [
-      for (var i = 0; i < files; i++)
-        Attachment(name: 'f$i.jpg', location: '/documents/f$i.jpg'),
-    ],
-  );
+  VehicleRecord record({required int id, int files = 0, String notes = ''}) =>
+      VehicleRecord(
+        id: id,
+        date: DateTime(2026, 4, 5),
+        odometer: 1000,
+        description: 'record $id',
+        cost: 10,
+        notes: notes,
+        tags: '',
+        files: [
+          for (var i = 0; i < files; i++)
+            Attachment(name: 'f$i.jpg', location: '/documents/f$i.jpg'),
+        ],
+      );
 
   Future<void> pump(WidgetTester tester, List<VehicleRecord> records) async {
     await tester.pumpWidget(

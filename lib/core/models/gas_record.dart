@@ -30,20 +30,20 @@ class GasRecord {
   });
 
   factory GasRecord.fromJson(Map<String, dynamic> json) => GasRecord(
-        id: toInt(json['id']),
-        date: calendarDateFromJson(json['date']),
-        odometer: toDouble(json['odometer']),
-        fuelConsumed: toDouble(json['fuelConsumed']),
-        cost: toDouble(json['cost']),
-        isFillToFull: toBoolOrFalse(json['isFillToFull']),
-        missedFuelUp: toBoolOrFalse(json['missedFuelUp']),
-        startingSoc: toInt(json['startingSoc']),
-        endingSoc: toInt(json['endingSoc']),
-        notes: (json['notes'] as String?) ?? '',
-        tags: (json['tags'] as String?) ?? '',
-        files: Attachment.listFrom(json['files']),
-        extraFields: ExtraField.listFrom(json['extraFields']),
-      );
+    id: toInt(json['id']),
+    date: calendarDateFromJson(json['date']),
+    odometer: toDouble(json['odometer']),
+    fuelConsumed: toDouble(json['fuelConsumed']),
+    cost: toDouble(json['cost']),
+    isFillToFull: toBoolOrFalse(json['isFillToFull']),
+    missedFuelUp: toBoolOrFalse(json['missedFuelUp']),
+    startingSoc: toInt(json['startingSoc']),
+    endingSoc: toInt(json['endingSoc']),
+    notes: (json['notes'] as String?) ?? '',
+    tags: (json['tags'] as String?) ?? '',
+    files: Attachment.listFrom(json['files']),
+    extraFields: ExtraField.listFrom(json['extraFields']),
+  );
 
   final int id;
   final DateTime? date;

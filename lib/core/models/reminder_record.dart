@@ -17,18 +17,18 @@ class ReminderRecord {
   });
 
   factory ReminderRecord.fromJson(Map<String, dynamic> json) => ReminderRecord(
-        id: toInt(json['id']),
-        description: (json['description'] as String?) ?? '',
-        urgency: ReminderUrgency.parse(json['urgency']),
-        metric: ReminderMetric.parse(json['metric']),
-        dueDate: calendarDateFromJson(json['dueDate']),
-        dueOdometer: () {
-          final o = toDouble(json['dueOdometer']);
-          return o > 0 ? o : null;
-        }(),
-        notes: (json['notes'] as String?) ?? '',
-        tags: (json['tags'] as String?) ?? '',
-      );
+    id: toInt(json['id']),
+    description: (json['description'] as String?) ?? '',
+    urgency: ReminderUrgency.parse(json['urgency']),
+    metric: ReminderMetric.parse(json['metric']),
+    dueDate: calendarDateFromJson(json['dueDate']),
+    dueOdometer: () {
+      final o = toDouble(json['dueOdometer']);
+      return o > 0 ? o : null;
+    }(),
+    notes: (json['notes'] as String?) ?? '',
+    tags: (json['tags'] as String?) ?? '',
+  );
 
   final int id;
   final String description;
@@ -43,7 +43,8 @@ class ReminderRecord {
   bool get showsDate => metric != ReminderMetric.odometer && dueDate != null;
 
   /// Whether the due odometer is relevant for this reminder's [metric].
-  bool get showsOdometer => metric != ReminderMetric.date && dueOdometer != null;
+  bool get showsOdometer =>
+      metric != ReminderMetric.date && dueOdometer != null;
 }
 
 /// Reminder urgency (`ReminderUrgency`: NotUrgent=0, Urgent=1, VeryUrgent=2,

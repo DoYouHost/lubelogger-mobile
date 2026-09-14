@@ -53,8 +53,12 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
     String evt, {
     LogLevel lvl = LogLevel.info,
     Map<String, Object?> fields = const {},
-  }) =>
-      DiagnosticRecorder.active?.add(LogSource.ui, evt, lvl: lvl, fields: fields);
+  }) => DiagnosticRecorder.active?.add(
+    LogSource.ui,
+    evt,
+    lvl: lvl,
+    fields: fields,
+  );
 
   Future<void> _pick() async {
     final l10n = AppLocalizations.of(context);
@@ -214,7 +218,10 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: TextStyle(color: t.dangerInk, fontFamily: DashTokens.fontUi),
+              style: TextStyle(
+                color: t.dangerInk,
+                fontFamily: DashTokens.fontUi,
+              ),
             ),
           ],
         ],

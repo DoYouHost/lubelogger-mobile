@@ -22,20 +22,20 @@ class VehicleRecord {
   });
 
   factory VehicleRecord.fromJson(Map<String, dynamic> json) => VehicleRecord(
-        id: toInt(json['id']),
-        date: calendarDateFromJson(json['date']),
-        // Tax records omit odometer; a "0" reading is treated as absent too.
-        odometer: () {
-          final o = toDouble(json['odometer']);
-          return o > 0 ? o : null;
-        }(),
-        description: (json['description'] as String?) ?? '',
-        cost: toDouble(json['cost']),
-        notes: (json['notes'] as String?) ?? '',
-        tags: (json['tags'] as String?) ?? '',
-        files: Attachment.listFrom(json['files']),
-        extraFields: ExtraField.listFrom(json['extraFields']),
-      );
+    id: toInt(json['id']),
+    date: calendarDateFromJson(json['date']),
+    // Tax records omit odometer; a "0" reading is treated as absent too.
+    odometer: () {
+      final o = toDouble(json['odometer']);
+      return o > 0 ? o : null;
+    }(),
+    description: (json['description'] as String?) ?? '',
+    cost: toDouble(json['cost']),
+    notes: (json['notes'] as String?) ?? '',
+    tags: (json['tags'] as String?) ?? '',
+    files: Attachment.listFrom(json['files']),
+    extraFields: ExtraField.listFrom(json['extraFields']),
+  );
 
   final int id;
   final DateTime? date;
@@ -56,8 +56,11 @@ enum RecordKind {
   upgrade(Endpoints.upgradeRecords, hasOdometer: true, editable: true),
   tax(Endpoints.taxRecords, hasOdometer: false, editable: true);
 
-  const RecordKind(this.endpoint,
-      {required this.hasOdometer, this.editable = false});
+  const RecordKind(
+    this.endpoint, {
+    required this.hasOdometer,
+    this.editable = false,
+  });
 
   final String endpoint;
 
@@ -70,11 +73,11 @@ enum RecordKind {
   final bool editable;
 
   ExtraFieldRecordType get extraFieldType => switch (this) {
-        RecordKind.service => ExtraFieldRecordType.service,
-        RecordKind.repair => ExtraFieldRecordType.repair,
-        RecordKind.upgrade => ExtraFieldRecordType.upgrade,
-        RecordKind.tax => ExtraFieldRecordType.tax,
-      };
+    RecordKind.service => ExtraFieldRecordType.service,
+    RecordKind.repair => ExtraFieldRecordType.repair,
+    RecordKind.upgrade => ExtraFieldRecordType.upgrade,
+    RecordKind.tax => ExtraFieldRecordType.tax,
+  };
 
   // Uniform CRUD paths under the list [endpoint] (see LUBELOGGER-API.md §6):
   // all four types share the same add/update/delete route shape.

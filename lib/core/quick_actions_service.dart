@@ -23,19 +23,18 @@ class QuickActionsService {
   Future<void> setRecordShortcuts({
     required String fuelLabel,
     required String odometerLabel,
-  }) =>
-      _quickActions.setShortcutItems([
-        ShortcutItem(
-          type: addFuel,
-          localizedTitle: fuelLabel,
-          icon: 'ic_shortcut_fuel',
-        ),
-        ShortcutItem(
-          type: addOdometer,
-          localizedTitle: odometerLabel,
-          icon: 'ic_shortcut_odometer',
-        ),
-      ]);
+  }) => _quickActions.setShortcutItems([
+    ShortcutItem(
+      type: addFuel,
+      localizedTitle: fuelLabel,
+      icon: 'ic_shortcut_fuel',
+    ),
+    ShortcutItem(
+      type: addOdometer,
+      localizedTitle: odometerLabel,
+      icon: 'ic_shortcut_odometer',
+    ),
+  ]);
 
   /// Removes every shortcut (on logout, when there's no vehicle to target).
   Future<void> clear() => _quickActions.clearShortcutItems();

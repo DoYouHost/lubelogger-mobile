@@ -7,10 +7,8 @@ import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import 'pending_write_label.dart';
 
-Future<void> showSyncSheet(BuildContext context) => dashSheet<void>(
-      context,
-      builder: (_) => const _SyncSheet(),
-    );
+Future<void> showSyncSheet(BuildContext context) =>
+    dashSheet<void>(context, builder: (_) => const _SyncSheet());
 
 /// App-bar entry to the sync sheet, shown only when there is something to say:
 /// writes still on the phone, writes the server refused, or a server that has
@@ -142,8 +140,9 @@ class _SyncSheet extends ConsumerWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.cloud_upload_outlined),
-                    label:
-                        Text(sync.syncing ? l10n.syncSending : l10n.syncSendNow),
+                    label: Text(
+                      sync.syncing ? l10n.syncSending : l10n.syncSendNow,
+                    ),
                   ).tagged('sync.send'),
                 ),
               ],
@@ -217,7 +216,8 @@ class _SyncSheet extends ConsumerWidget {
   static String _when(BuildContext context, DateTime moment) {
     final material = MaterialLocalizations.of(context);
     final now = DateTime.now();
-    final sameDay = moment.year == now.year &&
+    final sameDay =
+        moment.year == now.year &&
         moment.month == now.month &&
         moment.day == now.day;
     return sameDay
@@ -278,10 +278,7 @@ class _WriteRow extends StatelessWidget {
             ),
           ),
           if (onDiscard != null)
-            TextButton(
-              onPressed: onDiscard,
-              child: Text(l10n.syncDiscard),
-            ),
+            TextButton(onPressed: onDiscard, child: Text(l10n.syncDiscard)),
         ],
       ),
     );

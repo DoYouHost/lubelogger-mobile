@@ -197,25 +197,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       );
 
   Widget _busyLabel(String text) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Color(0xFF1A1206),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(text),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Color(0xFF1A1206),
+        ),
+      ),
+      const SizedBox(width: 10),
+      Text(text),
+    ],
+  );
 
   TextStyle _fieldStyle(DashTokens t, {required bool mono}) => TextStyle(
-        fontFamily: mono ? DashTokens.fontMono : DashTokens.fontUi,
-        fontSize: mono ? 13 : 14,
-        fontWeight: FontWeight.w600,
-        color: t.textPrimary,
-      );
+    fontFamily: mono ? DashTokens.fontMono : DashTokens.fontUi,
+    fontSize: mono ? 13 : 14,
+    fontWeight: FontWeight.w600,
+    color: t.textPrimary,
+  );
 }

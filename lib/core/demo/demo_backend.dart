@@ -58,16 +58,16 @@ class DemoBackend {
   /// fabricated `UploadedFiles` array — one entry per file, echoing its name so
   /// the record shows the file the reviewer picked.
   DemoResult upload(FormData form) => (
-        status: 200,
-        body: [
-          for (final entry in form.files)
-            {
-              'name': entry.value.filename ?? 'attachment',
-              'location': '/documents/demo-${entry.value.filename ?? 'file'}',
-              'isPending': false,
-            },
-        ],
-      );
+    status: 200,
+    body: [
+      for (final entry in form.files)
+        {
+          'name': entry.value.filename ?? 'attachment',
+          'location': '/documents/demo-${entry.value.filename ?? 'file'}',
+          'isPending': false,
+        },
+    ],
+  );
 
   // ── Routing ───────────────────────────────────────────────────────────────
 
@@ -82,8 +82,9 @@ class DemoBackend {
         .where((s) => s.isNotEmpty)
         .toList();
     final q = uri.queryParameters;
-    final body =
-        rawBody is Map<String, dynamic> ? rawBody : const <String, dynamic>{};
+    final body = rawBody is Map<String, dynamic>
+        ? rawBody
+        : const <String, dynamic>{};
     try {
       return _route(method, seg, q, body) ?? _fallback(method);
     } on Object {
@@ -96,9 +97,8 @@ class DemoBackend {
 
   /// Unknown writes still "succeed" (so a not-yet-modelled action never breaks
   /// the demo); unknown reads 404.
-  DemoResult _fallback(String method) => method == 'GET'
-      ? _notFound()
-      : _ok({'success': true, 'message': ''});
+  DemoResult _fallback(String method) =>
+      method == 'GET' ? _notFound() : _ok({'success': true, 'message': ''});
 
   DemoResult? _route(
     String m,
@@ -139,9 +139,11 @@ class DemoBackend {
           // No vehicleId means the whole garage, as on the server — that form
           // is the single request the garage screen makes.
           final id = toInt(q['vehicleId']);
-          return _ok(id == 0
-              ? [for (final v in _vehicles) _vehicleInfo(toInt(v['id']))]
-              : [_vehicleInfo(id)]);
+          return _ok(
+            id == 0
+                ? [for (final v in _vehicles) _vehicleInfo(toInt(v['id']))]
+                : [_vehicleInfo(id)],
+          );
         }
         final coll = _collectionFor(sub);
         if (coll == null) return _notFound();
@@ -170,15 +172,14 @@ class DemoBackend {
   /// demo mode can't quietly accept what a live server would reject.
   DemoResult? _rejectDonePlan(String sub, Map<String, dynamic> body) =>
       (sub == 'planrecords' && body['progress'] == 'Done')
-          ? (
-              status: 400,
-              body: {
-                'success': false,
-                'message':
-                    'Input object invalid, Progress cannot be set to Done.',
-              },
-            )
-          : null;
+      ? (
+          status: 400,
+          body: {
+            'success': false,
+            'message': 'Input object invalid, Progress cannot be set to Done.',
+          },
+        )
+      : null;
 
   DemoResult _addRecord(
     String sub,
@@ -217,10 +218,7 @@ class DemoBackend {
     return _ok({'success': true, 'message': ''});
   }
 
-  DemoResult _deleteRecord(
-    Map<int, List<Map<String, dynamic>>> coll,
-    int id,
-  ) {
+  DemoResult _deleteRecord(Map<int, List<Map<String, dynamic>>> coll, int id) {
     for (final list in coll.values) {
       list.removeWhere((r) => toInt(r['id']) == id);
     }
@@ -322,7 +320,8 @@ class DemoBackend {
   Map<String, dynamic> _vehicleInfo(int vehicleId) {
     final vehicle = _vehicles.firstWhere(
       (v) => toInt(v['id']) == vehicleId,
-      orElse: () => _vehicles.isNotEmpty ? _vehicles.first : <String, dynamic>{},
+      orElse: () =>
+          _vehicles.isNotEmpty ? _vehicles.first : <String, dynamic>{},
     );
     var veryUrgent = 0, urgent = 0, notUrgent = 0, pastDue = 0;
     for (final r in _reminders[vehicleId] ?? const []) {
@@ -353,8 +352,8 @@ class DemoBackend {
   }
 
   double _sumCost(List<Map<String, dynamic>>? records) => [
-        for (final r in records ?? const []) toDouble(r['cost']),
-      ].fold(0.0, (a, b) => a + b);
+    for (final r in records ?? const []) toDouble(r['cost']),
+  ].fold(0.0, (a, b) => a + b);
 
   /// Highest odometer across every reading source for a vehicle — mirrors the
   /// server's "last reported odometer".
@@ -394,10 +393,10 @@ class DemoBackend {
           days < 0
               ? 3
               : days <= 7
-                  ? 2
-                  : days <= 30
-                      ? 1
-                      : 0,
+              ? 2
+              : days <= 30
+              ? 1
+              : 0,
         );
       }
     }
@@ -410,10 +409,10 @@ class DemoBackend {
           dist < 0
               ? 3
               : dist <= 500
-                  ? 2
-                  : dist <= 2000
-                      ? 1
-                      : 0,
+              ? 2
+              : dist <= 2000
+              ? 1
+              : 0,
         );
       }
     }
@@ -428,50 +427,51 @@ class DemoBackend {
   // ── Static endpoints ───────────────────────────────────────────────────────
 
   Map<String, dynamic> get _whoami => {
-        'username': 'demo',
-        'emailAddress': 'demo@lubelogger.app',
-        'isAdmin': true,
-        'isRoot': true,
-      };
+    'username': 'demo',
+    'emailAddress': 'demo@lubelogger.app',
+    'isAdmin': true,
+    'isRoot': true,
+  };
 
   // 1.7.0: the fake backend implements the 1.7.0 vehicle-delete endpoint, so it
   // reports that version to keep the delete action enabled in the demo.
   /// `/api/extrafields` shape: `fieldType` as the .NET enum **name** and only
   /// the types that have fields configured, exactly as the real server answers.
   List<Map<String, dynamic>> get _extraFieldTemplates => [
-        {
-          'recordType': 'ServiceRecord',
-          'extraFields': [
-            {'name': 'Workshop', 'isRequired': true, 'fieldType': 'Text'},
-            {'name': 'Warranty until', 'isRequired': false, 'fieldType': 'Date'},
-          ],
-        },
-        {
-          'recordType': 'GasRecord',
-          'extraFields': [
-            {'name': 'Station', 'isRequired': false, 'fieldType': 'Text'},
-          ],
-        },
-      ];
+    {
+      'recordType': 'ServiceRecord',
+      'extraFields': [
+        {'name': 'Workshop', 'isRequired': true, 'fieldType': 'Text'},
+        {'name': 'Warranty until', 'isRequired': false, 'fieldType': 'Date'},
+      ],
+    },
+    {
+      'recordType': 'GasRecord',
+      'extraFields': [
+        {'name': 'Station', 'isRequired': false, 'fieldType': 'Text'},
+      ],
+    },
+  ];
 
   Map<String, dynamic> get _info => {
-        'currentVersion': '1.7.0',
-        'locale': 'en-US',
-        'currencySymbol': r'$',
-        'decimalSeparator': '.',
-        'dateFormat': 'M/d/yyyy',
-      };
+    'currentVersion': '1.7.0',
+    'locale': 'en-US',
+    'currencySymbol': r'$',
+    'decimalSeparator': '.',
+    'dateFormat': 'M/d/yyyy',
+  };
 
   Map<String, dynamic> get _version => {
-        'currentVersion': '1.7.0',
-        'latestVersion': '1.7.0',
-      };
+    'currentVersion': '1.7.0',
+    'latestVersion': '1.7.0',
+  };
 
   // ── Seed dataset ───────────────────────────────────────────────────────────
 
   void _seed() {
     final now = DateTime.now();
-    String ago(int days) => calendarDateToJson(now.subtract(Duration(days: days)));
+    String ago(int days) =>
+        calendarDateToJson(now.subtract(Duration(days: days)));
     String ahead(int days) => calendarDateToJson(now.add(Duration(days: days)));
 
     _vehicles.addAll([
@@ -829,14 +829,16 @@ class DemoBackend {
     var odo = startOdometer;
     for (var i = count - 1; i >= 0; i--) {
       odo += stepPerFill + (i % 3) * 40;
-      out.add(_rec({
-        'date': ago(i * 30 + 5),
-        'odometer': odo,
-        'fuelConsumed': litresPerFill + (i % 4) - 1.5,
-        'cost': costPerFill + (i % 5) * 2.5,
-        'isFillToFull': true,
-        'missedFuelUp': false,
-      }));
+      out.add(
+        _rec({
+          'date': ago(i * 30 + 5),
+          'odometer': odo,
+          'fuelConsumed': litresPerFill + (i % 4) - 1.5,
+          'cost': costPerFill + (i % 5) * 2.5,
+          'isFillToFull': true,
+          'missedFuelUp': false,
+        }),
+      );
     }
     return out;
   }
@@ -859,16 +861,18 @@ class DemoBackend {
       final startingSoc = 15 + (i % 4) * 5;
       final endingSoc = 80 + (i % 3) * 5;
       final kwh = batteryKwh * (endingSoc - startingSoc) / 100;
-      out.add(_rec({
-        'date': ago(i * 30 + 5),
-        'odometer': odo,
-        'fuelConsumed': _round2(kwh),
-        'cost': _round2(kwh * pricePerKwh),
-        'isFillToFull': true,
-        'missedFuelUp': false,
-        'startingSoc': startingSoc,
-        'endingSoc': endingSoc,
-      }));
+      out.add(
+        _rec({
+          'date': ago(i * 30 + 5),
+          'odometer': odo,
+          'fuelConsumed': _round2(kwh),
+          'cost': _round2(kwh * pricePerKwh),
+          'isFillToFull': true,
+          'missedFuelUp': false,
+          'startingSoc': startingSoc,
+          'endingSoc': endingSoc,
+        }),
+      );
     }
     return out;
   }
@@ -878,9 +882,9 @@ class DemoBackend {
   /// Seed a record map with a fresh id (fields the model reads that aren't
   /// supplied simply stay absent — the model tolerates that).
   Map<String, dynamic> _rec(Map<String, dynamic> fields) => {
-        'id': _newId(),
-        ...fields,
-      };
+    'id': _newId(),
+    ...fields,
+  };
 
   /// Seed a reminder, computing its urgency from the due date/odometer so the
   /// dashboard counts and the tab chips agree.

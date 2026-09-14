@@ -54,20 +54,22 @@ void main() {
     expect(paths, ['/api/vehicle/info']);
   });
 
-  test('the fuel tab, its statistics and the expense chart share one log',
-      () async {
-    final c = container();
-    await Future.wait([
-      c.read(gasRecordsProvider(1).future),
-      c.read(gasStatsProvider(1).future),
-      c.read(expenseTimelineProvider(1).future),
-      c.read(lastOdometerDateProvider(1).future),
-    ]);
+  test(
+    'the fuel tab, its statistics and the expense chart share one log',
+    () async {
+      final c = container();
+      await Future.wait([
+        c.read(gasRecordsProvider(1).future),
+        c.read(gasStatsProvider(1).future),
+        c.read(expenseTimelineProvider(1).future),
+        c.read(lastOdometerDateProvider(1).future),
+      ]);
 
-    expect(count('/api/vehicle/gasrecords'), 1);
-    expect(count('/api/vehicle/odometerrecords'), 1);
-    expect(count('/api/vehicle/info'), 1);
-  });
+      expect(count('/api/vehicle/gasrecords'), 1);
+      expect(count('/api/vehicle/odometerrecords'), 1);
+      expect(count('/api/vehicle/info'), 1);
+    },
+  );
 
   test('the expense chart reads the same records the tabs list', () async {
     final c = container();
@@ -82,14 +84,16 @@ void main() {
     }
   });
 
-  test('refreshing a record list refetches it and recomputes what derives',
-      () async {
-    final c = container();
-    final before = await c.read(gasStatsProvider(1).future);
-    c.invalidate(gasRecordsProvider(1));
-    final after = await c.read(gasStatsProvider(1).future);
+  test(
+    'refreshing a record list refetches it and recomputes what derives',
+    () async {
+      final c = container();
+      final before = await c.read(gasStatsProvider(1).future);
+      c.invalidate(gasRecordsProvider(1));
+      final after = await c.read(gasStatsProvider(1).future);
 
-    expect(count('/api/vehicle/gasrecords'), 2);
-    expect(after.totalRawDistance, before.totalRawDistance);
-  });
+      expect(count('/api/vehicle/gasrecords'), 2);
+      expect(after.totalRawDistance, before.totalRawDistance);
+    },
+  );
 }

@@ -229,14 +229,13 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
     required String title,
     required String message,
     required String confirmLabel,
-  }) =>
-      confirmDelete(
-        context,
-        what: step,
-        title: title,
-        message: message,
-        confirmLabel: confirmLabel,
-      );
+  }) => confirmDelete(
+    context,
+    what: step,
+    title: title,
+    message: message,
+    confirmLabel: confirmLabel,
+  );
 
   /// Confirms twice, then deletes the vehicle and all its records (irreversible
   /// server-side cascade). On success, refreshes the garage and closes the form.

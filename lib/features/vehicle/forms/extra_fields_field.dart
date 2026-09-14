@@ -81,8 +81,10 @@ class _ExtraFieldsFieldState extends ConsumerState<ExtraFieldsField> {
     ];
   }
 
-  void _report() =>
-      widget.onChanged([for (final f in _fields) if (f.value.isNotEmpty) f]);
+  void _report() => widget.onChanged([
+    for (final f in _fields)
+      if (f.value.isNotEmpty) f,
+  ]);
 
   /// [rebuild] for the picker fields, which render their value from state; a
   /// text field's controller already holds what the user typed.
@@ -95,11 +97,8 @@ class _ExtraFieldsFieldState extends ConsumerState<ExtraFieldsField> {
     _report();
   }
 
-  TextEditingController _controllerFor(ExtraField field) =>
-      _controllers.putIfAbsent(
-        field.name,
-        () => TextEditingController(text: field.value),
-      );
+  TextEditingController _controllerFor(ExtraField field) => _controllers
+      .putIfAbsent(field.name, () => TextEditingController(text: field.value));
 
   @override
   Widget build(BuildContext context) {
@@ -172,12 +171,8 @@ class _ExtraFieldsFieldState extends ConsumerState<ExtraFieldsField> {
       ExtraFieldType.decimal => _text(field, label, l10n, t, numeric: true),
       // Location is a plain string here: the web's pick-my-position button
       // fills the same field from the browser's geolocation API.
-      ExtraFieldType.text || ExtraFieldType.location => _text(
-        field,
-        label,
-        l10n,
-        t,
-      ),
+      ExtraFieldType.text ||
+      ExtraFieldType.location => _text(field, label, l10n, t),
     };
   }
 
@@ -198,9 +193,7 @@ class _ExtraFieldsFieldState extends ConsumerState<ExtraFieldsField> {
           : decimal
           ? decimalInputFormatters
           : integerInputFormatters,
-      style: numeric
-          ? const TextStyle(fontFamily: DashTokens.fontMono)
-          : null,
+      style: numeric ? const TextStyle(fontFamily: DashTokens.fontMono) : null,
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (v) => _requiredError(field, v, l10n),
       onChanged: (v) => _set(field.name, v),

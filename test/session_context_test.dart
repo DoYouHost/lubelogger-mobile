@@ -53,8 +53,7 @@ void main() {
   });
 
   group('settings snapshot', () {
-    test('the units a report has to be read in are on the second line',
-        () async {
+    test('the units a report has to be read in are on the second line', () async {
       await settings.saveUnits(
         const UnitsSettings(
           base: MeasurementSystem.imperial,
@@ -107,9 +106,7 @@ void main() {
     test('a preference change is recorded where it is persisted', () async {
       await recorder.start();
       await settings.saveRemindersEnabled(true);
-      await settings.saveUnits(
-        const UnitsSettings(distance: DistanceUnit.mi),
-      );
+      await settings.saveUnits(const UnitsSettings(distance: DistanceUnit.mi));
 
       final changes = [
         for (final r in await stopAndRead())

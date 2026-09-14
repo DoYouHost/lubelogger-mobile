@@ -62,8 +62,9 @@ void main() {
     });
   });
 
-  testWidgets('the sheet counts what is waiting and names each one',
-      (tester) async {
+  testWidgets('the sheet counts what is waiting and names each one', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final queue = WriteQueue(prefs);
@@ -99,8 +100,9 @@ void main() {
     expect(find.text('Send now'), findsOneWidget);
   });
 
-  testWidgets('a refused write is set apart, with the reason and a way out',
-      (tester) async {
+  testWidgets('a refused write is set apart, with the reason and a way out', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final queue = WriteQueue(prefs);

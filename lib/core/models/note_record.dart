@@ -18,14 +18,14 @@ class NoteRecord {
   });
 
   factory NoteRecord.fromJson(Map<String, dynamic> json) => NoteRecord(
-        id: toInt(json['id']),
-        description: (json['description'] as String?) ?? '',
-        noteText: (json['noteText'] as String?) ?? '',
-        pinned: toBoolOrFalse(json['pinned']),
-        tags: (json['tags'] as String?) ?? '',
-        files: Attachment.listFrom(json['files']),
-        extraFields: ExtraField.listFrom(json['extraFields']),
-      );
+    id: toInt(json['id']),
+    description: (json['description'] as String?) ?? '',
+    noteText: (json['noteText'] as String?) ?? '',
+    pinned: toBoolOrFalse(json['pinned']),
+    tags: (json['tags'] as String?) ?? '',
+    files: Attachment.listFrom(json['files']),
+    extraFields: ExtraField.listFrom(json['extraFields']),
+  );
 
   final int id;
   final String description;

@@ -21,7 +21,7 @@ typedef AuthProbeResult = ({WhoAmI who, String baseUrl});
 /// [ServerProfile].
 class AuthService {
   AuthService({required Dio bareDio, required this._credentials})
-      : _dio = bareDio;
+    : _dio = bareDio;
 
   final Dio _dio;
   final CredentialsStore _credentials;
@@ -35,10 +35,9 @@ class AuthService {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
         '$baseUrl${Endpoints.whoami}',
-        options: Options(headers: {
-          kCultureInvariantHeader: 'true',
-          'x-api-key': apiKey,
-        }),
+        options: Options(
+          headers: {kCultureInvariantHeader: 'true', 'x-api-key': apiKey},
+        ),
       );
       final body = res.data;
       if (body == null) {

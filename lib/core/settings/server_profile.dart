@@ -9,9 +9,9 @@ class ServerProfile {
   const ServerProfile({required this.baseUrl, this.label});
 
   factory ServerProfile.fromJson(Map<String, dynamic> json) => ServerProfile(
-        baseUrl: json['baseUrl'] as String,
-        label: json['label'] as String?,
-      );
+    baseUrl: json['baseUrl'] as String,
+    label: json['label'] as String?,
+  );
 
   /// E.g. `https://lubelogger.example.com` — without a trailing `/` or `/api`.
   final String baseUrl;
@@ -24,14 +24,14 @@ class ServerProfile {
   bool get isDemo => DemoConfig.isDemoUrl(baseUrl);
 
   Map<String, dynamic> toJson() => {
-        'baseUrl': baseUrl,
-        if (label != null) 'label': label,
-      };
+    'baseUrl': baseUrl,
+    if (label != null) 'label': label,
+  };
 
   ServerProfile copyWith({String? baseUrl, String? label}) => ServerProfile(
-        baseUrl: baseUrl ?? this.baseUrl,
-        label: label ?? this.label,
-      );
+    baseUrl: baseUrl ?? this.baseUrl,
+    label: label ?? this.label,
+  );
 
   /// Normalizes raw user input: adds `https://` if no scheme, strips a trailing
   /// `/` and a trailing `/api`.

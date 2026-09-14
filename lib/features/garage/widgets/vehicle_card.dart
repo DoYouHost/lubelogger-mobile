@@ -56,11 +56,7 @@ class VehicleCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (v.year > 0)
-                        Text(
-                          '${v.year}',
-                          style: _sub(t),
-                        ),
+                      if (v.year > 0) Text('${v.year}', style: _sub(t)),
                       Text(
                         v.makeModel,
                         style: TextStyle(
@@ -87,33 +83,31 @@ class VehicleCard extends StatelessWidget {
   }
 
   Widget _photo(DashTokens t) => Stack(
-        children: [
-          SizedBox(
-            height: _photoHeight,
-            width: double.infinity,
-            child: _image(t),
-          ),
-          Positioned(
-            top: 12,
-            left: 12,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Badge(
-                  icon: Icons.speed,
-                  label: VehicleUnits(units, useHours: info.vehicle.useHours)
-                      .distance(info.lastReportedOdometer),
-                ),
-                const SizedBox(height: 8),
-                _Badge(
-                  icon: Icons.payments_outlined,
-                  label: Formatters.currency(info.totalCost, currencySymbol),
-                ),
-              ],
+    children: [
+      SizedBox(height: _photoHeight, width: double.infinity, child: _image(t)),
+      Positioned(
+        top: 12,
+        left: 12,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Badge(
+              icon: Icons.speed,
+              label: VehicleUnits(
+                units,
+                useHours: info.vehicle.useHours,
+              ).distance(info.lastReportedOdometer),
             ),
-          ),
-        ],
-      );
+            const SizedBox(height: 8),
+            _Badge(
+              icon: Icons.payments_outlined,
+              label: Formatters.currency(info.totalCost, currencySymbol),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 
   Widget _image(DashTokens t) {
     final placeholder = ColoredBox(
@@ -144,11 +138,11 @@ class VehicleCard extends StatelessWidget {
   }
 
   TextStyle _sub(DashTokens t) => TextStyle(
-        fontFamily: DashTokens.fontUi,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: t.textTertiary,
-      );
+    fontFamily: DashTokens.fontUi,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: t.textTertiary,
+  );
 }
 
 /// Dark translucent pill overlaid on the vehicle photo.
@@ -242,10 +236,7 @@ class _DashedBorderPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       var distance = 0.0;
       while (distance < metric.length) {
-        canvas.drawPath(
-          metric.extractPath(distance, distance + dash),
-          paint,
-        );
+        canvas.drawPath(metric.extractPath(distance, distance + dash), paint);
         distance += dash + gap;
       }
     }

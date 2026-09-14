@@ -42,13 +42,13 @@ void main() {
   const vehicleId = 1;
 
   OdometerRecord record(double odometer) => OdometerRecord(
-        id: 7,
-        date: DateTime(2026, 4, 5),
-        odometer: odometer,
-        initialOdometer: 0,
-        notes: '',
-        tags: '',
-      );
+    id: 7,
+    date: DateTime(2026, 4, 5),
+    odometer: odometer,
+    initialOdometer: 0,
+    notes: '',
+    tags: '',
+  );
 
   Future<_CapturingAdapter> pump(
     WidgetTester tester, {
@@ -101,13 +101,14 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  String odometerField(WidgetTester tester) =>
-      tester.widget<TextFormField>(find.byType(TextFormField).first).controller!
-          .text;
+  String odometerField(WidgetTester tester) => tester
+      .widget<TextFormField>(find.byType(TextFormField).first)
+      .controller!
+      .text;
 
   double sentOdometer(_CapturingAdapter adapter) => double.parse(
-        (adapter.captured!.data as Map<String, dynamic>)['odometer'] as String,
-      );
+    (adapter.captured!.data as Map<String, dynamic>)['odometer'] as String,
+  );
 
   testWidgets('a metric reading edited in miles is stored back in km', (
     tester,

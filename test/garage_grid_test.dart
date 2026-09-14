@@ -14,7 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// not cost is the layout itself: every vehicle on screen, the add tile still
 /// riding along at the end, and the swipe action still opening.
 void main() {
-  Future<void> pumpGarage(WidgetTester tester, List<VehicleInfo> vehicles) async {
+  Future<void> pumpGarage(
+    WidgetTester tester,
+    List<VehicleInfo> vehicles,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'server_profile': jsonEncode({'baseUrl': 'https://lube.invalid'}),
     });

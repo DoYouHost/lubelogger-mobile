@@ -142,16 +142,9 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           ),
         ),
         const SizedBox(height: 14),
-        _numberField(
-          controller: _quantity,
-          label: l10n.formSupplyQuantity,
-        ),
+        _numberField(controller: _quantity, label: l10n.formSupplyQuantity),
         const SizedBox(height: 14),
-        _numberField(
-          controller: _cost,
-          label: l10n.colCost,
-          allowZero: true,
-        ),
+        _numberField(controller: _cost, label: l10n.colCost, allowZero: true),
         const SizedBox(height: 14),
         TextFormField(
           controller: _notes,

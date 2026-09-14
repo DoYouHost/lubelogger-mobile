@@ -170,7 +170,9 @@ class SettingsScreen extends ConsumerWidget {
                       value: chartRange,
                       items: ChartRangePreset.values,
                       labelOf: (p) => chartPresetLabel(p, l10n),
-                      onChanged: ref.read(chartDefaultRangeProvider.notifier).set,
+                      onChanged: ref
+                          .read(chartDefaultRangeProvider.notifier)
+                          .set,
                     ),
                   ),
                 ],
@@ -206,8 +208,9 @@ class SettingsScreen extends ConsumerWidget {
                     icon: Icons.cloud_sync_outlined,
                     label: l10n.settingsBackgroundRefresh,
                     value: backgroundRefresh,
-                    onChanged:
-                        ref.read(backgroundRefreshProvider.notifier).setEnabled,
+                    onChanged: ref
+                        .read(backgroundRefreshProvider.notifier)
+                        .setEnabled,
                   ),
                   _SettingRow(
                     label: l10n.settingsStoredData,
@@ -215,7 +218,9 @@ class SettingsScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          l10n.settingsStoredDataSize(formatBytes(cacheBytes ?? 0)),
+                          l10n.settingsStoredDataSize(
+                            formatBytes(cacheBytes ?? 0),
+                          ),
                           style: TextStyle(
                             fontFamily: DashTokens.fontUi,
                             fontSize: 13,

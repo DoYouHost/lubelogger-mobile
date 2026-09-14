@@ -7,9 +7,9 @@ class ServerVersion {
   });
 
   factory ServerVersion.fromJson(Map<String, dynamic> json) => ServerVersion(
-        currentVersion: (json['currentVersion'] as String?) ?? '',
-        latestVersion: (json['latestVersion'] as String?) ?? '',
-      );
+    currentVersion: (json['currentVersion'] as String?) ?? '',
+    latestVersion: (json['latestVersion'] as String?) ?? '',
+  );
 
   final String currentVersion;
   final String latestVersion;
@@ -26,8 +26,7 @@ class ServerVersion {
 
   static String _normalize(String v) {
     final trimmed = v.trim();
-    final noPrefix =
-        trimmed.startsWith('v') ? trimmed.substring(1) : trimmed;
+    final noPrefix = trimmed.startsWith('v') ? trimmed.substring(1) : trimmed;
     return noPrefix.toLowerCase();
   }
 }

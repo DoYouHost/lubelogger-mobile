@@ -353,9 +353,7 @@ class _StatBlock extends ConsumerWidget {
         icon: units.isElectric
             ? Icons.ev_station_outlined
             : Icons.local_gas_station_outlined,
-        label: units.isElectric
-            ? l10n.statAvgConsumption
-            : l10n.statAvgEconomy,
+        label: units.isElectric ? l10n.statAvgConsumption : l10n.statAvgEconomy,
         value: stats == null
             ? '—'
             : units.economy(stats!.totalRawDistance, stats!.totalRawVolume),
@@ -374,7 +372,9 @@ class _StatBlock extends ConsumerWidget {
       builder: (context, constraints) {
         final lines = constraints.maxWidth >= 2 * _StatRow.minWidth + 16
             ? [for (var i = 0; i < rows.length; i += 2) rows.sublist(i, i + 2)]
-            : [for (final row in rows) [row]];
+            : [
+                for (final row in rows) [row],
+              ];
         return Column(
           children: [
             for (final (i, line) in lines.indexed) ...[

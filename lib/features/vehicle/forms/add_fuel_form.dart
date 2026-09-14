@@ -77,9 +77,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
     );
     if (e != null) {
       _odometer.text = formatFormNumber(
-        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
-              e.odometer,
-            ),
+        ref
+            .read(vehicleUnitsProvider(widget.vehicleId))
+            .toDisplayOdometer(e.odometer),
       );
       _fuel.text = formatFormNumber(e.fuelConsumed);
       _cost.text = formatFormNumber(e.cost);

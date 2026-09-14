@@ -30,12 +30,12 @@ const Duration kUploadReceiveTimeout = Duration(minutes: 1);
 /// login probe (which runs before there is a profile) and the reminder worker's
 /// own client. It writes nothing unless a diagnostic recording is running.
 Dio createBareDio() => Dio(
-      BaseOptions(
-        connectTimeout: const Duration(seconds: 8),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
-      ),
-    )..interceptors.add(HttpProbe(config: lubeloggerHttpProbe));
+  BaseOptions(
+    connectTimeout: const Duration(seconds: 8),
+    receiveTimeout: const Duration(seconds: 15),
+    sendTimeout: const Duration(seconds: 15),
+  ),
+)..interceptors.add(HttpProbe(config: lubeloggerHttpProbe));
 
 /// Authenticated HTTP client for a single [ServerProfile].
 class ApiClient {
@@ -45,13 +45,15 @@ class ApiClient {
     WriteQueue? queue,
     OfflineStatus? status,
     Dio? dio,
-  })  : dio = dio ?? createBareDio(),
-        cache = HttpCache(baseUrl: profile.baseUrl),
-        status = status ?? OfflineStatus() {
+  }) : dio = dio ?? createBareDio(),
+       cache = HttpCache(baseUrl: profile.baseUrl),
+       status = status ?? OfflineStatus() {
     this.dio.options.baseUrl = profile.baseUrl;
     this.dio.interceptors.add(AuthInterceptor(credentials: credentials));
     if (kDebugMode) {
-      this.dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+      this.dio.interceptors.add(
+        LogInterceptor(requestBody: true, responseBody: true),
+      );
     }
     // Demo profile: serve everything from the in-process fake server, so no
     // request ever leaves the device. Covers every consumer of this Dio.
@@ -64,19 +66,16 @@ class ApiClient {
     }
     // Ahead of the offline interceptor on purpose: a transient failure gets its
     // second attempt before it is allowed to count as the server being gone.
-    this.dio.interceptors.add(RetryInterceptor(
-      dio: this.dio,
-      status: this.status,
-    ));
+    this.dio.interceptors.add(
+      RetryInterceptor(dio: this.dio, status: this.status),
+    );
     // The demo backend cannot fail and its data lives in memory already, so
     // caching it would only leave a real server's directory shape on disk for a
     // profile that is not a server.
     if (queue != null && !profile.isDemo) {
-      this.dio.interceptors.add(OfflineInterceptor(
-        cache: cache,
-        queue: queue,
-        status: this.status,
-      ));
+      this.dio.interceptors.add(
+        OfflineInterceptor(cache: cache, queue: queue, status: this.status),
+      );
     }
   }
 

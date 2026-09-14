@@ -71,29 +71,34 @@ void main() {
       expect(only(await stopAndRead(), 'degraded')['cause'], contains('Error'));
     });
 
-    test('an auth failure is not swallowed, so it is not logged here',
-        () async {
-      await recorder.start();
-      final options = RequestOptions(path: '/api/vehicles');
-      await expectLater(
-        guardOrNull<int>(
-          () => throw DioException.badResponse(
-            statusCode: 401,
-            requestOptions: options,
-            response: Response<void>(statusCode: 401, requestOptions: options),
+    test(
+      'an auth failure is not swallowed, so it is not logged here',
+      () async {
+        await recorder.start();
+        final options = RequestOptions(path: '/api/vehicles');
+        await expectLater(
+          guardOrNull<int>(
+            () => throw DioException.badResponse(
+              statusCode: 401,
+              requestOptions: options,
+              response: Response<void>(
+                statusCode: 401,
+                requestOptions: options,
+              ),
+            ),
           ),
-        ),
-        throwsA(isA<AuthException>()),
-      );
-      final records = await stopAndRead();
-      expect(records.where((r) => r['evt'] == 'degraded'), isEmpty);
-    });
+          throwsA(isA<AuthException>()),
+        );
+        final records = await stopAndRead();
+        expect(records.where((r) => r['evt'] == 'degraded'), isEmpty);
+      },
+    );
   });
 
   group('state views', () {
     Future<void> pump(WidgetTester tester, Widget child) => tester.pumpWidget(
-          MaterialApp(home: logSurface('garage', Scaffold(body: child))),
-        );
+      MaterialApp(home: logSurface('garage', Scaffold(body: child))),
+    );
 
     testWidgets('an error view names the screen it gave up on', (tester) async {
       await recorder.start();
@@ -162,8 +167,10 @@ void main() {
 
       final records = await stopAndRead();
       expect(records.where((r) => r['evt'] == 'image_failed').length, 1);
-      expect(only(records, 'image_failed')['type'],
-          'NetworkImageLoadException');
+      expect(
+        only(records, 'image_failed')['type'],
+        'NetworkImageLoadException',
+      );
     });
   });
 
@@ -185,9 +192,7 @@ void main() {
                 onSubmit: onSubmit,
                 onDelete: null,
                 error: null,
-                fields: [
-                  TextFormField(validator: (_) => 'required'),
-                ],
+                fields: [TextFormField(validator: (_) => 'required')],
               ),
             ),
           ),

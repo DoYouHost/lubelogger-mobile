@@ -154,9 +154,7 @@ class _Avatar extends StatelessWidget {
                     .round(),
               ),
               fit: BoxFit.cover,
-              errorBuilder: ImageProbe.errorBuilder(
-                Center(child: placeholder),
-              ),
+              errorBuilder: ImageProbe.errorBuilder(Center(child: placeholder)),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),
             ),

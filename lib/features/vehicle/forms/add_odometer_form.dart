@@ -70,9 +70,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     _odometer.addListener(() => setState(() {}));
     if (e != null) {
       _odometer.text = formatFormNumber(
-        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
-              e.odometer,
-            ),
+        ref
+            .read(vehicleUnitsProvider(widget.vehicleId))
+            .toDisplayOdometer(e.odometer),
       );
       _tags.text = e.tags;
       _notes.text = e.notes;
@@ -102,9 +102,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       _isEditing
           ? null
           : ref
-              .watch(vehicleInfoProvider(widget.vehicleId))
-              .valueOrNull
-              ?.lastReportedOdometer,
+                .watch(vehicleInfoProvider(widget.vehicleId))
+                .valueOrNull
+                ?.lastReportedOdometer,
     );
     final previousText = previous == null
         ? null
@@ -165,25 +165,26 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                 keyboardType: numberKeyboard(decimal: false),
                 inputFormatters: integerInputFormatters,
                 style: const TextStyle(fontFamily: DashTokens.fontMono),
-                decoration: dashFieldDecoration(
-                  t,
-                  labelText: l10n.formOdometerLabel(units.distanceLabel),
-                ).copyWith(
-                  // One line under the field, which turns from the hint into
-                  // the warning. A lower reading is legitimate often enough (a
-                  // swapped cluster, a correction) that it must not block the
-                  // save — hence this and a confirmation on submit, rather than
-                  // a validator error.
-                  helperText: previousText == null
-                      ? null
-                      : goesBackwards
+                decoration:
+                    dashFieldDecoration(
+                      t,
+                      labelText: l10n.formOdometerLabel(units.distanceLabel),
+                    ).copyWith(
+                      // One line under the field, which turns from the hint into
+                      // the warning. A lower reading is legitimate often enough (a
+                      // swapped cluster, a correction) that it must not block the
+                      // save — hence this and a confirmation on submit, rather than
+                      // a validator error.
+                      helperText: previousText == null
+                          ? null
+                          : goesBackwards
                           ? l10n.formOdometerBackwards(previousText)
                           : l10n.formOdometerLast(previousText),
-                  helperStyle: goesBackwards
-                      ? TextStyle(color: t.accentOrange)
-                      : null,
-                  helperMaxLines: 2,
-                ),
+                      helperStyle: goesBackwards
+                          ? TextStyle(color: t.accentOrange)
+                          : null,
+                      helperMaxLines: 2,
+                    ),
                 validator: (raw) {
                   final value = parseUserDecimal(raw);
                   if (value == null) {
@@ -297,15 +298,14 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   /// [_previousReading]'s inputs, read rather than watched — for the submit
   /// path, which runs outside a build.
   double? _previousReadingNow() => _previousReading(
-        ref.read(odometerRecordsProvider(widget.vehicleId)).valueOrNull ??
-            const [],
-        _isEditing
-            ? null
-            : ref
-                .read(vehicleInfoProvider(widget.vehicleId))
-                .valueOrNull
-                ?.lastReportedOdometer,
-      );
+    ref.read(odometerRecordsProvider(widget.vehicleId)).valueOrNull ?? const [],
+    _isEditing
+        ? null
+        : ref
+              .read(vehicleInfoProvider(widget.vehicleId))
+              .valueOrNull
+              ?.lastReportedOdometer,
+  );
 
   /// Reading currently in the field, in stored units.
   double? get _enteredReading {
@@ -407,7 +407,8 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     if (previous == null || entered == null || entered >= previous) return true;
 
     final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
-    final value = '${Formatters.odometer(units.toDisplayOdometer(previous))} '
+    final value =
+        '${Formatters.odometer(units.toDisplayOdometer(previous))} '
         '${units.distanceLabel}';
     return confirmRisky(
       context,

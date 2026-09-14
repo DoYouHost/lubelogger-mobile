@@ -115,7 +115,9 @@ class OdometerTab extends ConsumerWidget {
         double? previous;
         for (final r in ascending) {
           final o = r.odometer;
-          deltas[r.id] = (previous != null && o > previous) ? o - previous : null;
+          deltas[r.id] = (previous != null && o > previous)
+              ? o - previous
+              : null;
           previous = o > 0 ? o : previous;
         }
         final displayed = filter.apply(records);
@@ -127,7 +129,10 @@ class OdometerTab extends ConsumerWidget {
               date: _date(r.date, units),
               headline: _odoUnit(r.odometer, units),
               meta: [
-                RecordMetaItem(Icons.trending_up, _odoUnit(deltas[r.id], units)),
+                RecordMetaItem(
+                  Icons.trending_up,
+                  _odoUnit(deltas[r.id], units),
+                ),
                 ..._extras(l10n, files: r.files, notes: r.notes),
               ],
               tags: splitTags(r.tags),
@@ -205,9 +210,7 @@ class GenericRecordsTab extends ConsumerWidget {
               date: _date(r.date, units),
               headline: Formatters.currency(r.cost, symbol),
               headlineColor: t.accentGoldInk,
-              description: r.description.isEmpty
-                  ? _placeholder
-                  : r.description,
+              description: r.description.isEmpty ? _placeholder : r.description,
               meta: [
                 if (kind.hasOdometer)
                   RecordMetaItem(Icons.speed, _odoUnit(r.odometer, units)),
@@ -303,13 +306,10 @@ class FuelTab extends ConsumerWidget {
         // only then narrowed — computing them from a filtered list would
         // silently restate every figure on the screen.
         final rows = fuelRows(records, isElectric: units.isElectric);
-        final displayed = filter.sortStably(
-          [
-            for (var i = rows.length - 1; i >= 0; i--)
-              if (filter.matches(rows[i].record)) rows[i],
-          ],
-          (row) => row.record,
-        );
+        final displayed = filter.sortStably([
+          for (var i = rows.length - 1; i >= 0; i--)
+            if (filter.matches(rows[i].record)) rows[i],
+        ], (row) => row.record);
         // The pills stay lifetime figures, filter or no filter: an average
         // recomputed over an arbitrary subset of fill-ups is not this vehicle's
         // consumption, and the bar sits directly above them to say so.
@@ -394,10 +394,7 @@ class FuelTab extends ConsumerWidget {
                   Icons.trending_up,
                   _odoUnit(row.rawDelta, units),
                 ),
-                RecordMetaItem(
-                  Icons.local_gas_station,
-                  econMeta(row.rawRatio),
-                ),
+                RecordMetaItem(Icons.local_gas_station, econMeta(row.rawRatio)),
                 RecordMetaItem(Icons.sell, priceMeta(row.record)),
                 ..._extras(
                   l10n,
@@ -408,11 +405,8 @@ class FuelTab extends ConsumerWidget {
               tags: splitTags(row.record.tags),
               activeTags: filter.activeTags,
               onTagTap: filter.onTagTap,
-              onTap: () => showAddFuelForm(
-                context,
-                vehicleId,
-                existing: row.record,
-              ),
+              onTap: () =>
+                  showAddFuelForm(context, vehicleId, existing: row.record),
             );
           },
         );
@@ -447,12 +441,7 @@ class SupplyTab extends ConsumerWidget {
       facets: RecordFacets<SupplyRecord>(
         // A part is looked for by its number or its supplier at least as often
         // as by what it was called.
-        searchIn: (r) => [
-          r.description,
-          r.notes,
-          r.partNumber,
-          r.partSupplier,
-        ],
+        searchIn: (r) => [r.description, r.notes, r.partNumber, r.partSupplier],
         tagsOf: (r) => r.tags,
         sorts: [
           RecordSort(
@@ -480,9 +469,7 @@ class SupplyTab extends ConsumerWidget {
               date: _date(r.date, units),
               headline: Formatters.currency(r.cost, symbol),
               headlineColor: t.accentGoldInk,
-              description: r.description.isEmpty
-                  ? _placeholder
-                  : r.description,
+              description: r.description.isEmpty ? _placeholder : r.description,
               meta: [
                 if (r.partNumber.isNotEmpty)
                   RecordMetaItem(Icons.tag, r.partNumber),
@@ -566,9 +553,7 @@ class PlanTab extends ConsumerWidget {
               date: _date(r.dateCreated, units),
               headline: Formatters.currency(r.cost, symbol),
               headlineColor: t.accentGoldInk,
-              description: r.description.isEmpty
-                  ? _placeholder
-                  : r.description,
+              description: r.description.isEmpty ? _placeholder : r.description,
               meta: [
                 RecordMetaItem(
                   Icons.flag_outlined,
@@ -797,7 +782,8 @@ class EquipmentTab extends ConsumerWidget {
               tags: splitTags(r.tags),
               activeTags: filter.activeTags,
               onTagTap: filter.onTagTap,
-              onTap: () => showAddEquipmentForm(context, vehicleId, existing: r),
+              onTap: () =>
+                  showAddEquipmentForm(context, vehicleId, existing: r),
             );
           },
         );

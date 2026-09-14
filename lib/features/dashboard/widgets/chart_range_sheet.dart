@@ -215,7 +215,10 @@ class _Option extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 52),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     _RadioMark(selected: selected),
@@ -291,9 +294,7 @@ class _RadioMark extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: selected ? t.accent : null,
-        border: selected
-            ? null
-            : Border.all(color: t.textTertiary, width: 1.5),
+        border: selected ? null : Border.all(color: t.textTertiary, width: 1.5),
       ),
       child: selected ? Icon(Icons.check, size: 14, color: t.onAccent) : null,
     );

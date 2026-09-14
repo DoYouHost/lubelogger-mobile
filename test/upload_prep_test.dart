@@ -53,11 +53,7 @@ void main() {
   test('order is preserved across a mixed selection', () async {
     // The result goes straight to the upload, so a reordering would pair the
     // wrong names with the wrong bytes.
-    final files = [
-      write('a.pdf', 10),
-      write('b.txt', 10),
-      write('c.pdf', 10),
-    ];
+    final files = [write('a.pdf', 10), write('b.txt', 10), write('c.pdf', 10)];
 
     expect(await prepareForUpload(files), files);
   });

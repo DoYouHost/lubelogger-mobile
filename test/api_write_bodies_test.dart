@@ -26,7 +26,7 @@ import 'package:lubelogger_mobile/data/vehicles_repository.dart';
 /// against the shape the controllers actually read.
 class _CapturingAdapter implements HttpClientAdapter {
   _CapturingAdapter({this.status = 200, Map<String, dynamic>? response})
-      : response = response ?? const {'success': true, 'message': ''};
+    : response = response ?? const {'success': true, 'message': ''};
 
   final int status;
   final Map<String, dynamic> response;
@@ -104,7 +104,10 @@ Map<String, dynamic> _body(_CapturingAdapter adapter) =>
 
 /// One write, named, so the shared-encoding tests can drive every record type
 /// through the same assertion instead of restating it per method.
-typedef _Write = ({String what, Future<void> Function(VehiclesRepository) call});
+typedef _Write = ({
+  String what,
+  Future<void> Function(VehiclesRepository) call,
+});
 
 final _date = DateTime(2026, 4, 5, 23, 59);
 
@@ -113,35 +116,35 @@ final List<_Write> _dateWrites = [
   (
     what: 'gas add',
     call: (repo) => repo.addGasRecord(
-          vehicleId: 1,
-          date: _date,
-          odometer: 1000,
-          fuelConsumed: 40,
-          cost: 12,
-          isFillToFull: true,
-          missedFuelUp: false,
-        ),
+      vehicleId: 1,
+      date: _date,
+      odometer: 1000,
+      fuelConsumed: 40,
+      cost: 12,
+      isFillToFull: true,
+      missedFuelUp: false,
+    ),
   ),
   (
     what: 'service add',
     call: (repo) => repo.addRecord(
-          kind: RecordKind.service,
-          vehicleId: 1,
-          date: _date,
-          description: 'Oil change',
-          cost: 12,
-          odometer: 1000,
-        ),
+      kind: RecordKind.service,
+      vehicleId: 1,
+      date: _date,
+      description: 'Oil change',
+      cost: 12,
+      odometer: 1000,
+    ),
   ),
   (
     what: 'tax update',
     call: (repo) => repo.updateRecord(
-          kind: RecordKind.tax,
-          id: 7,
-          date: _date,
-          description: 'Road tax',
-          cost: 12,
-        ),
+      kind: RecordKind.tax,
+      id: 7,
+      date: _date,
+      description: 'Road tax',
+      cost: 12,
+    ),
   ),
   (
     what: 'odometer add',
@@ -151,21 +154,21 @@ final List<_Write> _dateWrites = [
   (
     what: 'supply add',
     call: (repo) => repo.addSupplyRecord(
-          vehicleId: 1,
-          date: _date,
-          description: 'Filters',
-          partQuantity: 2,
-          cost: 12,
-        ),
+      vehicleId: 1,
+      date: _date,
+      description: 'Filters',
+      partQuantity: 2,
+      cost: 12,
+    ),
   ),
   (
     what: 'reminder add',
     call: (repo) => repo.addReminder(
-          vehicleId: 1,
-          description: 'Service',
-          metric: ReminderMetric.date,
-          dueDate: _date,
-        ),
+      vehicleId: 1,
+      description: 'Service',
+      metric: ReminderMetric.date,
+      dueDate: _date,
+    ),
   ),
 ];
 
@@ -175,38 +178,38 @@ final List<_Write> _odometerWrites = [
   (
     what: 'gas add',
     call: (repo) => repo.addGasRecord(
-          vehicleId: 1,
-          date: _date,
-          odometer: 62137.44,
-          fuelConsumed: 40,
-          cost: 12,
-          isFillToFull: true,
-          missedFuelUp: false,
-        ),
+      vehicleId: 1,
+      date: _date,
+      odometer: 62137.44,
+      fuelConsumed: 40,
+      cost: 12,
+      isFillToFull: true,
+      missedFuelUp: false,
+    ),
   ),
   (
     what: 'gas update',
     call: (repo) => repo.updateGasRecord(
-          vehicleId: 1,
-          id: 7,
-          date: _date,
-          odometer: 62137.44,
-          fuelConsumed: 40,
-          cost: 12,
-          isFillToFull: true,
-          missedFuelUp: false,
-        ),
+      vehicleId: 1,
+      id: 7,
+      date: _date,
+      odometer: 62137.44,
+      fuelConsumed: 40,
+      cost: 12,
+      isFillToFull: true,
+      missedFuelUp: false,
+    ),
   ),
   (
     what: 'service add',
     call: (repo) => repo.addRecord(
-          kind: RecordKind.service,
-          vehicleId: 1,
-          date: _date,
-          description: 'Oil change',
-          cost: 12,
-          odometer: 62137.44,
-        ),
+      kind: RecordKind.service,
+      vehicleId: 1,
+      date: _date,
+      description: 'Oil change',
+      cost: 12,
+      odometer: 62137.44,
+    ),
   ),
   (
     what: 'odometer add',
@@ -216,11 +219,11 @@ final List<_Write> _odometerWrites = [
   (
     what: 'reminder add',
     call: (repo) => repo.addReminder(
-          vehicleId: 1,
-          description: 'Service',
-          metric: ReminderMetric.odometer,
-          dueOdometer: 62137.44,
-        ),
+      vehicleId: 1,
+      description: 'Service',
+      metric: ReminderMetric.odometer,
+      dueOdometer: 62137.44,
+    ),
   ),
 ];
 
@@ -229,46 +232,46 @@ final List<_Write> _costWrites = [
   (
     what: 'gas add',
     call: (repo) => repo.addGasRecord(
-          vehicleId: 1,
-          date: _date,
-          odometer: 1000,
-          fuelConsumed: 40,
-          cost: 1234.56,
-          isFillToFull: true,
-          missedFuelUp: false,
-        ),
+      vehicleId: 1,
+      date: _date,
+      odometer: 1000,
+      fuelConsumed: 40,
+      cost: 1234.56,
+      isFillToFull: true,
+      missedFuelUp: false,
+    ),
   ),
   (
     what: 'repair add',
     call: (repo) => repo.addRecord(
-          kind: RecordKind.repair,
-          vehicleId: 1,
-          date: _date,
-          description: 'Brakes',
-          cost: 1234.56,
-          odometer: 1000,
-        ),
+      kind: RecordKind.repair,
+      vehicleId: 1,
+      date: _date,
+      description: 'Brakes',
+      cost: 1234.56,
+      odometer: 1000,
+    ),
   ),
   (
     what: 'supply add',
     call: (repo) => repo.addSupplyRecord(
-          vehicleId: 1,
-          date: _date,
-          description: 'Filters',
-          partQuantity: 2,
-          cost: 1234.56,
-        ),
+      vehicleId: 1,
+      date: _date,
+      description: 'Filters',
+      partQuantity: 2,
+      cost: 1234.56,
+    ),
   ),
   (
     what: 'plan add',
     call: (repo) => repo.addPlanRecord(
-          vehicleId: 1,
-          description: 'Winter tyres',
-          cost: 1234.56,
-          type: PlanType.upgrade,
-          priority: PlanPriority.normal,
-          progress: PlanProgress.backlog,
-        ),
+      vehicleId: 1,
+      description: 'Winter tyres',
+      cost: 1234.56,
+      type: PlanType.upgrade,
+      priority: PlanPriority.normal,
+      progress: PlanProgress.backlog,
+    ),
   ),
 ];
 
@@ -279,85 +282,89 @@ final List<_Write> _allAdds = [
   (
     what: 'plan add',
     call: (repo) => repo.addPlanRecord(
-          vehicleId: 1,
-          description: 'Winter tyres',
-          cost: 12,
-          type: PlanType.upgrade,
-          priority: PlanPriority.normal,
-          progress: PlanProgress.backlog,
-        ),
+      vehicleId: 1,
+      description: 'Winter tyres',
+      cost: 12,
+      type: PlanType.upgrade,
+      priority: PlanPriority.normal,
+      progress: PlanProgress.backlog,
+    ),
   ),
   (
     what: 'note add',
-    call: (repo) => repo.addNote(
-          vehicleId: 1,
-          description: 'Key code',
-          noteText: '1234',
-        ),
+    call: (repo) =>
+        repo.addNote(vehicleId: 1, description: 'Key code', noteText: '1234'),
   ),
   (
     what: 'equipment add',
     call: (repo) => repo.addEquipmentRecord(
-          vehicleId: 1,
-          description: 'Winter tyres',
-          isEquipped: true,
-        ),
+      vehicleId: 1,
+      description: 'Winter tyres',
+      isEquipped: true,
+    ),
   ),
   (
     what: 'vehicle add',
     call: (repo) => repo.addVehicle(
-          year: 2019,
-          make: 'Skoda',
-          model: 'Octavia',
-          licensePlate: 'WX 1234A',
-          fuelType: 'Diesel',
-        ),
+      year: 2019,
+      make: 'Skoda',
+      model: 'Octavia',
+      licensePlate: 'WX 1234A',
+      fuelType: 'Diesel',
+    ),
   ),
 ];
 
 void main() {
   group('shared scalar encodings', () {
     for (final write in _dateWrites) {
-      test('${write.what} sends an unambiguous ISO date, time of day dropped',
-          () async {
-        // The server parses with the invariant culture but stores a date only;
-        // a "4/5/2026" would read as a different day under `M/d/yyyy` vs
-        // `d/M/yyyy`, and a trailing time survives into the stored record.
-        final (:repo, :adapter) = _repo();
+      test(
+        '${write.what} sends an unambiguous ISO date, time of day dropped',
+        () async {
+          // The server parses with the invariant culture but stores a date only;
+          // a "4/5/2026" would read as a different day under `M/d/yyyy` vs
+          // `d/M/yyyy`, and a trailing time survives into the stored record.
+          final (:repo, :adapter) = _repo();
 
-        await write.call(repo);
+          await write.call(repo);
 
-        final sent = _body(adapter)['date'] ?? _body(adapter)['dueDate'];
-        expect(sent, '2026-04-05');
-      });
+          final sent = _body(adapter)['date'] ?? _body(adapter)['dueDate'];
+          expect(sent, '2026-04-05');
+        },
+      );
     }
 
     for (final write in _odometerWrites) {
-      test('${write.what} rounds the odometer to what int.Parse accepts',
-          () async {
-        // Every odometer field on the server is `int.Parse`d (gas records
-        // included: GasController `Mileage = int.Parse(input.Odometer)`), so a
-        // "62137.44" from the mi→km round-trip is a 500, not a rounded record.
-        final (:repo, :adapter) = _repo();
+      test(
+        '${write.what} rounds the odometer to what int.Parse accepts',
+        () async {
+          // Every odometer field on the server is `int.Parse`d (gas records
+          // included: GasController `Mileage = int.Parse(input.Odometer)`), so a
+          // "62137.44" from the mi→km round-trip is a 500, not a rounded record.
+          final (:repo, :adapter) = _repo();
 
-        await write.call(repo);
+          await write.call(repo);
 
-        final sent = (_body(adapter)['odometer'] ??
-            _body(adapter)['dueOdometer']) as String;
-        expect(sent, '62137');
-        expect(int.tryParse(sent), isNotNull, reason: 'sent "$sent"');
-      });
+          final sent =
+              (_body(adapter)['odometer'] ?? _body(adapter)['dueOdometer'])
+                  as String;
+          expect(sent, '62137');
+          expect(int.tryParse(sent), isNotNull, reason: 'sent "$sent"');
+        },
+      );
     }
 
     for (final write in _costWrites) {
-      test('${write.what} keeps the cost decimals with a dot separator',
-          () async {
-        final (:repo, :adapter) = _repo();
+      test(
+        '${write.what} keeps the cost decimals with a dot separator',
+        () async {
+          final (:repo, :adapter) = _repo();
 
-        await write.call(repo);
+          await write.call(repo);
 
-        expect(_body(adapter)['cost'], '1234.56');
-      });
+          expect(_body(adapter)['cost'], '1234.56');
+        },
+      );
     }
 
     test('a whole-number cost is not padded to decimals', () async {
@@ -378,33 +385,33 @@ void main() {
     test('flags go out as words bool.Parse accepts', () async {
       final flagWrites = <String, Future<void> Function(VehiclesRepository)>{
         'isFillToFull': (repo) => repo.addGasRecord(
-              vehicleId: 1,
-              date: _date,
-              odometer: 1000,
-              fuelConsumed: 40,
-              cost: 12,
-              isFillToFull: true,
-              missedFuelUp: false,
-            ),
+          vehicleId: 1,
+          date: _date,
+          odometer: 1000,
+          fuelConsumed: 40,
+          cost: 12,
+          isFillToFull: true,
+          missedFuelUp: false,
+        ),
         'pinned': (repo) => repo.addNote(
-              vehicleId: 1,
-              description: 'Key code',
-              noteText: '1234',
-              pinned: true,
-            ),
+          vehicleId: 1,
+          description: 'Key code',
+          noteText: '1234',
+          pinned: true,
+        ),
         'isEquipped': (repo) => repo.addEquipmentRecord(
-              vehicleId: 1,
-              description: 'Winter tyres',
-              isEquipped: true,
-            ),
+          vehicleId: 1,
+          description: 'Winter tyres',
+          isEquipped: true,
+        ),
         'useEngineHours': (repo) => repo.addVehicle(
-              year: 2019,
-              make: 'Kubota',
-              model: 'L1501',
-              licensePlate: 'WX 1234A',
-              fuelType: 'Diesel',
-              useHours: true,
-            ),
+          year: 2019,
+          make: 'Kubota',
+          model: 'L1501',
+          licensePlate: 'WX 1234A',
+          fuelType: 'Diesel',
+          useHours: true,
+        ),
       };
 
       for (final entry in flagWrites.entries) {
@@ -419,8 +426,7 @@ void main() {
     });
 
     for (final write in _allAdds) {
-      test('${write.what} sends a body that is JSON with no nulls in it',
-          () async {
+      test('${write.what} sends a body that is JSON with no nulls in it', () async {
         // A null reaches the server as JSON null, which the string-typed export
         // models bind as an empty field — the required-field check then answers
         // 400 for a value the user did fill in.
@@ -472,44 +478,46 @@ void main() {
       });
     });
 
-    test('an update carries id and vehicleId in the body, not the query',
-        () async {
-      final (:repo, :adapter) = _repo();
+    test(
+      'an update carries id and vehicleId in the body, not the query',
+      () async {
+        final (:repo, :adapter) = _repo();
 
-      await repo.updateGasRecord(
-        vehicleId: 3,
-        id: 7,
-        date: _date,
-        odometer: 317240,
-        fuelConsumed: 41.53,
-        cost: 221.50,
-        isFillToFull: false,
-        missedFuelUp: true,
-        startingSoc: 18,
-        endingSoc: 92,
-      );
+        await repo.updateGasRecord(
+          vehicleId: 3,
+          id: 7,
+          date: _date,
+          odometer: 317240,
+          fuelConsumed: 41.53,
+          cost: 221.50,
+          isFillToFull: false,
+          missedFuelUp: true,
+          startingSoc: 18,
+          endingSoc: 92,
+        );
 
-      final request = _request(adapter);
-      expect(request.method, 'PUT');
-      expect(request.path, Endpoints.gasRecordsUpdate);
-      expect(request.uri.queryParameters, isEmpty);
-      expect(_body(adapter), {
-        'id': '7',
-        'vehicleId': '3',
-        'date': '2026-04-05',
-        'odometer': '317240',
-        'fuelConsumed': '41.53',
-        'cost': '221.5',
-        'isFillToFull': 'false',
-        'missedFuelUp': 'true',
-        'startingSoc': '18',
-        'endingSoc': '92',
-        'notes': '',
-        'tags': '',
-        'files': <Map<String, dynamic>>[],
-        'extraFields': <Map<String, dynamic>>[],
-      });
-    });
+        final request = _request(adapter);
+        expect(request.method, 'PUT');
+        expect(request.path, Endpoints.gasRecordsUpdate);
+        expect(request.uri.queryParameters, isEmpty);
+        expect(_body(adapter), {
+          'id': '7',
+          'vehicleId': '3',
+          'date': '2026-04-05',
+          'odometer': '317240',
+          'fuelConsumed': '41.53',
+          'cost': '221.5',
+          'isFillToFull': 'false',
+          'missedFuelUp': 'true',
+          'startingSoc': '18',
+          'endingSoc': '92',
+          'notes': '',
+          'tags': '',
+          'files': <Map<String, dynamic>>[],
+          'extraFields': <Map<String, dynamic>>[],
+        });
+      },
+    );
   });
 
   group('generic records', () {
@@ -559,26 +567,28 @@ void main() {
       expect(_body(adapter).containsKey('odometer'), isFalse);
     });
 
-    test('an update sends id and lets the server resolve the vehicle',
-        () async {
-      final (:repo, :adapter) = _repo();
+    test(
+      'an update sends id and lets the server resolve the vehicle',
+      () async {
+        final (:repo, :adapter) = _repo();
 
-      await repo.updateRecord(
-        kind: RecordKind.service,
-        id: 12,
-        date: _date,
-        description: 'Oil change',
-        cost: 470,
-        odometer: 320447,
-      );
+        await repo.updateRecord(
+          kind: RecordKind.service,
+          id: 12,
+          date: _date,
+          description: 'Oil change',
+          cost: 470,
+          odometer: 320447,
+        );
 
-      final request = _request(adapter);
-      expect(request.method, 'PUT');
-      expect(request.path, '${Endpoints.serviceRecords}/update');
-      expect(request.uri.queryParameters, isEmpty);
-      expect(_body(adapter)['id'], '12');
-      expect(_body(adapter).containsKey('vehicleId'), isFalse);
-    });
+        final request = _request(adapter);
+        expect(request.method, 'PUT');
+        expect(request.path, '${Endpoints.serviceRecords}/update');
+        expect(request.uri.queryParameters, isEmpty);
+        expect(_body(adapter)['id'], '12');
+        expect(_body(adapter).containsKey('vehicleId'), isFalse);
+      },
+    );
   });
 
   group('odometer records', () {
@@ -1002,23 +1012,25 @@ void main() {
       expect(form.files.single.value.filename, 'invoice.pdf');
     });
 
-    test('the uploaded files come back as attachments to send on a write',
-        () async {
-      // The endpoint answers with a bare array of UploadedFiles — no
-      // `success` envelope — and omits `isPending` for API uploads.
-      final (:repo, adapter: _) = uploader(const [
-        {'name': 'invoice.pdf', 'location': '/documents/abc.pdf'},
-      ]);
-      final file = tempPdf('invoice.pdf');
+    test(
+      'the uploaded files come back as attachments to send on a write',
+      () async {
+        // The endpoint answers with a bare array of UploadedFiles — no
+        // `success` envelope — and omits `isPending` for API uploads.
+        final (:repo, adapter: _) = uploader(const [
+          {'name': 'invoice.pdf', 'location': '/documents/abc.pdf'},
+        ]);
+        final file = tempPdf('invoice.pdf');
 
-      final attachments = await repo.uploadDocuments([
-        (path: file.path, name: 'invoice.pdf'),
-      ]);
+        final attachments = await repo.uploadDocuments([
+          (path: file.path, name: 'invoice.pdf'),
+        ]);
 
-      expect(attachments.single.name, 'invoice.pdf');
-      expect(attachments.single.location, '/documents/abc.pdf');
-      expect(attachments.single.isPending, isFalse);
-    });
+        expect(attachments.single.name, 'invoice.pdf');
+        expect(attachments.single.location, '/documents/abc.pdf');
+        expect(attachments.single.isPending, isFalse);
+      },
+    );
 
     test('the part header is camel-case Content-Disposition', () async {
       // Both spellings are legal per RFC 7578 and LubeLogger parses either, but
@@ -1033,19 +1045,21 @@ void main() {
       expect(wire, isNot(contains('content-disposition:')));
     });
 
-    test('the declared Content-Length matches the bytes actually sent',
-        () async {
-      // A body shorter than its Content-Length is the one client-side defect
-      // that would produce issue #15's edge-generated 502 on a request the
-      // server never sees.
-      final (:repo, :adapter) = uploader(const []);
-      final file = tempPdf('invoice.pdf');
+    test(
+      'the declared Content-Length matches the bytes actually sent',
+      () async {
+        // A body shorter than its Content-Length is the one client-side defect
+        // that would produce issue #15's edge-generated 502 on a request the
+        // server never sees.
+        final (:repo, :adapter) = uploader(const []);
+        final file = tempPdf('invoice.pdf');
 
-      await repo.uploadDocuments([(path: file.path, name: 'invoice.pdf')]);
+        await repo.uploadDocuments([(path: file.path, name: 'invoice.pdf')]);
 
-      final declared = adapter.captured!.headers[Headers.contentLengthHeader];
-      expect(int.parse('$declared'), adapter.body!.length);
-    });
+        final declared = adapter.captured!.headers[Headers.contentLengthHeader];
+        expect(int.parse('$declared'), adapter.body!.length);
+      },
+    );
 
     test('the upload gets its own timeouts, not the global 15s', () async {
       // Dio spends `sendTimeout` on the whole body in one go, so the global
@@ -1063,43 +1077,48 @@ void main() {
   });
 
   group('deletes', () {
-    final deletes = <String, ({String path, Future<void> Function(
-      VehiclesRepository,
-    ) call})>{
-      'gas': (
-        path: Endpoints.gasRecordsDelete,
-        call: (repo) => repo.deleteGasRecord(7)
-      ),
-      'service': (
-        path: '${Endpoints.serviceRecords}/delete',
-        call: (repo) => repo.deleteRecord(RecordKind.service, 7)
-      ),
-      'odometer': (
-        path: Endpoints.odometerRecordsDelete,
-        call: (repo) => repo.deleteOdometerRecord(7)
-      ),
-      'supply': (
-        path: Endpoints.supplyRecordsDelete,
-        call: (repo) => repo.deleteSupplyRecord(7)
-      ),
-      'plan': (
-        path: Endpoints.planRecordsDelete,
-        call: (repo) => repo.deletePlanRecord(7)
-      ),
-      'reminder': (
-        path: Endpoints.remindersDelete,
-        call: (repo) => repo.deleteReminder(7)
-      ),
-      'note': (path: Endpoints.notesDelete, call: (repo) => repo.deleteNote(7)),
-      'equipment': (
-        path: Endpoints.equipmentRecordsDelete,
-        call: (repo) => repo.deleteEquipmentRecord(7)
-      ),
-      'vehicle': (
-        path: Endpoints.vehiclesDelete,
-        call: (repo) => repo.deleteVehicle(7)
-      ),
-    };
+    final deletes =
+        <
+          String,
+          ({String path, Future<void> Function(VehiclesRepository) call})
+        >{
+          'gas': (
+            path: Endpoints.gasRecordsDelete,
+            call: (repo) => repo.deleteGasRecord(7),
+          ),
+          'service': (
+            path: '${Endpoints.serviceRecords}/delete',
+            call: (repo) => repo.deleteRecord(RecordKind.service, 7),
+          ),
+          'odometer': (
+            path: Endpoints.odometerRecordsDelete,
+            call: (repo) => repo.deleteOdometerRecord(7),
+          ),
+          'supply': (
+            path: Endpoints.supplyRecordsDelete,
+            call: (repo) => repo.deleteSupplyRecord(7),
+          ),
+          'plan': (
+            path: Endpoints.planRecordsDelete,
+            call: (repo) => repo.deletePlanRecord(7),
+          ),
+          'reminder': (
+            path: Endpoints.remindersDelete,
+            call: (repo) => repo.deleteReminder(7),
+          ),
+          'note': (
+            path: Endpoints.notesDelete,
+            call: (repo) => repo.deleteNote(7),
+          ),
+          'equipment': (
+            path: Endpoints.equipmentRecordsDelete,
+            call: (repo) => repo.deleteEquipmentRecord(7),
+          ),
+          'vehicle': (
+            path: Endpoints.vehiclesDelete,
+            call: (repo) => repo.deleteVehicle(7),
+          ),
+        };
 
     for (final entry in deletes.entries) {
       test('a ${entry.key} delete is DELETE ?id=', () async {
@@ -1152,8 +1171,11 @@ void main() {
       await expectLater(
         repo.deleteVehicle(7),
         throwsA(
-          isA<AuthException>()
-              .having((e) => e.code, 'code', AppErrorCode.unauthorized),
+          isA<AuthException>().having(
+            (e) => e.code,
+            'code',
+            AppErrorCode.unauthorized,
+          ),
         ),
       );
     });
@@ -1167,8 +1189,11 @@ void main() {
       await expectLater(
         repo.deleteVehicle(7),
         throwsA(
-          isA<ApiException>()
-              .having((e) => e.code, 'code', AppErrorCode.unsupportedByServer),
+          isA<ApiException>().having(
+            (e) => e.code,
+            'code',
+            AppErrorCode.unsupportedByServer,
+          ),
         ),
       );
     });

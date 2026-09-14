@@ -8,12 +8,11 @@ VehicleUnits units({
   FuelEconomyUnit economy = FuelEconomyUnit.l100km,
   bool isElectric = false,
   bool useHours = false,
-}) =>
-    VehicleUnits(
-      UnitsSettings(base: base, distance: distance, economy: economy),
-      isElectric: isElectric,
-      useHours: useHours,
-    );
+}) => VehicleUnits(
+  UnitsSettings(base: base, distance: distance, economy: economy),
+  isElectric: isElectric,
+  useHours: useHours,
+);
 
 void main() {
   group('odometer round-trip', () {
@@ -85,13 +84,17 @@ void main() {
         closeTo(15.97, 0.01),
       );
       expect(
-        units(isElectric: true, economy: FuelEconomyUnit.kmPerL)
-            .economyValue(626, 100),
+        units(
+          isElectric: true,
+          economy: FuelEconomyUnit.kmPerL,
+        ).economyValue(626, 100),
         closeTo(6.26, 0.01),
       );
       expect(
-        units(isElectric: true, economy: FuelEconomyUnit.mpg)
-            .economyValue(626, 100),
+        units(
+          isElectric: true,
+          economy: FuelEconomyUnit.mpg,
+        ).economyValue(626, 100),
         closeTo(626 * 0.621371 / 100, 0.01),
       );
     });
@@ -100,9 +103,10 @@ void main() {
       // An imperial server stores miles and gallons — but a kWh is a kWh, so
       // reading the same numbers as miles may only stretch the distance half.
       const electricKmPerKwh = FuelEconomyUnit.kmPerL;
-      final metric =
-          units(isElectric: true, economy: electricKmPerKwh)
-              .economyValue(626, 100)!;
+      final metric = units(
+        isElectric: true,
+        economy: electricKmPerKwh,
+      ).economyValue(626, 100)!;
       final imperial = units(
         base: MeasurementSystem.imperial,
         isElectric: true,

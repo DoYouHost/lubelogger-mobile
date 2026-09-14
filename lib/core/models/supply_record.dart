@@ -23,20 +23,20 @@ class SupplyRecord {
   });
 
   factory SupplyRecord.fromJson(Map<String, dynamic> json) => SupplyRecord(
-        id: toInt(json['id']),
-        date: calendarDateFromJson(json['date']),
-        description: (json['description'] as String?) ?? '',
-        cost: toDouble(json['cost']),
-        partNumber: (json['partNumber'] as String?) ?? '',
-        partSupplier: (json['partSupplier'] as String?) ?? '',
-        // Sent as a number under culture-invariant; keep a trimmed string for
-        // display and re-parse it for the edit form.
-        partQuantity: _toNumString(json['partQuantity']),
-        notes: (json['notes'] as String?) ?? '',
-        tags: (json['tags'] as String?) ?? '',
-        files: Attachment.listFrom(json['files']),
-        extraFields: ExtraField.listFrom(json['extraFields']),
-      );
+    id: toInt(json['id']),
+    date: calendarDateFromJson(json['date']),
+    description: (json['description'] as String?) ?? '',
+    cost: toDouble(json['cost']),
+    partNumber: (json['partNumber'] as String?) ?? '',
+    partSupplier: (json['partSupplier'] as String?) ?? '',
+    // Sent as a number under culture-invariant; keep a trimmed string for
+    // display and re-parse it for the edit form.
+    partQuantity: _toNumString(json['partQuantity']),
+    notes: (json['notes'] as String?) ?? '',
+    tags: (json['tags'] as String?) ?? '',
+    files: Attachment.listFrom(json['files']),
+    extraFields: ExtraField.listFrom(json['extraFields']),
+  );
 
   final int id;
   final DateTime? date;
@@ -54,9 +54,8 @@ class SupplyRecord {
   /// A numeric wire value as a display string, dropping a trailing `.0`
   /// (`2.0` → "2", `1.5` → "1.5"); already-string values pass through.
   static String _toNumString(Object? v) => switch (v) {
-        final String s => s,
-        final num n =>
-          n == n.roundToDouble() ? n.toInt().toString() : n.toString(),
-        _ => '',
-      };
+    final String s => s,
+    final num n => n == n.roundToDouble() ? n.toInt().toString() : n.toString(),
+    _ => '',
+  };
 }

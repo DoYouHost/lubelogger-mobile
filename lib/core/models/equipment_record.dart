@@ -19,7 +19,8 @@ class EquipmentRecord {
     this.extraFields = const [],
   });
 
-  factory EquipmentRecord.fromJson(Map<String, dynamic> json) => EquipmentRecord(
+  factory EquipmentRecord.fromJson(Map<String, dynamic> json) =>
+      EquipmentRecord(
         id: toInt(json['id']),
         description: (json['description'] as String?) ?? '',
         isEquipped: toBoolOrFalse(json['isEquipped']),

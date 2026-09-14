@@ -157,9 +157,11 @@ class ChartWindow {
 /// chart never has a handful of slots or several dozen.
 ChartBucket bucketFor(DateTime start, DateTime end) {
   final days =
-      DateTime.utc(end.year, end.month, end.day)
-          .difference(DateTime.utc(start.year, start.month, start.day))
-          .inDays +
+      DateTime.utc(
+        end.year,
+        end.month,
+        end.day,
+      ).difference(DateTime.utc(start.year, start.month, start.day)).inDays +
       1;
   if (days <= 93) return ChartBucket.week;
   final months = (end.year - start.year) * 12 + end.month - start.month + 1;

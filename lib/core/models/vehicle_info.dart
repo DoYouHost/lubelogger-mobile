@@ -21,19 +21,18 @@ class VehicleInfo {
   });
 
   factory VehicleInfo.fromJson(Map<String, dynamic> json) => VehicleInfo(
-        vehicle:
-            Vehicle.fromJson(json['vehicleData'] as Map<String, dynamic>),
-        lastReportedOdometer: toDouble(json['lastReportedOdometer']),
-        serviceRecordCost: toDouble(json['serviceRecordCost']),
-        repairRecordCost: toDouble(json['repairRecordCost']),
-        upgradeRecordCost: toDouble(json['upgradeRecordCost']),
-        taxRecordCost: toDouble(json['taxRecordCost']),
-        gasRecordCost: toDouble(json['gasRecordCost']),
-        veryUrgentReminderCount: toInt(json['veryUrgentReminderCount']),
-        urgentReminderCount: toInt(json['urgentReminderCount']),
-        notUrgentReminderCount: toInt(json['notUrgentReminderCount']),
-        pastDueReminderCount: toInt(json['pastDueReminderCount']),
-      );
+    vehicle: Vehicle.fromJson(json['vehicleData'] as Map<String, dynamic>),
+    lastReportedOdometer: toDouble(json['lastReportedOdometer']),
+    serviceRecordCost: toDouble(json['serviceRecordCost']),
+    repairRecordCost: toDouble(json['repairRecordCost']),
+    upgradeRecordCost: toDouble(json['upgradeRecordCost']),
+    taxRecordCost: toDouble(json['taxRecordCost']),
+    gasRecordCost: toDouble(json['gasRecordCost']),
+    veryUrgentReminderCount: toInt(json['veryUrgentReminderCount']),
+    urgentReminderCount: toInt(json['urgentReminderCount']),
+    notUrgentReminderCount: toInt(json['notUrgentReminderCount']),
+    pastDueReminderCount: toInt(json['pastDueReminderCount']),
+  );
 
   final Vehicle vehicle;
   final double lastReportedOdometer;

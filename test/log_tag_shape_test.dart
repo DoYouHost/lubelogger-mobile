@@ -15,7 +15,10 @@ List<(String file, String id)> _declaredTags() {
   );
   // The shared dialog names its two buttons from the id it is handed, so that
   // id is a tag declared here like any other.
-  final handedOver = RegExp(r"""confirmDialog\([^;]*?id: '([^']*)'""", dotAll: true);
+  final handedOver = RegExp(
+    r"""confirmDialog\([^;]*?id: '([^']*)'""",
+    dotAll: true,
+  );
   final comment = RegExp(r'^\s*//.*$', multiLine: true);
   final found = <(String, String)>[];
   for (final entity in Directory('lib').listSync(recursive: true)) {

@@ -54,8 +54,12 @@ class _QuickActionHandlerState extends ConsumerState<QuickActionHandler> {
     String evt, {
     LogLevel lvl = LogLevel.info,
     Map<String, Object?> fields = const {},
-  }) =>
-      DiagnosticRecorder.active?.add(LogSource.app, evt, lvl: lvl, fields: fields);
+  }) => DiagnosticRecorder.active?.add(
+    LogSource.app,
+    evt,
+    lvl: lvl,
+    fields: fields,
+  );
 
   void _onPending() {
     final action = pendingQuickAction.value;

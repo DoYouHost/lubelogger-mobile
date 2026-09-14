@@ -52,13 +52,15 @@ class _ScriptedAdapter implements HttpClientAdapter {
   final adapter = _ScriptedAdapter(outcomes);
   final slept = <Duration>[];
   dio.httpClientAdapter = adapter;
-  dio.interceptors.add(RetryInterceptor(
-    dio: dio,
-    status: status,
-    maxAttempts: maxAttempts,
-    // Deterministic and instant: the delay is asserted, never waited through.
-    sleep: (d) async => slept.add(d),
-  ));
+  dio.interceptors.add(
+    RetryInterceptor(
+      dio: dio,
+      status: status,
+      maxAttempts: maxAttempts,
+      // Deterministic and instant: the delay is asserted, never waited through.
+      sleep: (d) async => slept.add(d),
+    ),
+  );
   return (dio: dio, adapter: adapter, slept: slept);
 }
 
@@ -67,8 +69,10 @@ void main() {
 
   group('retries', () {
     test('a dropped connection is tried again and succeeds', () async {
-      final (:dio, :adapter, slept: _) =
-          _client([DioExceptionType.connectionError, 200]);
+      final (:dio, :adapter, slept: _) = _client([
+        DioExceptionType.connectionError,
+        200,
+      ]);
 
       final res = await dio.get<Map<String, dynamic>>('/api/vehicles');
 
@@ -84,22 +88,28 @@ void main() {
     });
 
     test('attempts stop at the cap and the failure surfaces', () async {
-      final (:dio, :adapter, :slept) =
-          _client([DioExceptionType.connectionError]);
+      final (:dio, :adapter, :slept) = _client([
+        DioExceptionType.connectionError,
+      ]);
 
-      await expectLater(dio.get<dynamic>('/api/vehicles'), throwsA(
-        isA<DioException>()
-            .having((e) => e.type, 'type', DioExceptionType.connectionError),
-      ));
+      await expectLater(
+        dio.get<dynamic>('/api/vehicles'),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.type,
+            'type',
+            DioExceptionType.connectionError,
+          ),
+        ),
+      );
       expect(adapter.calls, kDefaultMaxAttempts);
       expect(slept, hasLength(kDefaultMaxAttempts - 1));
     });
 
     test('each wait is longer than the last, and none is zero', () async {
-      final (:dio, adapter: _, :slept) = _client(
-        [DioExceptionType.connectionError],
-        maxAttempts: 4,
-      );
+      final (:dio, adapter: _, :slept) = _client([
+        DioExceptionType.connectionError,
+      ], maxAttempts: 4);
 
       await expectLater(dio.get<dynamic>('/api/vehicles'), throwsA(anything));
 
@@ -130,8 +140,9 @@ void main() {
       // The point of the exclusion: three receive timeouts would turn a 15s
       // failure into a 45s one, and the stale copy the user could have had
       // arrives three times later.
-      final (:dio, :adapter, slept: _) =
-          _client([DioExceptionType.receiveTimeout]);
+      final (:dio, :adapter, slept: _) = _client([
+        DioExceptionType.receiveTimeout,
+      ]);
 
       await expectLater(
         dio.get<dynamic>('/api/vehicles'),
@@ -141,8 +152,9 @@ void main() {
     });
 
     test('a write — re-sending an add can create the record twice', () async {
-      final (:dio, :adapter, slept: _) =
-          _client([DioExceptionType.connectionError]);
+      final (:dio, :adapter, slept: _) = _client([
+        DioExceptionType.connectionError,
+      ]);
 
       await expectLater(
         dio.post<dynamic>('/api/vehicle/gasrecords/add', data: {'cost': '1'}),
@@ -155,8 +167,9 @@ void main() {
       // The offline banner is already up; retrying only makes every screen
       // slower to fall back to its stored copy.
       final status = OfflineStatus()..unreachable();
-      final (:dio, :adapter, slept: _) =
-          _client([DioExceptionType.connectionError], status: status);
+      final (:dio, :adapter, slept: _) = _client([
+        DioExceptionType.connectionError,
+      ], status: status);
 
       await expectLater(
         dio.get<dynamic>('/api/vehicles'),
@@ -200,8 +213,10 @@ void main() {
     }
 
     test('a blip is retried, not turned into "you are offline"', () async {
-      final (:dio, :status, :cache) =
-          chain([DioExceptionType.connectionError, 200]);
+      final (:dio, :status, :cache) = chain([
+        DioExceptionType.connectionError,
+        200,
+      ]);
       await cache.write(
         HttpCache.keyFor(method: 'GET', path: '/api/vehicles', query: const {}),
         {'ok': 'stale'},
@@ -213,18 +228,26 @@ void main() {
       expect(status.offline, isFalse, reason: 'no banner for one lost packet');
     });
 
-    test('a real outage still falls back once the attempts are spent',
-        () async {
-      final (:dio, :status, :cache) = chain([DioExceptionType.connectionError]);
-      await cache.write(
-        HttpCache.keyFor(method: 'GET', path: '/api/vehicles', query: const {}),
-        {'ok': 'stale'},
-      );
+    test(
+      'a real outage still falls back once the attempts are spent',
+      () async {
+        final (:dio, :status, :cache) = chain([
+          DioExceptionType.connectionError,
+        ]);
+        await cache.write(
+          HttpCache.keyFor(
+            method: 'GET',
+            path: '/api/vehicles',
+            query: const {},
+          ),
+          {'ok': 'stale'},
+        );
 
-      final res = await dio.get<Map<String, dynamic>>('/api/vehicles');
+        final res = await dio.get<Map<String, dynamic>>('/api/vehicles');
 
-      expect(res.data, {'ok': 'stale'});
-      expect(status.offline, isTrue);
-    });
+        expect(res.data, {'ok': 'stale'});
+        expect(status.offline, isTrue);
+      },
+    );
   });
 }

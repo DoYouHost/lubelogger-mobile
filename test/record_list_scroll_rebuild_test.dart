@@ -56,7 +56,8 @@ void main() {
     expect(
       builds,
       lessThan(afterFirstFrame),
-      reason: 'rebuilt $builds cards over 20 frames of a small drag, '
+      reason:
+          'rebuilt $builds cards over 20 frames of a small drag, '
           'having built $afterFirstFrame for the whole first screen',
     );
   });

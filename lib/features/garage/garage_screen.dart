@@ -147,7 +147,8 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                   extentRatio: 0.3,
                                   children: [
                                     _EditVehicleAction(
-                                      onPressed: () => _editVehicle(info.vehicle),
+                                      onPressed: () =>
+                                          _editVehicle(info.vehicle),
                                     ),
                                   ],
                                 ),
@@ -159,8 +160,9 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                     apiKey: apiKey,
                                     currencySymbol: currency,
                                     units: units,
-                                    onTap: () => context
-                                        .push('/vehicle/${info.vehicle.id}'),
+                                    onTap: () => context.push(
+                                      '/vehicle/${info.vehicle.id}',
+                                    ),
                                   ),
                                 ),
                               ),
@@ -171,13 +173,13 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                     ],
                   ),
                 );
-                },
-              ),
+              },
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
   /// Opens Settings — unless a swipe action is open, in which case the tap just
   /// closes it (consistent with tapping a card while one is open).

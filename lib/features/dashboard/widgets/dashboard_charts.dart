@@ -265,7 +265,11 @@ class UrgencyItem {
 /// Reminder counts by urgency: a proportion bar over one tile per level, most
 /// urgent first.
 class UrgencyChart extends StatelessWidget {
-  const UrgencyChart({super.key, required this.items, required this.emptyLabel});
+  const UrgencyChart({
+    super.key,
+    required this.items,
+    required this.emptyLabel,
+  });
 
   final List<UrgencyItem> items;
   final String emptyLabel;
@@ -751,7 +755,16 @@ class _ExpensePainter extends CustomPainter {
       final panelBottom = panelTop + _distanceHeight;
       double yDistance(double v) =>
           panelBottom - v / distanceMax * _distanceHeight;
-      _grid(canvas, size, left, distanceStep, distanceMax, yDistance, labels: true, topOnly: true);
+      _grid(
+        canvas,
+        size,
+        left,
+        distanceStep,
+        distanceMax,
+        yDistance,
+        labels: true,
+        topOnly: true,
+      );
 
       final distanceColor = t.textSecondary;
       final distanceWidth = math.min(10.0, barWidth * 0.7);
@@ -877,7 +890,8 @@ class _EconomyChartState extends State<EconomyChart> {
     if (widget.values.every((v) => v == null)) {
       return _NoData(
         label: widget.emptyLabel,
-        height: _EconomyPainter.heightFor(hasYear: false) + _keyGap + _keyHeight,
+        height:
+            _EconomyPainter.heightFor(hasYear: false) + _keyGap + _keyHeight,
       );
     }
     final selected = _selected;
@@ -1529,25 +1543,26 @@ class _Swatch extends StatelessWidget {
 double niceAxisInterval(double maxY, {int divisions = 4}) {
   if (maxY <= 0) return 1;
   final rough = maxY / divisions;
-  final magnitude =
-      math.pow(10, (math.log(rough) / math.ln10).floor()).toDouble();
+  final magnitude = math
+      .pow(10, (math.log(rough) / math.ln10).floor())
+      .toDouble();
   final normalized = rough / magnitude;
   final step = normalized < 1.5
       ? 1
       : normalized < 3
-          ? 2
-          : normalized < 7
-              ? 5
-              : 10;
+      ? 2
+      : normalized < 7
+      ? 5
+      : 10;
   return step * magnitude;
 }
 
 TextStyle _axisStyle(DashTokens t) => TextStyle(
-      fontFamily: DashTokens.fontMono,
-      fontSize: 10,
-      fontWeight: FontWeight.w600,
-      color: t.textTertiary,
-    );
+  fontFamily: DashTokens.fontMono,
+  fontSize: 10,
+  fontWeight: FontWeight.w600,
+  color: t.textTertiary,
+);
 
 /// Compact axis number: `1.2k` / `15k` for thousands, rounded otherwise.
 String _compact(double v) {
@@ -1560,6 +1575,5 @@ String _compact(double v) {
 
 /// [value] rounded up to a whole multiple of [interval]; one step when there
 /// is nothing to fit.
-double _roundUp(double value, double interval) => value <= 0
-    ? interval
-    : (value / interval).ceilToDouble() * interval;
+double _roundUp(double value, double interval) =>
+    value <= 0 ? interval : (value / interval).ceilToDouble() * interval;

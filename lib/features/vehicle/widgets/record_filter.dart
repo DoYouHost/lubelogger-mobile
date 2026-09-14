@@ -81,8 +81,10 @@ class RecordListControls<T> {
   final bool filtering;
 
   /// Filtered and sorted — what a tab normally calls.
-  List<T> apply(List<T> records) =>
-      sortStably([for (final r in records) if (matches(r)) r], (r) => r);
+  List<T> apply(List<T> records) => sortStably([
+    for (final r in records)
+      if (matches(r)) r,
+  ], (r) => r);
 
   /// The active sort, preserving the incoming order between entries it
   /// considers equal (`List.sort` alone is not stable, and the note tab's
@@ -152,7 +154,11 @@ class RecordFilterBar extends StatelessWidget {
                   decoration: dashFieldDecoration(
                     t,
                     hintText: l10n.recordsSearchHint,
-                    prefixIcon: Icon(Icons.search, size: 18, color: t.textTertiary),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 18,
+                      color: t.textTertiary,
+                    ),
                     suffixIcon: controller.text.isEmpty
                         ? null
                         : IconButton(

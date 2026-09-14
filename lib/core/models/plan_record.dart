@@ -22,17 +22,17 @@ class PlanRecord {
   });
 
   factory PlanRecord.fromJson(Map<String, dynamic> json) => PlanRecord(
-        id: toInt(json['id']),
-        dateCreated: calendarDateFromJson(json['dateCreated']),
-        description: (json['description'] as String?) ?? '',
-        cost: toDouble(json['cost']),
-        type: PlanType.parse(json['type']),
-        priority: PlanPriority.parse(json['priority']),
-        progress: PlanProgress.parse(json['progress']),
-        notes: (json['notes'] as String?) ?? '',
-        files: Attachment.listFrom(json['files']),
-        extraFields: ExtraField.listFrom(json['extraFields']),
-      );
+    id: toInt(json['id']),
+    dateCreated: calendarDateFromJson(json['dateCreated']),
+    description: (json['description'] as String?) ?? '',
+    cost: toDouble(json['cost']),
+    type: PlanType.parse(json['type']),
+    priority: PlanPriority.parse(json['priority']),
+    progress: PlanProgress.parse(json['progress']),
+    notes: (json['notes'] as String?) ?? '',
+    files: Attachment.listFrom(json['files']),
+    extraFields: ExtraField.listFrom(json['extraFields']),
+  );
 
   final int id;
   final DateTime? dateCreated;
@@ -62,11 +62,11 @@ enum PlanType {
   final String wireName;
 
   static PlanType parse(Object? raw) => switch (raw?.toString().toLowerCase()) {
-        'servicerecord' => PlanType.service,
-        'repairrecord' => PlanType.repair,
-        'upgraderecord' => PlanType.upgrade,
-        _ => PlanType.unknown,
-      };
+    'servicerecord' => PlanType.service,
+    'repairrecord' => PlanType.repair,
+    'upgraderecord' => PlanType.upgrade,
+    _ => PlanType.unknown,
+  };
 }
 
 /// Planner priority (`PlanPriority`: Critical=0, Normal=1, Low=2). [unknown]

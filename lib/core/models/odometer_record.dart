@@ -24,16 +24,16 @@ class OdometerRecord {
   });
 
   factory OdometerRecord.fromJson(Map<String, dynamic> json) => OdometerRecord(
-        id: toInt(json['id']),
-        date: calendarDateFromJson(json['date']),
-        odometer: toDouble(json['odometer']),
-        initialOdometer: toDouble(json['initialOdometer']),
-        notes: (json['notes'] as String?) ?? '',
-        tags: (json['tags'] as String?) ?? '',
-        files: Attachment.listFrom(json['files']),
-        extraFields: ExtraField.listFrom(json['extraFields']),
-        equipmentRecordId: _toIdList(json['equipmentRecordId']),
-      );
+    id: toInt(json['id']),
+    date: calendarDateFromJson(json['date']),
+    odometer: toDouble(json['odometer']),
+    initialOdometer: toDouble(json['initialOdometer']),
+    notes: (json['notes'] as String?) ?? '',
+    tags: (json['tags'] as String?) ?? '',
+    files: Attachment.listFrom(json['files']),
+    extraFields: ExtraField.listFrom(json['extraFields']),
+    equipmentRecordId: _toIdList(json['equipmentRecordId']),
+  );
 
   final int id;
   final DateTime? date;
@@ -52,9 +52,9 @@ class OdometerRecord {
 
   /// Reads the link whether it arrives as a list or as an already-joined string.
   static String _toIdList(Object? v) => switch (v) {
-        final String s => s,
-        final List<dynamic> l => l.map((e) => e.toString()).join(' '),
-        final num n => n.toString(),
-        _ => '',
-      };
+    final String s => s,
+    final List<dynamic> l => l.map((e) => e.toString()).join(' '),
+    final num n => n.toString(),
+    _ => '',
+  };
 }

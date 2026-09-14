@@ -15,16 +15,14 @@ double _energyUsedSince(GasRecord record, int previousEndingSoc) {
 }
 
 /// The server's ordering, which the running totals below depend on.
-List<GasRecord> _chronological(List<GasRecord> records) => [...records]..sort((
-  a,
-  b,
-) {
-  final da = a.date, db = b.date;
-  final byDate = (da == null || db == null) ? 0 : da.compareTo(db);
-  if (byDate != 0) return byDate;
-  final byOdometer = a.odometer.compareTo(b.odometer);
-  return byOdometer != 0 ? byOdometer : a.endingSoc.compareTo(b.endingSoc);
-});
+List<GasRecord> _chronological(List<GasRecord> records) =>
+    [...records]..sort((a, b) {
+      final da = a.date, db = b.date;
+      final byDate = (da == null || db == null) ? 0 : da.compareTo(db);
+      if (byDate != 0) return byDate;
+      final byOdometer = a.odometer.compareTo(b.odometer);
+      return byOdometer != 0 ? byOdometer : a.endingSoc.compareTo(b.endingSoc);
+    });
 
 /// The fuel economy resolved at one fill-up, as a raw distance/volume ratio
 /// (stored distance units per stored volume unit). The screen converts it to
@@ -115,7 +113,8 @@ class GasStats {
       // IncludeInAverage: a resolved economy, or a partial/odometer-less record
       // that still carries real fuel (but never a missed fuel-up).
       final ratio = row.rawRatio;
-      final includeInAverage = !r.missedFuelUp &&
+      final includeInAverage =
+          !r.missedFuelUp &&
           (ratio != null || !r.isFillToFull || r.odometer == 0);
       if (includeInAverage) {
         // The walk clamps an odometer-less row's delta to 0.
@@ -182,12 +181,14 @@ List<FuelRow> fuelRows(List<GasRecord> records, {bool isElectric = false}) {
     if (i == 0) {
       if (r.odometer > 0) previousOdometer = r.odometer;
       if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;
-      rows.add(FuelRow(
-        record: r,
-        rawDelta: null,
-        rawRatio: null,
-        rawConsumption: r.fuelConsumed,
-      ));
+      rows.add(
+        FuelRow(
+          record: r,
+          rawDelta: null,
+          rawRatio: null,
+          rawConsumption: r.fuelConsumed,
+        ),
+      );
       continue;
     }
 
@@ -218,12 +219,14 @@ List<FuelRow> fuelRows(List<GasRecord> records, {bool isElectric = false}) {
       unFactoredDistance += delta;
     }
 
-    rows.add(FuelRow(
-      record: r,
-      rawDelta: r.odometer > 0 ? delta : null,
-      rawRatio: (ratio != null && ratio > 0) ? ratio : null,
-      rawConsumption: volume,
-    ));
+    rows.add(
+      FuelRow(
+        record: r,
+        rawDelta: r.odometer > 0 ? delta : null,
+        rawRatio: (ratio != null && ratio > 0) ? ratio : null,
+        rawConsumption: volume,
+      ),
+    );
 
     if (r.odometer > 0) previousOdometer = r.odometer;
     if (r.endingSoc != 0) previousEndingSoc = r.endingSoc;

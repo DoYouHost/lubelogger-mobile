@@ -42,17 +42,17 @@ class ExpenseTimeline {
       for (final MapEntry(key: category, value: records)
           in costsByCategory.entries)
         for (final r in records)
-          if (r.date != null)
-            (category: category, date: r.date!, cost: r.cost),
+          if (r.date != null) (category: category, date: r.date!, cost: r.cost),
     ];
 
-    final timeline = [
-      for (final r in odometerReadings)
-        if (r.date != null && r.odometer > 0) r,
-    ]..sort((a, b) {
-        final byDate = a.date!.compareTo(b.date!);
-        return byDate != 0 ? byDate : a.odometer.compareTo(b.odometer);
-      });
+    final timeline =
+        [
+          for (final r in odometerReadings)
+            if (r.date != null && r.odometer > 0) r,
+        ]..sort((a, b) {
+          final byDate = a.date!.compareTo(b.date!);
+          return byDate != 0 ? byDate : a.odometer.compareTo(b.odometer);
+        });
     final distances = <({DateTime date, double distance})>[];
     double? previous;
     for (final r in timeline) {

@@ -70,12 +70,12 @@ class RetryInterceptor extends Interceptor {
   /// stored copy the best answer available?"): a timeout means both "unreachable"
   /// and "do not try again", see the class comment.
   static bool worthRetrying(DioException err) => switch (err.type) {
-        DioExceptionType.connectionError => true,
-        DioExceptionType.badResponse => (err.response?.statusCode ?? 0) >= 500,
-        DioExceptionType.unknown =>
-          err.error is SocketException || err.error is HttpException,
-        _ => false,
-      };
+    DioExceptionType.connectionError => true,
+    DioExceptionType.badResponse => (err.response?.statusCode ?? 0) >= 500,
+    DioExceptionType.unknown =>
+      err.error is SocketException || err.error is HttpException,
+    _ => false,
+  };
 
   @override
   Future<void> onError(
@@ -120,11 +120,7 @@ class RetryInterceptor extends Interceptor {
     return step * (0.5 + _random.nextDouble() * 0.5);
   }
 
-  void _log(String event, Map<String, Object?> fields) =>
-      DiagnosticRecorder.active?.add(
-        LogSource.http,
-        event,
-        lvl: LogLevel.warn,
-        fields: fields,
-      );
+  void _log(String event, Map<String, Object?> fields) => DiagnosticRecorder
+      .active
+      ?.add(LogSource.http, event, lvl: LogLevel.warn, fields: fields);
 }

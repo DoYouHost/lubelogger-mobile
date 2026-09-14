@@ -40,13 +40,12 @@ void main() {
   PhotoCache cacheFor({
     String baseUrl = 'https://one.example',
     String? apiKey = 'key',
-  }) =>
-      PhotoCache(
-        baseUrl: baseUrl,
-        apiKey: apiKey,
-        supportDirectory: () async => root,
-        fetch: server.fetch,
-      );
+  }) => PhotoCache(
+    baseUrl: baseUrl,
+    apiKey: apiKey,
+    supportDirectory: () async => root,
+    fetch: server.fetch,
+  );
 
   const photo = '/images/abc.jpg';
 
@@ -123,29 +122,31 @@ void main() {
     });
   });
 
-  test('photos are sized and cleared with the rest of the offline copy',
-      () async {
-    await cacheFor().bytes(photo);
-    final lists = HttpCache(
-      baseUrl: 'https://one.example',
-      supportDirectory: () async => root,
-    );
+  test(
+    'photos are sized and cleared with the rest of the offline copy',
+    () async {
+      await cacheFor().bytes(photo);
+      final lists = HttpCache(
+        baseUrl: 'https://one.example',
+        supportDirectory: () async => root,
+      );
 
-    expect(await lists.sizeInBytes(), server.bytes.length);
-    await lists.clear();
+      expect(await lists.sizeInBytes(), server.bytes.length);
+      await lists.clear();
 
-    server.up = false;
-    expect(cacheFor().bytes(photo), throwsA(isA<SocketException>()));
-  });
+      server.up = false;
+      expect(cacheFor().bytes(photo), throwsA(isA<SocketException>()));
+    },
+  );
 
   test('the image key holds across rebuilds', () {
     // Every rebuild hands the provider a fresh PhotoCache; a key that changed
     // with it would re-decode the whole garage frame after frame.
     providerFor(String path) => vehicleImageProvider(
-          imageLocation: path,
-          baseUrl: 'https://one.example',
-          apiKey: 'key',
-        );
+      imageLocation: path,
+      baseUrl: 'https://one.example',
+      apiKey: 'key',
+    );
 
     expect(providerFor(photo), providerFor(photo));
     expect(providerFor(photo), isNot(providerFor('/images/other.jpg')));
