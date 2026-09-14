@@ -1,14 +1,11 @@
-import 'dart:math' as math;
-
-import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/format/calendar_month.dart';
+import '../../core/format/chart_range.dart';
+import '../../core/format/expense_timeline.dart';
 import '../../core/format/formatters.dart';
 import '../../core/format/gas_stats.dart';
-import '../../core/format/monthly_breakdown.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/models/vehicle_info.dart';
 import '../../core/format/vehicle_units.dart';
@@ -16,24 +13,9 @@ import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import '../common/state_views.dart';
+import 'widgets/chart_palette.dart';
+import 'widgets/chart_range_sheet.dart';
 import 'widgets/dashboard_charts.dart';
-
-/// Extra category colors used only by the dashboard charts (the shared palette
-/// has no purple/pink/green). Taken verbatim from the design mockup.
-const _repairsColor = Color(0xFF8A5FD1);
-const _upgradesColor = Color(0xFFD1499A);
-const _okGreen = Color(0xFF4CAF6E);
-
-/// Category → swatch, shared by the "Expenses by Type" donut and the combo
-/// chart's dominant-category bar coloring.
-Color _categoryColor(ExpenseCategory category, DashTokens t) =>
-    switch (category) {
-      ExpenseCategory.service => t.accentBlue,
-      ExpenseCategory.repair => _repairsColor,
-      ExpenseCategory.upgrade => _upgradesColor,
-      ExpenseCategory.fuel => t.accentGold,
-      ExpenseCategory.tax => t.danger,
-    };
 
 String _categoryLabel(ExpenseCategory category, AppLocalizations l10n) =>
     switch (category) {
@@ -42,16 +24,6 @@ String _categoryLabel(ExpenseCategory category, AppLocalizations l10n) =>
       ExpenseCategory.upgrade => l10n.catUpgrades,
       ExpenseCategory.fuel => l10n.catFuel,
       ExpenseCategory.tax => l10n.catTax,
-    };
-
-/// The server's lifetime total for [category].
-double _categoryCost(ExpenseCategory category, VehicleInfo info) =>
-    switch (category) {
-      ExpenseCategory.service => info.serviceRecordCost,
-      ExpenseCategory.repair => info.repairRecordCost,
-      ExpenseCategory.upgrade => info.upgradeRecordCost,
-      ExpenseCategory.fuel => info.gasRecordCost,
-      ExpenseCategory.tax => info.taxRecordCost,
     };
 
 /// Vehicle dashboard (design screen #5): at-a-glance stats plus expense,
@@ -99,89 +71,172 @@ class _DashboardBody extends ConsumerWidget {
     final units = ref.watch(vehicleUnitsProvider(vehicleId));
     final symbol = ref.watch(currencySymbolProvider);
     final stats = ref.watch(gasStatsProvider(vehicleId)).valueOrNull;
-    final breakdown = ref
-        .watch(monthlyBreakdownProvider(vehicleId))
-        .valueOrNull;
-    final window = trailingMonths(DateTime.now());
-    final monthLabel = DateFormat.LLL(l10n.localeName).format;
+    final timeline = ref.watch(expenseTimelineProvider(vehicleId)).valueOrNull;
     final t = DashTokens.of(context);
+    final now = DateTime.now();
+    // MaterialLocalizations counts from Sunday = 0; DateTime from Monday = 1.
+    final firstDayIndex = MaterialLocalizations.of(context).firstDayOfWeekIndex;
+    final firstDayOfWeek = firstDayIndex == 0 ? DateTime.sunday : firstDayIndex;
 
-    ChartSlice reminderSlice(String label, int count, Color color) =>
-        ChartSlice(
+    ({ChartRange range, ChartWindow window, Widget chip}) rangeOf(
+      DashboardChart chart,
+      String title,
+    ) {
+      final key = (vehicleId: vehicleId, chart: chart);
+      final range = ref.watch(chartRangeProvider(key));
+      final window = range.resolve(now, firstDayOfWeek: firstDayOfWeek);
+      final label = chartRangeChipLabel(range, l10n, now);
+      return (
+        range: range,
+        window: window,
+        chip: ChartRangeChip(
           label: label,
-          value: count.toDouble(),
-          color: color,
-          legendValue: '$count',
-        );
+          semanticLabel: l10n.chartRangeButton(label),
+          custom: range is CustomRange,
+          onTap: () async {
+            final picked = await showChartRangeSheet(
+              context,
+              chartTitle: title,
+              current: range,
+              defaultPreset: ref.read(chartDefaultRangeProvider),
+              currentWindow: window,
+              formatDate: units.formatDate,
+            );
+            if (picked != null && context.mounted) {
+              ref.read(chartRangeOverridesProvider.notifier).set(key, picked);
+            }
+          },
+        ),
+      );
+    }
+
+    final byTypeTitle = l10n.chartExpensesByType;
+    final byType = rangeOf(DashboardChart.expensesByType, byTypeTitle);
+    final byTypeTotals = timeline?.totalsIn(byType.window) ?? const {};
+
+    final expensesTitle = l10n.chartExpensesDistance;
+    final expenses = rangeOf(DashboardChart.expensesDistance, expensesTitle);
+    final expenseBuckets = timeline?.bucketed(expenses.window);
+
+    final economyTitle =
+        '${units.isElectric ? l10n.chartConsumption : l10n.chartFuelMileage}'
+        ' (${units.economyLabel})';
+    final economy = rangeOf(DashboardChart.economy, economyTitle);
+
+    double? toEconomy(double? raw) =>
+        raw == null ? null : units.economyValue(raw, 1);
+
+    final categoryLabels = {
+      for (final c in ExpenseCategory.values) c: _categoryLabel(c, l10n),
+    };
+    final today = dateOnly(now);
 
     // Charts flow two-up on wider (landscape) screens, single column on
     // portrait phones. Off-screen ones are left unbuilt: a chart is expensive to
     // lay out and paint, and on a phone at most two are ever in view.
     final charts = <Widget>[
       ChartCard(
-        title: l10n.chartExpensesByType,
-        child: DonutChart(
-          emptyLabel: l10n.chartNoData,
-          slices: [
-            for (final category in ExpenseCategory.values)
-              ChartSlice(
-                label: _categoryLabel(category, l10n),
-                value: _categoryCost(category, info),
-                color: _categoryColor(category, t),
-                legendValue: Formatters.currency(
-                  _categoryCost(category, info),
-                  symbol,
-                ),
+        title: byTypeTitle,
+        trailing: byType.chip,
+        child: CategoryShareChart(
+          emptyLabel: l10n.chartNoDataInRange,
+          items: [
+            for (final c in chartCategoryOrder)
+              ShareItem(
+                label: categoryLabels[c]!,
+                value: byTypeTotals[c] ?? 0,
+                color: categoryColor(c, t),
+                valueLabel: Formatters.currency(byTypeTotals[c] ?? 0, symbol),
               ),
           ],
         ),
       ),
       ChartCard(
-        title: l10n.chartExpensesDistanceByMonth,
-        child: MonthlyComboChart(
+        title: expensesTitle,
+        trailing: expenses.chip,
+        child: ExpenseDistanceChart(
+          slots: _slots(expenses.window, l10n),
+          data: [
+            for (final b in expenseBuckets ?? const <ExpenseBucket>[])
+              ExpenseSlot(
+                costs: b.byCategory,
+                distance: units.toDisplayDistance(b.distance),
+              ),
+            if (expenseBuckets == null)
+              for (final _ in expenses.window.bucketStarts)
+                const ExpenseSlot(costs: {}, distance: 0),
+          ],
+          categoryLabels: categoryLabels,
           currencySymbol: symbol,
-          expensesLegend: l10n.legendExpenses,
-          distanceLegend:
-              '${l10n.legendDistance} (${units.distanceLabel})',
-          emptyLabel: l10n.chartNoData,
-          months: _comboMonths(context, window, monthLabel, breakdown, units),
+          expensesLabel: l10n.legendExpenses,
+          distanceLabel: l10n.legendDistance,
+          distanceUnit: units.distanceLabel,
+          totalLabel: l10n.chartTotal,
+          emptyLabel: l10n.chartNoDataInRange,
+          emphasizeLast: expenses.window.end == today,
         ),
       ),
       ChartCard(
         title: l10n.chartRemindersByUrgency,
-        child: DonutChart(
+        trailing: Text(
+          l10n.chartRemindersTotal(
+            info.pastDueReminderCount +
+                info.veryUrgentReminderCount +
+                info.urgentReminderCount +
+                info.notUrgentReminderCount,
+          ),
+          style: TextStyle(
+            fontFamily: DashTokens.fontUi,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: t.textTertiary,
+          ),
+        ),
+        child: UrgencyChart(
           emptyLabel: l10n.chartNoReminders,
-          slices: [
-            reminderSlice(
-              l10n.urgencyNotUrgent,
-              info.notUrgentReminderCount,
-              _okGreen,
+          items: [
+            UrgencyItem(
+              label: l10n.urgencyPastDue,
+              count: info.pastDueReminderCount,
+              color: t.danger,
             ),
-            reminderSlice(
-              l10n.urgencyUrgent,
-              info.urgentReminderCount,
-              t.accentOrange,
+            UrgencyItem(
+              label: l10n.urgencyVeryUrgent,
+              count: info.veryUrgentReminderCount,
+              color: t.accentOrange,
             ),
-            reminderSlice(
-              l10n.urgencyVeryUrgent,
-              info.veryUrgentReminderCount,
-              t.danger,
+            UrgencyItem(
+              label: l10n.urgencyUrgent,
+              count: info.urgentReminderCount,
+              color: t.warning,
             ),
-            reminderSlice(
-              l10n.urgencyPastDue,
-              info.pastDueReminderCount,
-              t.textTertiary,
+            UrgencyItem(
+              label: l10n.urgencyNotUrgent,
+              count: info.notUrgentReminderCount,
+              color: okStatusColor(t),
             ),
           ],
         ),
       ),
       ChartCard(
-        title: '${units.isElectric ? l10n.chartConsumptionByMonth : l10n.chartFuelMileageByMonth}'
-            ' (${units.economyLabel})',
-        child: MonthlyBars(
-          lowerIsBetter: units.lowerIsBetter,
-          emptyLabel: l10n.chartNoData,
-          bars: _monthlyBars(window, monthLabel, stats, units),
+        title: economyTitle,
+        trailing: economy.chip,
+        child: EconomyChart(
+          slots: _slots(economy.window, l10n),
+          values: [
+            for (final raw
+                in stats?.economyByBucket(economy.window) ??
+                    List<double?>.filled(
+                      economy.window.bucketStarts.length,
+                      null,
+                    ))
+              toEconomy(raw),
+          ],
+          average: toEconomy(stats?.averageRatioIn(economy.window)),
+          unitLabel: units.economyLabel,
+          averageLabel: l10n.chartAverage,
+          emptyLabel: l10n.chartNoDataInRange,
+          emphasizeLast: economy.window.end == today,
         ),
       ),
     ];
@@ -213,58 +268,44 @@ class _DashboardBody extends ConsumerWidget {
     );
   }
 
-  /// Total expenses (colored by dominant category) and distance (converted to
-  /// the display unit) for each month of [window].
-  List<ComboMonth> _comboMonths(
-    BuildContext context,
-    List<DateTime> window,
-    String Function(DateTime) monthLabel,
-    MonthlyBreakdown? breakdown,
-    VehicleUnits units,
-  ) {
-    final t = DashTokens.of(context);
+  /// Axis and tooltip names for every slot of [window]. Week slots carry the
+  /// year in their tooltip only.
+  List<TimeSlot> _slots(ChartWindow window, AppLocalizations l10n) {
+    final locale = l10n.localeName;
+    final starts = window.bucketStarts;
     return [
-      for (final month in window)
-        () {
-          final entry = breakdown?.months[month];
-          final dominant = entry?.dominantCategory;
-          return ComboMonth(
-            label: monthLabel(month),
-            cost: entry?.totalCost ?? 0,
-            barColor: dominant == null
-                ? t.accentGold
-                : _categoryColor(dominant, t),
-            distance: units.toDisplayDistance(entry?.distance ?? 0),
-          );
-        }(),
-    ];
-  }
-
-  /// One slot per month of [window]: its raw ratio converted to the display
-  /// unit, or null when that month has no economy data.
-  List<MonthlyBar> _monthlyBars(
-    List<DateTime> window,
-    String Function(DateTime) monthLabel,
-    GasStats? stats,
-    VehicleUnits units,
-  ) {
-    final byMonth = {
-      for (final m in stats?.monthly ?? const <MonthlyEconomy>[])
-        m.month: m.rawRatio,
-    };
-    return [
-      for (final month in window)
-        MonthlyBar(
-          label: monthLabel(month),
-          value: byMonth[month] == null
-              ? null
-              : units.economyValue(byMonth[month]!, 1),
-        ),
+      for (final start in starts)
+        switch (window.bucket) {
+          ChartBucket.week => () {
+            final days = window.daysOf(start);
+            return TimeSlot(
+              axisLabel: DateFormat.Md(locale).format(days.first),
+              title: days.first == days.last
+                  ? DateFormat.yMMMd(locale).format(days.first)
+                  : '${DateFormat.MMMd(locale).format(days.first)} – '
+                        '${DateFormat.yMMMd(locale).format(days.last)}',
+            );
+          }(),
+          ChartBucket.month => TimeSlot(
+            axisLabel: DateFormat.LLL(locale).format(start),
+            year: start.year,
+            title: DateFormat.yMMMM(locale).format(start),
+          ),
+          ChartBucket.quarter => () {
+            final quarter = (start.month - 1) ~/ 3 + 1;
+            return TimeSlot(
+              axisLabel: l10n.chartQuarter(quarter),
+              year: start.year,
+              title: '${l10n.chartQuarter(quarter)} ${start.year}',
+            );
+          }(),
+        },
     ];
   }
 }
 
-/// The four stacked headline stats: odometer, distance, total cost, avg economy.
+/// The four headline stats — odometer, distance, total cost, avg economy — as
+/// rows of one card: stacked in portrait, two columns side by side when wide.
 class _StatBlock extends ConsumerWidget {
   const _StatBlock({
     required this.info,
@@ -281,142 +322,225 @@ class _StatBlock extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-
-    final odometer = units.distance(info.lastReportedOdometer);
+    final t = DashTokens.of(context);
 
     final lastOdometerDate = ref
         .watch(lastOdometerDateProvider(info.vehicle.id))
         .valueOrNull;
-    final lastOdometerDateLabel = lastOdometerDate == null
-        ? null
-        : units.formatDate(lastOdometerDate);
-
-    final distance = stats == null ? '—' : units.distance(stats!.distanceSpan);
-
-    final economy = stats == null
-        ? '—'
-        : units.economy(stats!.totalRawDistance, stats!.totalRawVolume);
 
     final rows = [
-      _StatRow(value: odometer, secondary: lastOdometerDateLabel),
-      _StatRow(value: distance, label: l10n.statDistanceTraveled),
       _StatRow(
-        value: Formatters.currency(info.totalCost, symbol),
-        label: l10n.statTotalCost,
+        icon: Icons.speed_outlined,
+        label: l10n.colOdometer,
+        value: units.distance(info.lastReportedOdometer),
+        secondary: lastOdometerDate == null
+            ? null
+            : units.formatDate(lastOdometerDate),
       ),
       _StatRow(
-        value: economy,
-        label: units.isElectric ? l10n.statAvgConsumption : l10n.statAvgEconomy,
+        icon: Icons.route_outlined,
+        label: l10n.statDistanceTraveled,
+        value: stats == null ? '—' : units.distance(stats!.distanceSpan),
+      ),
+      _StatRow(
+        icon: Icons.account_balance_wallet_outlined,
+        label: l10n.statTotalCost,
+        value: Formatters.currency(info.totalCost, symbol),
+      ),
+      _StatRow(
+        icon: units.isElectric
+            ? Icons.ev_station_outlined
+            : Icons.local_gas_station_outlined,
+        label: units.isElectric
+            ? l10n.statAvgConsumption
+            : l10n.statAvgEconomy,
+        value: stats == null
+            ? '—'
+            : units.economy(stats!.totalRawDistance, stats!.totalRawVolume),
       ),
     ];
 
-    // Side by side across the width in landscape/tablet; stacked in portrait.
-    if (context.isWideLayout) {
-      final t = DashTokens.of(context);
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          // Fit as many stat cells across as possible without the mono value
-          // wrapping mid-number. Measure the widest value at its real style
-          // instead of guessing, so it adapts to font metrics, locale and
-          // currency width. Falls back to two rows of two.
-          final valueStyle = _StatRow.valueStyle(t);
-          var widest = 0.0;
-          for (final row in rows) {
-            widest = math.max(widest, textWidth(context, row.value, valueStyle));
-          }
-          const gap = 12.0;
-          const cellSideRoom = 24.0; // breathing room around each value
-          final perCell = widest + cellSideRoom;
-          var columns = ((constraints.maxWidth + gap) / (perCell + gap))
-              .floor()
-              .clamp(1, rows.length);
-          // Prefer a balanced 2×2 over a lopsided 3 + 1.
-          if (columns == 3 && rows.length == 4) columns = 2;
-          return Column(
-            children: [
-              for (var i = 0; i < rows.length; i += columns)
+    final divider = Padding(
+      padding: const EdgeInsets.only(left: _StatRow.textInset),
+      child: Divider(height: 1, thickness: 1, color: t.hairline),
+    );
+
+    // Two columns only once each has room for a long label beside a long
+    // value; lines are paired so both cells of a line share its height and
+    // the dividers meet.
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final lines = constraints.maxWidth >= 2 * _StatRow.minWidth + 16
+            ? [for (var i = 0; i < rows.length; i += 2) rows.sublist(i, i + 2)]
+            : [for (final row in rows) [row]];
+        return Column(
+          children: [
+            for (final (i, line) in lines.indexed) ...[
+              if (i > 0)
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (var j = 0; j < columns; j++)
-                      Expanded(
-                        child: (i + j) < rows.length
-                            ? rows[i + j]
-                            : const SizedBox.shrink(),
-                      ),
+                    for (final (j, _) in line.indexed) ...[
+                      if (j > 0) const SizedBox(width: 16),
+                      Expanded(child: divider),
+                    ],
                   ],
                 ),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final (j, row) in line.indexed) ...[
+                      if (j > 0) const SizedBox(width: 16),
+                      Expanded(child: row),
+                    ],
+                  ],
+                ),
+              ),
             ],
-          );
-        },
-      );
-    }
-    return Column(children: rows);
+          ],
+        );
+      },
+    );
+
+    final radius = BorderRadius.circular(16);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: t.cardGradient,
+        borderRadius: radius,
+        border: Border.all(color: t.cardBorder),
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topRight,
+                    radius: 1.3,
+                    stops: const [0, 0.6],
+                    colors: [
+                      t.accent.withValues(alpha: t.isDark ? 0.16 : 0.12),
+                      t.accent.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 24,
+              right: 24,
+              height: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      t.accent.withValues(alpha: 0),
+                      t.accent.withValues(alpha: 0.55),
+                      t.accent.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: content,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.value, this.label, this.secondary});
+  const _StatRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.secondary,
+  });
 
+  /// Where the label starts, past the icon chip; row dividers start here too.
+  static const double textInset = _chipSize + 12;
+
+  /// Narrowest a row gets side by side with another.
+  static const double minWidth = 330;
+  static const double _chipSize = 30;
+
+  final IconData icon;
+  final String label;
   final String value;
 
-  /// Caption under the value. Omitted for rows that carry only a [secondary]
-  /// chip (the odometer date).
-  final String? label;
-
-  /// Optional small chip under the value (e.g. the date of the reading).
+  /// A small line under the label (the date of the odometer reading).
   final String? secondary;
-
-  /// Style of the big mono value. Shared so the [_StatBlock] layout can measure
-  /// value widths with the exact metrics used to render them.
-  static TextStyle valueStyle(DashTokens t) => TextStyle(
-    fontFamily: DashTokens.fontMono,
-    fontSize: 26,
-    fontWeight: FontWeight.w700,
-    color: t.textPrimary,
-  );
 
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        children: [
-          Text(value, style: valueStyle(t)),
-          if (secondary != null) ...[
-            const SizedBox(height: 6),
+    return MergeSemantics(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              width: _chipSize,
+              height: _chipSize,
               decoration: BoxDecoration(
-                color: t.subCard,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: t.subCardBorder),
+                color: t.accent.withValues(alpha: t.isDark ? 0.12 : 0.14),
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: t.accent.withValues(alpha: 0.22)),
               ),
-              child: Text(
-                secondary!,
-                style: TextStyle(
-                  fontFamily: DashTokens.fontMono,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: t.textTertiary,
+              child: Icon(icon, size: 17, color: t.accentInk),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontUi,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: t.textSecondary,
+                      ),
+                    ),
+                    if (secondary != null)
+                      Text(
+                        secondary!,
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontMono,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: t.textTertiary,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-          ],
-          if (label != null) ...[
-            SizedBox(height: secondary != null ? 6 : 2),
+            const SizedBox(width: 12),
             Text(
-              label!,
+              value,
               style: TextStyle(
-                fontFamily: DashTokens.fontUi,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: t.textTertiary,
+                fontFamily: DashTokens.fontMono,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: t.textPrimary,
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }

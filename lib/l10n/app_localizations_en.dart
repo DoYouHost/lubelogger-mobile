@@ -127,19 +127,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartExpensesByType => 'Expenses by Type';
 
   @override
-  String get chartExpensesDistanceByMonth => 'Expenses and Distance by Month';
+  String get chartExpensesDistance => 'Expenses and Distance';
 
   @override
   String get chartRemindersByUrgency => 'Reminders by Urgency';
 
   @override
-  String get chartFuelMileageByMonth => 'Fuel Mileage by Month';
+  String get chartFuelMileage => 'Fuel Mileage';
 
   @override
-  String get chartNoData => 'No data yet';
+  String get chartNoDataInRange => 'No data in this period';
 
   @override
   String get chartNoReminders => 'No reminders';
+
+  @override
+  String chartRemindersTotal(int count) {
+    return '$count total';
+  }
+
+  @override
+  String get chartTotal => 'Total';
+
+  @override
+  String chartAverage(String value) {
+    return 'avg $value';
+  }
+
+  @override
+  String chartQuarter(int quarter) {
+    return 'Q$quarter';
+  }
+
+  @override
+  String get chartRangeTitle => 'Data range';
+
+  @override
+  String get chartRangeOneMonth => '1 month';
+
+  @override
+  String get chartRangeThreeMonths => '3 months';
+
+  @override
+  String get chartRangeSixMonths => '6 months';
+
+  @override
+  String get chartRangeYear => '1 year';
+
+  @override
+  String get chartRangeCustom => 'Custom range';
+
+  @override
+  String get chartRangeOneMonthShort => '1 mo';
+
+  @override
+  String get chartRangeThreeMonthsShort => '3 mo';
+
+  @override
+  String get chartRangeSixMonthsShort => '6 mo';
+
+  @override
+  String get chartRangeYearShort => '1 yr';
+
+  @override
+  String get chartRangeDefault => 'default';
+
+  @override
+  String get chartRangeSettingsHint =>
+      'Change the default range for all charts in Settings.';
+
+  @override
+  String chartRangeButton(String range) {
+    return 'Data range: $range';
+  }
+
+  @override
+  String get settingsCharts => 'Charts';
+
+  @override
+  String get settingsChartDefaultRange => 'Default chart range';
+
+  @override
+  String get settingsChartsNote =>
+      'You can switch each chart on the vehicle dashboard separately.';
 
   @override
   String get legendExpenses => 'Expenses';
@@ -823,7 +893,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statAvgConsumption => 'Average Consumption';
 
   @override
-  String get chartConsumptionByMonth => 'Consumption by Month';
+  String get chartConsumption => 'Consumption';
 
   @override
   String get planDoneReadOnly =>

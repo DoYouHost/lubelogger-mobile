@@ -60,7 +60,7 @@ void main() {
     await Future.wait([
       c.read(gasRecordsProvider(1).future),
       c.read(gasStatsProvider(1).future),
-      c.read(monthlyBreakdownProvider(1).future),
+      c.read(expenseTimelineProvider(1).future),
       c.read(lastOdometerDateProvider(1).future),
     ]);
 
@@ -72,7 +72,7 @@ void main() {
   test('the expense chart reads the same records the tabs list', () async {
     final c = container();
     await Future.wait([
-      c.read(monthlyBreakdownProvider(1).future),
+      c.read(expenseTimelineProvider(1).future),
       for (final kind in RecordKind.values)
         c.read(vehicleRecordsProvider((vehicleId: 1, kind: kind)).future),
     ]);

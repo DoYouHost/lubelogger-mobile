@@ -57,11 +57,52 @@
   "statAvgEconomy": "Average Fuel Economy",
 
   "chartExpensesByType": "Expenses by Type",
-  "chartExpensesDistanceByMonth": "Expenses and Distance by Month",
+  "chartExpensesDistance": "Expenses and Distance",
   "chartRemindersByUrgency": "Reminders by Urgency",
-  "chartFuelMileageByMonth": "Fuel Mileage by Month",
-  "chartNoData": "No data yet",
+  "chartFuelMileage": "Fuel Mileage",
+  "chartNoDataInRange": "No data in this period",
   "chartNoReminders": "No reminders",
+  "chartRemindersTotal": "{count} total",
+  "@chartRemindersTotal": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "chartTotal": "Total",
+  "chartAverage": "avg {value}",
+  "@chartAverage": {
+    "description": "Label on a chart's average line; value is a formatted number",
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "chartQuarter": "Q{quarter}",
+  "@chartQuarter": {
+    "description": "Time-axis label for a calendar quarter",
+    "placeholders": { "quarter": { "type": "int" } }
+  },
+  "chartRangeTitle": "Data range",
+  "chartRangeOneMonth": "1 month",
+  "chartRangeThreeMonths": "3 months",
+  "chartRangeSixMonths": "6 months",
+  "chartRangeYear": "1 year",
+  "chartRangeCustom": "Custom range",
+  "chartRangeOneMonthShort": "1 mo",
+  "chartRangeThreeMonthsShort": "3 mo",
+  "chartRangeSixMonthsShort": "6 mo",
+  "chartRangeYearShort": "1 yr",
+  "@chartRangeOneMonthShort": {
+    "description": "Chart range button label; keep it very short"
+  },
+  "chartRangeDefault": "default",
+  "@chartRangeDefault": {
+    "description": "Badge next to the range option that Settings sets as default"
+  },
+  "chartRangeSettingsHint": "Change the default range for all charts in Settings.",
+  "chartRangeButton": "Data range: {range}",
+  "@chartRangeButton": {
+    "description": "Screen-reader label of a chart's range button",
+    "placeholders": { "range": { "type": "String" } }
+  },
+  "settingsCharts": "Charts",
+  "settingsChartDefaultRange": "Default chart range",
+  "settingsChartsNote": "You can switch each chart on the vehicle dashboard separately.",
   "legendExpenses": "Expenses",
   "legendDistance": "Distance",
 
@@ -432,7 +473,7 @@
     "placeholders": { "unit": { "type": "String" } }
   },
   "statAvgConsumption": "Average Consumption",
-  "chartConsumptionByMonth": "Consumption by Month",
+  "chartConsumption": "Consumption",
   "planDoneReadOnly": "This plan is done. LubeLogger's API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.",
   "@planDoneReadOnly": {
     "description": "Warning shown on the plan form when the item's progress is Done"

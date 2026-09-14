@@ -129,19 +129,89 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chartExpensesByType => 'Wydatki wg typu';
 
   @override
-  String get chartExpensesDistanceByMonth => 'Wydatki i dystans wg miesiąca';
+  String get chartExpensesDistance => 'Wydatki i dystans';
 
   @override
   String get chartRemindersByUrgency => 'Przypomnienia wg pilności';
 
   @override
-  String get chartFuelMileageByMonth => 'Spalanie wg miesiąca';
+  String get chartFuelMileage => 'Spalanie';
 
   @override
-  String get chartNoData => 'Brak danych';
+  String get chartNoDataInRange => 'Brak danych w tym okresie';
 
   @override
   String get chartNoReminders => 'Brak przypomnień';
+
+  @override
+  String chartRemindersTotal(int count) {
+    return '$count łącznie';
+  }
+
+  @override
+  String get chartTotal => 'Razem';
+
+  @override
+  String chartAverage(String value) {
+    return 'śr. $value';
+  }
+
+  @override
+  String chartQuarter(int quarter) {
+    return '$quarter kw.';
+  }
+
+  @override
+  String get chartRangeTitle => 'Zakres danych';
+
+  @override
+  String get chartRangeOneMonth => '1 miesiąc';
+
+  @override
+  String get chartRangeThreeMonths => '3 miesiące';
+
+  @override
+  String get chartRangeSixMonths => '6 miesięcy';
+
+  @override
+  String get chartRangeYear => 'Rok';
+
+  @override
+  String get chartRangeCustom => 'Własny zakres';
+
+  @override
+  String get chartRangeOneMonthShort => '1 mies.';
+
+  @override
+  String get chartRangeThreeMonthsShort => '3 mies.';
+
+  @override
+  String get chartRangeSixMonthsShort => '6 mies.';
+
+  @override
+  String get chartRangeYearShort => 'Rok';
+
+  @override
+  String get chartRangeDefault => 'domyślny';
+
+  @override
+  String get chartRangeSettingsHint =>
+      'Domyślny zakres wszystkich wykresów zmienisz w Ustawieniach.';
+
+  @override
+  String chartRangeButton(String range) {
+    return 'Zakres danych: $range';
+  }
+
+  @override
+  String get settingsCharts => 'Wykresy';
+
+  @override
+  String get settingsChartDefaultRange => 'Domyślny zakres wykresów';
+
+  @override
+  String get settingsChartsNote =>
+      'Każdy wykres na pulpicie pojazdu możesz przełączyć osobno.';
 
   @override
   String get legendExpenses => 'Wydatki';
@@ -836,7 +906,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get statAvgConsumption => 'Średnie zużycie energii';
 
   @override
-  String get chartConsumptionByMonth => 'Zużycie energii wg miesiąca';
+  String get chartConsumption => 'Zużycie energii';
 
   @override
   String get planDoneReadOnly =>

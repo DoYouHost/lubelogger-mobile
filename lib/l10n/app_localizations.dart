@@ -320,11 +320,11 @@ abstract class AppLocalizations {
   /// **'Expenses by Type'**
   String get chartExpensesByType;
 
-  /// No description provided for @chartExpensesDistanceByMonth.
+  /// No description provided for @chartExpensesDistance.
   ///
   /// In en, this message translates to:
-  /// **'Expenses and Distance by Month'**
-  String get chartExpensesDistanceByMonth;
+  /// **'Expenses and Distance'**
+  String get chartExpensesDistance;
 
   /// No description provided for @chartRemindersByUrgency.
   ///
@@ -332,23 +332,143 @@ abstract class AppLocalizations {
   /// **'Reminders by Urgency'**
   String get chartRemindersByUrgency;
 
-  /// No description provided for @chartFuelMileageByMonth.
+  /// No description provided for @chartFuelMileage.
   ///
   /// In en, this message translates to:
-  /// **'Fuel Mileage by Month'**
-  String get chartFuelMileageByMonth;
+  /// **'Fuel Mileage'**
+  String get chartFuelMileage;
 
-  /// No description provided for @chartNoData.
+  /// No description provided for @chartNoDataInRange.
   ///
   /// In en, this message translates to:
-  /// **'No data yet'**
-  String get chartNoData;
+  /// **'No data in this period'**
+  String get chartNoDataInRange;
 
   /// No description provided for @chartNoReminders.
   ///
   /// In en, this message translates to:
   /// **'No reminders'**
   String get chartNoReminders;
+
+  /// No description provided for @chartRemindersTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} total'**
+  String chartRemindersTotal(int count);
+
+  /// No description provided for @chartTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get chartTotal;
+
+  /// Label on a chart's average line; value is a formatted number
+  ///
+  /// In en, this message translates to:
+  /// **'avg {value}'**
+  String chartAverage(String value);
+
+  /// Time-axis label for a calendar quarter
+  ///
+  /// In en, this message translates to:
+  /// **'Q{quarter}'**
+  String chartQuarter(int quarter);
+
+  /// No description provided for @chartRangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data range'**
+  String get chartRangeTitle;
+
+  /// No description provided for @chartRangeOneMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get chartRangeOneMonth;
+
+  /// No description provided for @chartRangeThreeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 months'**
+  String get chartRangeThreeMonths;
+
+  /// No description provided for @chartRangeSixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'6 months'**
+  String get chartRangeSixMonths;
+
+  /// No description provided for @chartRangeYear.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get chartRangeYear;
+
+  /// No description provided for @chartRangeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get chartRangeCustom;
+
+  /// Chart range button label; keep it very short
+  ///
+  /// In en, this message translates to:
+  /// **'1 mo'**
+  String get chartRangeOneMonthShort;
+
+  /// No description provided for @chartRangeThreeMonthsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'3 mo'**
+  String get chartRangeThreeMonthsShort;
+
+  /// No description provided for @chartRangeSixMonthsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'6 mo'**
+  String get chartRangeSixMonthsShort;
+
+  /// No description provided for @chartRangeYearShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1 yr'**
+  String get chartRangeYearShort;
+
+  /// Badge next to the range option that Settings sets as default
+  ///
+  /// In en, this message translates to:
+  /// **'default'**
+  String get chartRangeDefault;
+
+  /// No description provided for @chartRangeSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the default range for all charts in Settings.'**
+  String get chartRangeSettingsHint;
+
+  /// Screen-reader label of a chart's range button
+  ///
+  /// In en, this message translates to:
+  /// **'Data range: {range}'**
+  String chartRangeButton(String range);
+
+  /// No description provided for @settingsCharts.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts'**
+  String get settingsCharts;
+
+  /// No description provided for @settingsChartDefaultRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Default chart range'**
+  String get settingsChartDefaultRange;
+
+  /// No description provided for @settingsChartsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can switch each chart on the vehicle dashboard separately.'**
+  String get settingsChartsNote;
 
   /// No description provided for @legendExpenses.
   ///
@@ -1550,11 +1670,11 @@ abstract class AppLocalizations {
   /// **'Average Consumption'**
   String get statAvgConsumption;
 
-  /// No description provided for @chartConsumptionByMonth.
+  /// No description provided for @chartConsumption.
   ///
   /// In en, this message translates to:
-  /// **'Consumption by Month'**
-  String get chartConsumptionByMonth;
+  /// **'Consumption'**
+  String get chartConsumption;
 
   /// Warning shown on the plan form when the item's progress is Done
   ///

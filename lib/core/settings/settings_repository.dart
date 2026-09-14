@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../format/chart_range.dart';
 import '../models/vehicle_tab.dart';
 import 'server_profile.dart';
 import 'units_settings.dart';
@@ -18,6 +19,7 @@ class SettingsRepository {
   static const _tabOrderKey = 'tab_order';
   static const _remindersEnabledKey = 'reminder_notifications_enabled';
   static const _backgroundRefreshKey = 'background_refresh_enabled';
+  static const _chartRangeKey = 'chart_default_range';
   static const _diagnosticsSessionKey = 'diagnostics_session';
 
   final SharedPreferences _prefs;
@@ -132,6 +134,17 @@ class SettingsRepository {
     return _prefs.setBool(_backgroundRefreshKey, enabled);
   }
 
+  /// The range dashboard charts open on. Three months unless the user chose
+  /// otherwise; an unknown stored name falls back to that too.
+  ChartRangePreset loadChartDefaultRange() =>
+      ChartRangePreset.byName(_prefs.getString(_chartRangeKey) ?? '') ??
+      ChartRangePreset.threeMonths;
+
+  Future<void> saveChartDefaultRange(ChartRangePreset preset) {
+    _logChange('chart_range', preset.name);
+    return _prefs.setString(_chartRangeKey, preset.name);
+  }
+
   /// Id of the diagnostic recording in progress, or null when nothing is being
   /// recorded — the id doubles as the flag. Written by the UI isolate and read
   /// by the WorkManager one, which is how a recording started in the app reaches
@@ -170,6 +183,7 @@ class SettingsRepository {
       // names that say nothing, printed at the top of every report.
       if (!_sameOrder(order, defaultOrder)) 'tab_order': order,
       'reminders': loadRemindersEnabled(),
+      'chart_range': loadChartDefaultRange().name,
     };
   }
 
