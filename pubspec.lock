@@ -5,11 +5,11 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/app_diagnostics"
-      ref: "v0.3.0"
-      resolved-ref: "39b1e7f8e18750cd25058c8bb51d7f95ff86c563"
+      ref: "v0.9.0"
+      resolved-ref: "4fb72cd6e9a69ab456956e6fb8a39bdb32bb442e"
       url: "https://github.com/DoYouHost/app-shared.git"
     source: git
-    version: "0.2.0"
+    version: "0.3.0"
   app_report_client:
     dependency: "direct main"
     description:
@@ -23,20 +23,20 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/app_report_ui"
-      ref: "v0.5.0"
-      resolved-ref: d8a7d170ad6a4464ce2805e20612379fcfeecb56
+      ref: "v0.9.0"
+      resolved-ref: "4fb72cd6e9a69ab456956e6fb8a39bdb32bb442e"
       url: "https://github.com/DoYouHost/app-shared.git"
     source: git
-    version: "0.1.0"
+    version: "0.1.1"
   app_util:
     dependency: "direct main"
     description:
       path: "packages/app_util"
-      ref: "v0.7.1"
-      resolved-ref: "4b13fb4a355417719221c03dfa045fb144f4ef18"
+      ref: "v0.9.0"
+      resolved-ref: "4fb72cd6e9a69ab456956e6fb8a39bdb32bb442e"
       url: "https://github.com/DoYouHost/app-shared.git"
     source: git
-    version: "0.2.1"
+    version: "0.2.2"
   archive:
     dependency: transitive
     description:
@@ -145,20 +145,20 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/dash_kit"
-      ref: "v0.8.0"
-      resolved-ref: "79acd15dc16adf065cdd3b710b16b9cc292146c6"
+      ref: "v0.9.0"
+      resolved-ref: "4fb72cd6e9a69ab456956e6fb8a39bdb32bb442e"
       url: "https://github.com/DoYouHost/app-shared.git"
     source: git
-    version: "0.1.0"
+    version: "0.1.1"
   dash_ui:
     dependency: transitive
     description:
       path: "packages/dash_ui"
-      ref: "v0.5.0"
-      resolved-ref: d8a7d170ad6a4464ce2805e20612379fcfeecb56
+      ref: "v0.9.0"
+      resolved-ref: "4fb72cd6e9a69ab456956e6fb8a39bdb32bb442e"
       url: "https://github.com/DoYouHost/app-shared.git"
     source: git
-    version: "0.2.0"
+    version: "0.3.0"
   dbus:
     dependency: transitive
     description:
@@ -168,7 +168,7 @@ packages:
     source: hosted
     version: "0.7.13"
   device_info_plus:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: device_info_plus
       sha256: b4fed1b2835da9d670d7bed7db79ae2a94b0f5ad6312268158a9b5479abbacdd
