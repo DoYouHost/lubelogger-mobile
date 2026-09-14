@@ -739,69 +739,33 @@ class _ExpensePainter extends CustomPainter {
           panelBottom - v / distanceMax * _distanceHeight;
       _grid(canvas, size, left, distanceStep, distanceMax, yDistance, labels: true, topOnly: true);
 
-      final points = [
-        for (var i = 0; i < data.length; i++)
-          data[i].distance > 0
-              ? Offset(left + slot * (i + 0.5), yDistance(data[i].distance))
-              : null,
-      ];
-      _distanceRuns(canvas, points, panelBottom);
-
-      if (selected != null) {
-        final cx = left + slot * (selected! + 0.5);
-        canvas.drawLine(
-          Offset(cx, panelTop),
-          Offset(cx, panelBottom),
-          Paint()
-            ..color = t.textTertiary
-            ..strokeWidth = 1,
+      final distanceColor = t.textSecondary;
+      final distanceWidth = math.min(10.0, barWidth * 0.7);
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].distance <= 0) continue;
+        final cx = left + slot * (i + 0.5);
+        final top = yDistance(data[i].distance);
+        final alpha = selected == null
+            ? 0.45
+            : selected == i
+            ? 0.9
+            : 0.18;
+        canvas.drawRRect(
+          RRect.fromLTRBAndCorners(
+            cx - distanceWidth / 2,
+            top,
+            cx + distanceWidth / 2,
+            panelBottom,
+            topLeft: Radius.circular(math.min(3, panelBottom - top)),
+            topRight: Radius.circular(math.min(3, panelBottom - top)),
+          ),
+          Paint()..color = distanceColor.withValues(alpha: alpha),
         );
-        final p = points[selected!];
-        if (p != null) _dot(canvas, p, 4.5, t.textSecondary, t.overlaySurface);
       }
       axisTop = panelBottom;
     }
 
     _timeAxis(canvas, left, slot, axisTop + 6);
-  }
-
-  /// The distance line, broken wherever a slot has no reading, over a faint
-  /// wash; a lone point is drawn as a dot.
-  void _distanceRuns(Canvas canvas, List<Offset?> points, double baseline) {
-    final lineColor = t.textSecondary;
-    final runs = <List<Offset>>[];
-    for (final p in points) {
-      if (p == null) {
-        if (runs.isNotEmpty && runs.last.isNotEmpty) runs.add([]);
-        continue;
-      }
-      if (runs.isEmpty) runs.add([]);
-      runs.last.add(p);
-    }
-    for (final run in runs.where((r) => r.isNotEmpty)) {
-      if (run.length == 1) {
-        canvas.drawCircle(run.single, 3, Paint()..color = lineColor);
-        continue;
-      }
-      final line = Path()..moveTo(run.first.dx, run.first.dy);
-      for (final p in run.skip(1)) {
-        line.lineTo(p.dx, p.dy);
-      }
-      final area = Path.from(line)
-        ..lineTo(run.last.dx, baseline)
-        ..lineTo(run.first.dx, baseline)
-        ..close();
-      canvas.drawPath(area, Paint()..color = lineColor.withValues(alpha: 0.08));
-      canvas.drawPath(
-        line,
-        Paint()
-          ..color = lineColor
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round,
-      );
-    }
   }
 
   void _grid(
@@ -1102,14 +1066,13 @@ class _EconomyPainter extends CustomPainter {
       );
     }
 
+    // Joined across slots without a fill-up: refuelling every few weeks leaves
+    // most week slots empty, and a line broken at each would be only dots.
     final line = Path();
     var penDown = false;
     for (var i = 0; i < values.length; i++) {
       final p = point(i);
-      if (p == null) {
-        penDown = false;
-        continue;
-      }
+      if (p == null) continue;
       penDown ? line.lineTo(p.dx, p.dy) : line.moveTo(p.dx, p.dy);
       penDown = true;
     }

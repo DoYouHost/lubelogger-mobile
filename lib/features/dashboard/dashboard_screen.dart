@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -307,7 +304,8 @@ class _DashboardBody extends ConsumerWidget {
   }
 }
 
-/// The four stacked headline stats: odometer, distance, total cost, avg economy.
+/// The four headline stats — odometer, distance, total cost, avg economy — as
+/// rows of one card: stacked in portrait, two columns side by side when wide.
 class _StatBlock extends ConsumerWidget {
   const _StatBlock({
     required this.info,
@@ -324,141 +322,198 @@ class _StatBlock extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-
-    final odometer = units.distance(info.lastReportedOdometer);
+    final t = DashTokens.of(context);
 
     final lastOdometerDate = ref
         .watch(lastOdometerDateProvider(info.vehicle.id))
         .valueOrNull;
-    final lastOdometerDateLabel = lastOdometerDate == null
-        ? null
-        : units.formatDate(lastOdometerDate);
-
-    final distance = stats == null ? '—' : units.distance(stats!.distanceSpan);
-
-    final economy = stats == null
-        ? '—'
-        : units.economy(stats!.totalRawDistance, stats!.totalRawVolume);
 
     final rows = [
-      _StatRow(value: odometer, secondary: lastOdometerDateLabel),
-      _StatRow(value: distance, label: l10n.statDistanceTraveled),
       _StatRow(
-        value: Formatters.currency(info.totalCost, symbol),
-        label: l10n.statTotalCost,
+        icon: Icons.speed_outlined,
+        label: l10n.colOdometer,
+        value: units.distance(info.lastReportedOdometer),
+        secondary: lastOdometerDate == null
+            ? null
+            : units.formatDate(lastOdometerDate),
       ),
       _StatRow(
-        value: economy,
-        label: units.isElectric ? l10n.statAvgConsumption : l10n.statAvgEconomy,
+        icon: Icons.route_outlined,
+        label: l10n.statDistanceTraveled,
+        value: stats == null ? '—' : units.distance(stats!.distanceSpan),
+      ),
+      _StatRow(
+        icon: Icons.account_balance_wallet_outlined,
+        label: l10n.statTotalCost,
+        value: Formatters.currency(info.totalCost, symbol),
+      ),
+      _StatRow(
+        icon: units.isElectric
+            ? Icons.ev_station_outlined
+            : Icons.local_gas_station_outlined,
+        label: units.isElectric
+            ? l10n.statAvgConsumption
+            : l10n.statAvgEconomy,
+        value: stats == null
+            ? '—'
+            : units.economy(stats!.totalRawDistance, stats!.totalRawVolume),
       ),
     ];
 
-    // Side by side across the width in landscape/tablet; stacked in portrait.
-    if (context.isWideLayout) {
-      final t = DashTokens.of(context);
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          // Fit as many stat cells across as possible without the mono value
-          // wrapping mid-number. Measure the widest value at its real style
-          // instead of guessing, so it adapts to font metrics, locale and
-          // currency width. Falls back to two rows of two.
-          final valueStyle = _StatRow.valueStyle(t);
-          var widest = 0.0;
-          for (final row in rows) {
-            widest = math.max(widest, textWidth(context, row.value, valueStyle));
-          }
-          const gap = 12.0;
-          const cellSideRoom = 24.0; // breathing room around each value
-          final perCell = widest + cellSideRoom;
-          var columns = ((constraints.maxWidth + gap) / (perCell + gap))
-              .floor()
-              .clamp(1, rows.length);
-          // Prefer a balanced 2×2 over a lopsided 3 + 1.
-          if (columns == 3 && rows.length == 4) columns = 2;
-          return Column(
+    Widget column(List<_StatRow> items) => Column(
+      children: [
+        for (final (i, row) in items.indexed) ...[
+          if (i > 0)
+            Padding(
+              padding: const EdgeInsets.only(left: _StatRow.textInset),
+              child: Divider(height: 1, thickness: 1, color: t.hairline),
+            ),
+          row,
+        ],
+      ],
+    );
+
+    final content = context.isWideLayout
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (var i = 0; i < rows.length; i += columns)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var j = 0; j < columns; j++)
-                      Expanded(
-                        child: (i + j) < rows.length
-                            ? rows[i + j]
-                            : const SizedBox.shrink(),
-                      ),
-                  ],
-                ),
+              Expanded(child: column(rows.sublist(0, 2))),
+              const SizedBox(width: 16),
+              Expanded(child: column(rows.sublist(2))),
             ],
-          );
-        },
-      );
-    }
-    return Column(children: rows);
+          )
+        : column(rows);
+
+    final radius = BorderRadius.circular(16);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: t.cardGradient,
+        borderRadius: radius,
+        border: Border.all(color: t.cardBorder),
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topRight,
+                    radius: 1.3,
+                    stops: const [0, 0.6],
+                    colors: [
+                      t.accent.withValues(alpha: t.isDark ? 0.16 : 0.12),
+                      t.accent.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 24,
+              right: 24,
+              height: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      t.accent.withValues(alpha: 0),
+                      t.accent.withValues(alpha: 0.55),
+                      t.accent.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: content,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.value, this.label, this.secondary});
+  const _StatRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.secondary,
+  });
 
+  /// Where the label starts, past the icon chip; row dividers start here too.
+  static const double textInset = _chipSize + 12;
+  static const double _chipSize = 30;
+
+  final IconData icon;
+  final String label;
   final String value;
 
-  /// Caption under the value. Omitted for rows that carry only a [secondary]
-  /// chip (the odometer date).
-  final String? label;
-
-  /// Optional small chip under the value (e.g. the date of the reading).
+  /// A small line under the label (the date of the odometer reading).
   final String? secondary;
-
-  /// Style of the big mono value. Shared so the [_StatBlock] layout can measure
-  /// value widths with the exact metrics used to render them.
-  static TextStyle valueStyle(DashTokens t) => TextStyle(
-    fontFamily: DashTokens.fontMono,
-    fontSize: 26,
-    fontWeight: FontWeight.w700,
-    color: t.textPrimary,
-  );
 
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Column(
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Row(
         children: [
-          Text(value, style: valueStyle(t)),
-          if (secondary != null) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: t.subCard,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: t.subCardBorder),
-              ),
-              child: Text(
-                secondary!,
-                style: TextStyle(
-                  fontFamily: DashTokens.fontMono,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: t.textTertiary,
-                ),
+          Container(
+            width: _chipSize,
+            height: _chipSize,
+            decoration: BoxDecoration(
+              color: t.accent.withValues(alpha: t.isDark ? 0.12 : 0.14),
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: t.accent.withValues(alpha: 0.22)),
+            ),
+            child: Icon(icon, size: 17, color: t.accentInk),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: DashTokens.fontUi,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: t.textSecondary,
+                    ),
+                  ),
+                  if (secondary != null)
+                    Text(
+                      secondary!,
+                      style: TextStyle(
+                        fontFamily: DashTokens.fontMono,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: t.textTertiary,
+                      ),
+                    ),
+                ],
               ),
             ),
-          ],
-          if (label != null) ...[
-            SizedBox(height: secondary != null ? 6 : 2),
-            Text(
-              label!,
-              style: TextStyle(
-                fontFamily: DashTokens.fontUi,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: t.textTertiary,
-              ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: DashTokens.fontMono,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: t.textPrimary,
             ),
-          ],
+          ),
         ],
       ),
     );
