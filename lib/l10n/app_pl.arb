@@ -159,6 +159,7 @@
   },
 
   "addRecordTitle": "Dodaj wpis",
+  "addRecordHidden": "Ukryte pozycje ({count})",
   "formFuelTitle": "Dodaj tankowanie",
   "formFuelEditTitle": "Edytuj tankowanie",
   "formOdometerTitle": "Dodaj odczyt licznika",

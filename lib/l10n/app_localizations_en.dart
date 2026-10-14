@@ -384,6 +384,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addRecordTitle => 'Add record';
 
   @override
+  String addRecordHidden(int count) {
+    return 'Hidden records ($count)';
+  }
+
+  @override
   String get formFuelTitle => 'Add Fuel Record';
 
   @override

@@ -203,6 +203,14 @@
   },
 
   "addRecordTitle": "Add record",
+  "addRecordHidden": "Hidden records ({count})",
+  "@addRecordHidden": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "formFuelTitle": "Add Fuel Record",
   "formFuelEditTitle": "Edit Fuel Record",
   "formOdometerTitle": "Add Odometer Reading",

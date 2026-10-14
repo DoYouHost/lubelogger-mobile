@@ -390,6 +390,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get addRecordTitle => 'Dodaj wpis';
 
   @override
+  String addRecordHidden(int count) {
+    return 'Ukryte pozycje ($count)';
+  }
+
+  @override
   String get formFuelTitle => 'Dodaj tankowanie';
 
   @override

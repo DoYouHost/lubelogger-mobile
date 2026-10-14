@@ -758,6 +758,12 @@ abstract class AppLocalizations {
   /// **'Add record'**
   String get addRecordTitle;
 
+  /// No description provided for @addRecordHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden records ({count})'**
+  String addRecordHidden(int count);
+
   /// No description provided for @formFuelTitle.
   ///
   /// In en, this message translates to:
