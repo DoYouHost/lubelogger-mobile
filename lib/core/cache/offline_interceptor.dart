@@ -243,14 +243,13 @@ class OfflineInterceptor extends Interceptor {
 /// 5xx counts: a server that is up but broken (or a proxy with nothing behind
 /// it) is no more able to take a write than one that is off.
 bool isUnreachable(DioException err) => switch (err.type) {
-      DioExceptionType.connectionError ||
-      DioExceptionType.connectionTimeout ||
-      DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout ||
-      DioExceptionType.transformTimeout =>
-        true,
-      DioExceptionType.badResponse => (err.response?.statusCode ?? 0) >= 500,
-      DioExceptionType.unknown =>
-        err.error is SocketException || err.error is HttpException,
-      DioExceptionType.badCertificate || DioExceptionType.cancel => false,
-    };
+  DioExceptionType.connectionError ||
+  DioExceptionType.connectionTimeout ||
+  DioExceptionType.sendTimeout ||
+  DioExceptionType.receiveTimeout ||
+  DioExceptionType.transformTimeout => true,
+  DioExceptionType.badResponse => (err.response?.statusCode ?? 0) >= 500,
+  DioExceptionType.unknown =>
+    err.error is SocketException || err.error is HttpException,
+  DioExceptionType.badCertificate || DioExceptionType.cancel => false,
+};

@@ -139,17 +139,17 @@ class SyncService {
   }
 
   Future<Response<dynamic>> _send(PendingWrite write) => dio.request<dynamic>(
-        write.path,
-        data: write.body,
-        queryParameters: write.query,
-        options: Options(
-          method: write.method,
-          contentType: Headers.jsonContentType,
-          // Whatever happens to a retry, it must not be queued again — that is
-          // this loop's job to decide.
-          extra: {kNoQueue: true},
-        ),
-      );
+    write.path,
+    data: write.body,
+    queryParameters: write.query,
+    options: Options(
+      method: write.method,
+      contentType: Headers.jsonContentType,
+      // Whatever happens to a retry, it must not be queued again — that is
+      // this loop's job to decide.
+      extra: {kNoQueue: true},
+    ),
+  );
 
   /// A write endpoint reports failure in-band with HTTP 200; that is a refusal,
   /// not a delivery problem.
@@ -163,7 +163,9 @@ class SyncService {
 
   String _describe(DioException error) {
     final body = error.response?.data;
-    if (body is Map && body['message'] is String) return body['message'] as String;
+    if (body is Map && body['message'] is String) {
+      return body['message'] as String;
+    }
     return 'HTTP ${error.response?.statusCode ?? error.type.name}';
   }
 

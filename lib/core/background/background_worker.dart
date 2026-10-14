@@ -11,7 +11,6 @@ import '../cache/sync_service.dart';
 import '../cache/write_queue.dart';
 import '../notifications/reminder_worker.dart';
 import '../settings/settings_repository.dart';
-import '../diagnostics/diagnostics_wiring.dart';
 import '../diagnostics/report_config.dart';
 import '../diagnostics/session_facts.dart';
 
@@ -58,12 +57,12 @@ Future<void> initBackgroundWorker() =>
 /// [ExistingPeriodicWorkPolicy.update] keeps a single task and refreshes its
 /// spec without disrupting a run in progress.
 Future<void> registerBackgroundWorker() => Workmanager().registerPeriodicTask(
-      _periodicTaskUniqueName,
-      _periodicTaskName,
-      frequency: backgroundPassInterval,
-      constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
-    );
+  _periodicTaskUniqueName,
+  _periodicTaskName,
+  frequency: backgroundPassInterval,
+  constraints: Constraints(networkType: NetworkType.connected),
+  existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
+);
 
 /// Cancel the recurring pass (on logout).
 Future<void> cancelBackgroundWorker() =>
@@ -73,11 +72,11 @@ Future<void> cancelBackgroundWorker() =>
 /// is waiting for. [ExistingWorkPolicy.keep] makes repeat calls free, so every
 /// queued write may ask without stacking up passes.
 Future<void> requestWriteRetry() => Workmanager().registerOneOffTask(
-      _retryTaskUniqueName,
-      _retryTaskName,
-      constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.keep,
-    );
+  _retryTaskUniqueName,
+  _retryTaskName,
+  constraints: Constraints(networkType: NetworkType.connected),
+  existingWorkPolicy: ExistingWorkPolicy.keep,
+);
 
 /// One background pass: deliver what the write queue is holding, refresh what
 /// the app opens onto, then check for past-due reminders.
@@ -97,7 +96,7 @@ Future<void> runBackgroundPass() async {
   // "my edit never arrived" has no other witness. Null when nothing is being
   // recorded, which is the normal case.
   final recording = await DiagnosticRecorder.startBackground(
-    sessions: SettingsSessionStore(settings),
+    sessions: settings.diagnosticsSessions,
     stream: LogStream.worker,
     redactor: lubeloggerRedactor,
     sessionLimit: recordingLimit,
@@ -129,10 +128,7 @@ Future<void> runBackgroundPass() async {
   }
 }
 
-Future<void> _pass(
-  SharedPreferences prefs,
-  SettingsRepository settings,
-) async {
+Future<void> _pass(SharedPreferences prefs, SettingsRepository settings) async {
   final log = DiagnosticRecorder.active;
   log?.add(LogSource.app, 'worker_started');
 

@@ -1,5 +1,5 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -30,11 +30,8 @@ Future<bool?> showAddReminderForm(
   int vehicleId, {
   ReminderRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.reminder',
       _AddReminderForm(vehicleId: vehicleId, existing: existing),
@@ -122,23 +119,28 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
               ? l10n.validationRequired
               : null,
         ),
-        const SizedBox(height: 14),
-        DropdownButtonFormField<ReminderMetric>(
-          initialValue: _metric,
-          decoration: dashFieldDecoration(
-            t,
-            labelText: l10n.formReminderMetric,
-          ),
-          items: [
+        const SizedBox(height: DashSpace.lg),
+        dashCombo<ReminderMetric>(
+          context,
+          id: 'form.reminder_metric',
+          label: Text(l10n.formReminderMetric),
+          initialSelection: _metric,
+          enabled: !_submitting,
+          entries: [
             for (final m in _selectableMetrics)
-              DropdownMenuItem(value: m, child: Text(_metricLabel(m, l10n))),
+              DropdownMenuEntry(
+                value: m,
+                label: _metricLabel(m, l10n),
+                labelWidget: logTag(
+                  'form.reminder_metric.option',
+                  Text(_metricLabel(m, l10n)),
+                ),
+              ),
           ],
-          onChanged: _submitting
-              ? null
-              : (m) => setState(() => _metric = m ?? _metric),
+          onSelected: (m) => setState(() => _metric = m ?? _metric),
         ),
         if (_needsDate) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: DashSpace.lg),
           DateField(
             text: units.formatDate(_dueDate),
             label: l10n.formReminderDueDate,
@@ -146,7 +148,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
           ),
         ],
         if (_needsOdometer) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: DashSpace.lg),
           TextFormField(
             controller: _odometer,
             enabled: !_submitting,
@@ -159,7 +161,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
             ),
             validator: (raw) {
               // Only enforced while the field is shown (odometer/both metrics).
-              final value = parseFormNumber(raw);
+              final value = parseUserDecimal(raw);
               if (value == null) {
                 return (raw == null || raw.trim().isEmpty)
                     ? l10n.validationRequired
@@ -170,7 +172,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
             },
           ),
         ],
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _notes,
           enabled: !_submitting,
@@ -178,7 +180,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
           maxLines: 4,
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _tags,
           enabled: !_submitting,
@@ -189,9 +191,9 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dueDate,
+    final picked = await pickDate(
+      context,
+      initial: _dueDate,
       firstDate: DateTime(1900),
       lastDate: DateTime(_dueDate.year + 10, 12, 31),
     );
@@ -212,7 +214,7 @@ class _AddReminderFormState extends ConsumerState<_AddReminderForm> {
     final dueOdometer = _needsOdometer
         ? ref
               .read(vehicleUnitsProvider(widget.vehicleId))
-              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
+              .toStoredDistance(parseUserDecimal(_odometer.text)!.toDouble())
         : null;
     try {
       if (existing == null) {

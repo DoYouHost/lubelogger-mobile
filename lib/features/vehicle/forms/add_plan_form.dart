@@ -1,5 +1,5 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -26,11 +26,8 @@ Future<bool?> showAddPlanForm(
   int vehicleId, {
   PlanRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.plan',
       _AddPlanForm(vehicleId: vehicleId, existing: existing),
@@ -129,55 +126,75 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
               ? l10n.validationRequired
               : null,
         ),
-        const SizedBox(height: 14),
-        DropdownButtonFormField<PlanType>(
-          initialValue: _type,
-          decoration: dashFieldDecoration(t, labelText: l10n.formPlanType),
-          items: [
+        const SizedBox(height: DashSpace.lg),
+        dashCombo<PlanType>(
+          context,
+          id: 'form.plan_type',
+          label: Text(l10n.formPlanType),
+          initialSelection: _type,
+          enabled: _enabled,
+          entries: [
             for (final v in PlanType.values)
               if (v != PlanType.unknown)
-                DropdownMenuItem(value: v, child: Text(_typeLabel(v, l10n))),
-          ],
-          onChanged: _enabled ? (v) => setState(() => _type = v ?? _type) : null,
-        ),
-        const SizedBox(height: 14),
-        DropdownButtonFormField<PlanPriority>(
-          initialValue: _priority,
-          decoration: dashFieldDecoration(t, labelText: l10n.formPlanPriority),
-          items: [
-            for (final v in PlanPriority.values)
-              if (v != PlanPriority.unknown)
-                DropdownMenuItem(
+                DropdownMenuEntry(
                   value: v,
-                  child: Text(_priorityLabel(v, l10n)),
+                  label: _typeLabel(v, l10n),
+                  labelWidget: logTag(
+                    'form.plan_type.option',
+                    Text(_typeLabel(v, l10n)),
+                  ),
                 ),
           ],
-          onChanged: _enabled
-              ? (v) => setState(() => _priority = v ?? _priority)
-              : null,
+          onSelected: (v) => setState(() => _type = v ?? _type),
         ),
-        const SizedBox(height: 14),
-        DropdownButtonFormField<PlanProgress>(
-          initialValue: _progress,
-          decoration: dashFieldDecoration(t, labelText: l10n.formPlanProgress),
-          items: [
+        const SizedBox(height: DashSpace.lg),
+        dashCombo<PlanPriority>(
+          context,
+          id: 'form.plan_priority',
+          label: Text(l10n.formPlanPriority),
+          initialSelection: _priority,
+          enabled: _enabled,
+          entries: [
+            for (final v in PlanPriority.values)
+              if (v != PlanPriority.unknown)
+                DropdownMenuEntry(
+                  value: v,
+                  label: _priorityLabel(v, l10n),
+                  labelWidget: logTag(
+                    'form.plan_priority.option',
+                    Text(_priorityLabel(v, l10n)),
+                  ),
+                ),
+          ],
+          onSelected: (v) => setState(() => _priority = v ?? _priority),
+        ),
+        const SizedBox(height: DashSpace.lg),
+        dashCombo<PlanProgress>(
+          context,
+          id: 'form.plan_progress',
+          label: Text(l10n.formPlanProgress),
+          initialSelection: _progress,
+          enabled: _enabled,
+          entries: [
             for (final v in PlanProgress.values)
               // Done appears only on a plan that already is one, so the field
               // can show its real state; picking it is never an option.
               if (v != PlanProgress.unknown && (v.isWritable || v == _progress))
-                DropdownMenuItem(
+                DropdownMenuEntry(
                   value: v,
                   enabled: v.isWritable,
-                  child: Text(_progressLabel(v, l10n)),
+                  label: _progressLabel(v, l10n),
+                  labelWidget: logTag(
+                    'form.plan_progress.option',
+                    Text(_progressLabel(v, l10n)),
+                  ),
                 ),
           ],
-          onChanged: _enabled
-              ? (v) => setState(() => _progress = v ?? _progress)
-              : null,
+          onSelected: (v) => setState(() => _progress = v ?? _progress),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         _CostField(controller: _cost, enabled: _enabled),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _notes,
           enabled: _enabled,
@@ -185,14 +202,14 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
           maxLines: 4,
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         ExtraFieldsField(
           recordType: ExtraFieldRecordType.plan,
           initial: _extraFields,
           enabled: _enabled,
           onChanged: (fields) => _extraFields = fields,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         AttachmentsField(
           initial: _files,
           enabled: _enabled,
@@ -217,7 +234,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
         await repo.addPlanRecord(
           vehicleId: widget.vehicleId,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           type: _type,
           priority: _priority,
           progress: _progress,
@@ -229,7 +246,7 @@ class _AddPlanFormState extends ConsumerState<_AddPlanForm> {
         await repo.updatePlanRecord(
           id: existing.id,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           type: _type,
           priority: _priority,
           progress: _progress,
@@ -311,7 +328,10 @@ class _DoneNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DashSpace.md,
+        vertical: DashSpace.md,
+      ),
       decoration: BoxDecoration(
         color: t.accentOrange.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
@@ -321,7 +341,7 @@ class _DoneNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.lock_outline, size: 18, color: t.accentOrange),
-          const SizedBox(width: 10),
+          const SizedBox(width: DashSpace.md),
           Expanded(
             child: Text(
               message,
@@ -381,7 +401,7 @@ class _CostField extends StatelessWidget {
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: l10n.colCost),
       validator: (raw) {
-        final value = parseFormNumber(raw);
+        final value = parseUserDecimal(raw);
         if (value == null) {
           return (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired

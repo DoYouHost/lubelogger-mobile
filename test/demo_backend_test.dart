@@ -1,6 +1,7 @@
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lubelogger_mobile/core/demo/demo_http_adapter.dart';
+import 'package:lubelogger_mobile/core/demo/demo_backend.dart';
 import 'package:lubelogger_mobile/core/format/gas_stats.dart';
 import 'package:lubelogger_mobile/core/format/vehicle_units.dart';
 import 'package:lubelogger_mobile/core/settings/units_settings.dart';
@@ -16,7 +17,11 @@ import 'package:lubelogger_mobile/data/vehicles_repository.dart';
 void main() {
   VehiclesRepository repo() {
     final dio = Dio(BaseOptions(baseUrl: 'http://demo'))
-      ..httpClientAdapter = DemoHttpClientAdapter(latency: Duration.zero);
+      ..httpClientAdapter = DemoHttpClientAdapter(
+        DemoBackend.instance.handle,
+        uploads: DemoBackend.instance.upload,
+        latency: Duration.zero,
+      );
     return VehiclesRepository(dio);
   }
 
@@ -27,20 +32,23 @@ void main() {
     expect(vehicles.firstWhere((v) => v.id == 1).makeModel, 'Toyota Corolla');
   });
 
-  test('vehicle info aggregates costs and reminder counts consistently',
-      () async {
-    final r = repo();
-    final info = await r.info(1);
-    final reminders = await r.reminders(1);
-    expect(info.totalCost, greaterThan(0));
-    expect(info.lastReportedOdometer, greaterThan(60000));
-    final counted = info.veryUrgentReminderCount +
-        info.urgentReminderCount +
-        info.notUrgentReminderCount +
-        info.pastDueReminderCount;
-    expect(counted, reminders.length);
-    expect(info.pastDueReminderCount, greaterThanOrEqualTo(1));
-  });
+  test(
+    'vehicle info aggregates costs and reminder counts consistently',
+    () async {
+      final r = repo();
+      final info = await r.info(1);
+      final reminders = await r.reminders(1);
+      expect(info.totalCost, greaterThan(0));
+      expect(info.lastReportedOdometer, greaterThan(60000));
+      final counted =
+          info.veryUrgentReminderCount +
+          info.urgentReminderCount +
+          info.notUrgentReminderCount +
+          info.pastDueReminderCount;
+      expect(counted, reminders.length);
+      expect(info.pastDueReminderCount, greaterThanOrEqualTo(1));
+    },
+  );
 
   test('every record tab parses its seeded data', () async {
     final r = repo();
@@ -58,11 +66,11 @@ void main() {
   test('reminders carry a computed urgency, at least one past due', () async {
     final reminders = await repo().reminders(1);
     expect(reminders, isNotEmpty);
-    expect(reminders.every((x) => x.urgency != ReminderUrgency.unknown), isTrue);
     expect(
-      reminders.any((x) => x.urgency == ReminderUrgency.pastDue),
+      reminders.every((x) => x.urgency != ReminderUrgency.unknown),
       isTrue,
     );
+    expect(reminders.any((x) => x.urgency == ReminderUrgency.pastDue), isTrue);
   });
 
   test('add / update / delete a service record round-trips', () async {
@@ -90,7 +98,10 @@ void main() {
       odometer: 140050,
     );
     list = await r.records(RecordKind.service, 2);
-    expect(list.any((x) => x.description == 'Demo brake fluid (updated)'), isTrue);
+    expect(
+      list.any((x) => x.description == 'Demo brake fluid (updated)'),
+      isTrue,
+    );
 
     await r.deleteRecord(RecordKind.service, added.id);
     list = await r.records(RecordKind.service, 2);
@@ -110,38 +121,42 @@ void main() {
     expect(id, isNotNull);
     final after = await r.list();
     expect(after.length, before + 1);
-    expect(after.any((v) => v.id == id && v.makeModel == 'Honda Civic'), isTrue);
+    expect(
+      after.any((v) => v.id == id && v.makeModel == 'Honda Civic'),
+      isTrue,
+    );
   });
 
-  test('deleting a vehicle removes it and its records from the garage',
-      () async {
-    final r = repo();
-    final id = await r.addVehicle(
-      year: 2018,
-      make: 'Mazda',
-      model: '3',
-      licensePlate: 'DEMO-909',
-      fuelType: 'Gasoline',
-    );
-    expect(id, isNotNull);
-    await r.addRecord(
-      kind: RecordKind.service,
-      vehicleId: id!,
-      date: DateTime(2026, 2, 1),
-      description: 'Demo service before delete',
-      cost: 10,
-      odometer: 100,
-    );
+  test(
+    'deleting a vehicle removes it and its records from the garage',
+    () async {
+      final r = repo();
+      final id = await r.addVehicle(
+        year: 2018,
+        make: 'Mazda',
+        model: '3',
+        licensePlate: 'DEMO-909',
+        fuelType: 'Gasoline',
+      );
+      expect(id, isNotNull);
+      await r.addRecord(
+        kind: RecordKind.service,
+        vehicleId: id!,
+        date: DateTime(2026, 2, 1),
+        description: 'Demo service before delete',
+        cost: 10,
+        odometer: 100,
+      );
 
-    await r.deleteVehicle(id);
+      await r.deleteVehicle(id);
 
-    final after = await r.list();
-    expect(after.any((v) => v.id == id), isFalse);
-    expect(await r.records(RecordKind.service, id), isEmpty);
-  });
+      final after = await r.list();
+      expect(after.any((v) => v.id == id), isFalse);
+      expect(await r.records(RecordKind.service, id), isEmpty);
+    },
+  );
 
-  test('the electric vehicle charges with a coherent state of charge',
-      () async {
+  test('the electric vehicle charges with a coherent state of charge', () async {
     final r = repo();
     expect((await r.list()).firstWhere((v) => v.id == 3).isElectric, isTrue);
 
@@ -198,9 +213,10 @@ void main() {
     final templates = await r.extraFieldTemplates();
     expect(templates[ExtraFieldRecordType.service], isNotEmpty);
 
-    final before = (await r.records(RecordKind.service, 1)).firstWhere(
-      (rec) => rec.extraFields.isNotEmpty,
-    );
+    final before = (await r.records(
+      RecordKind.service,
+      1,
+    )).firstWhere((rec) => rec.extraFields.isNotEmpty);
     await r.updateRecord(
       kind: RecordKind.service,
       id: before.id,
@@ -211,8 +227,10 @@ void main() {
       extraFields: before.extraFields,
     );
 
-    final after = (await r.records(RecordKind.service, 1))
-        .firstWhere((rec) => rec.id == before.id);
+    final after = (await r.records(
+      RecordKind.service,
+      1,
+    )).firstWhere((rec) => rec.id == before.id);
     expect(after.extraFields.single.name, before.extraFields.single.name);
     expect(after.extraFields.single.value, before.extraFields.single.value);
   });

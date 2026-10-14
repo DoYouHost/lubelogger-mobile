@@ -89,6 +89,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
       for (final tab in order)
         if (visible.contains(tab)) tab,
     ];
+    final hidden = [
+      for (final tab in order)
+        if (!visible.contains(tab)) tab,
+    ];
     _tabs = <_VehicleTab>[
       _VehicleTab(
         'dashboard',
@@ -97,8 +101,7 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
         DashboardTab(vehicleId: vehicleId),
         (ref) => invalidateVehicleData(ref.invalidate, vehicleId),
       ),
-      for (final tab in orderedVisible)
-        _recordTab(tab, l10n, vehicleId),
+      for (final tab in orderedVisible) _recordTab(tab, l10n, vehicleId),
     ];
 
     final controller = _controllerFor(_tabs.length);
@@ -106,13 +109,26 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
     return DashBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: DashTokens.of(context).accentGold,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          onPressed: () =>
-              showAddRecordSheet(context, vehicleId, orderedVisible),
-          child: const Icon(Icons.add),
-        ).tagged('vehicle.add'),
+        // On a record tab the FAB adds that tab's record type straight away;
+        // the dashboard, or a long press anywhere, opens the full picker.
+        floatingActionButton: GestureDetector(
+          onLongPress: () {
+            Feedback.forLongPress(context);
+            showAddRecordSheet(context, vehicleId, orderedVisible, hidden);
+          },
+          child: FloatingActionButton(
+            backgroundColor: DashTokens.of(context).accentGold,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            onPressed: () => controller.index == 0
+                ? showAddRecordSheet(context, vehicleId, orderedVisible, hidden)
+                : showAddRecordForm(
+                    context,
+                    vehicleId,
+                    orderedVisible[controller.index - 1],
+                  ),
+            child: const Icon(Icons.add),
+          ).tagged('vehicle.add'),
+        ),
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -190,7 +206,10 @@ class _VehicleScreenState extends ConsumerState<VehicleScreen>
 
   /// The generic (date + cost) record tab + its refresh, shared by
   /// service / repair / upgrade / tax.
-  (Widget, void Function(WidgetRef)) _genericTab(int vehicleId, RecordKind kind) => (
+  (Widget, void Function(WidgetRef)) _genericTab(
+    int vehicleId,
+    RecordKind kind,
+  ) => (
     GenericRecordsTab(vehicleId: vehicleId, kind: kind),
     (ref) => ref.invalidate(
       vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)),
@@ -233,7 +252,12 @@ class _VehicleHeader extends ConsumerWidget {
           ].where((s) => s.isNotEmpty).join(' ');
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(
+        DashSpace.xs,
+        DashSpace.sm,
+        DashSpace.lg,
+        DashSpace.md,
+      ),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: t.hairline)),
       ),
@@ -244,7 +268,7 @@ class _VehicleHeader extends ConsumerWidget {
             onPressed: () => context.pop(),
           ).tagged('vehicle.back'),
           _Avatar(vehicle: vehicle, baseUrl: baseUrl, apiKey: apiKey),
-          const SizedBox(width: 12),
+          const SizedBox(width: DashSpace.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +286,7 @@ class _VehicleHeader extends ConsumerWidget {
                 ),
                 if (vehicle != null && vehicle!.licensePlate.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.only(top: DashSpace.xs),
                     child: Text(
                       '(${vehicle!.licensePlate})',
                       style: TextStyle(
@@ -318,9 +342,7 @@ class _Avatar extends StatelessWidget {
                     .round(),
               ),
               fit: BoxFit.cover,
-              errorBuilder: ImageProbe.errorBuilder(
-                Center(child: placeholder),
-              ),
+              errorBuilder: ImageProbe.errorBuilder(Center(child: placeholder)),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),
             ),
@@ -359,7 +381,7 @@ class _VehicleTabBar extends StatelessWidget {
         ),
         labelColor: t.accentGoldInk,
         unselectedLabelColor: t.textSecondary,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+        labelPadding: const EdgeInsets.symmetric(horizontal: DashSpace.sm),
         labelStyle: const TextStyle(
           fontFamily: DashTokens.fontUi,
           fontSize: 13,
@@ -377,12 +399,12 @@ class _VehicleTabBar extends StatelessWidget {
               Tab(
                 height: 44,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: DashSpace.md),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(tab.icon, size: 17),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: DashSpace.sm),
                       Text(tab.label),
                     ],
                   ),

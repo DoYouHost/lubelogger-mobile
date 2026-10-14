@@ -25,8 +25,8 @@ class SetupState {
 
 final setupControllerProvider =
     AutoDisposeNotifierProvider<SetupController, SetupState>(
-  SetupController.new,
-);
+      SetupController.new,
+    );
 
 /// Drives the login screen: validate input, verify the API key against
 /// `GET /api/whoami`, then persist the profile (which flips the router to the
@@ -35,19 +35,19 @@ class SetupController extends AutoDisposeNotifier<SetupState> {
   @override
   SetupState build() => const SetupState();
 
-  Future<void> connect({
-    required String rawUrl,
-    required String apiKey,
-  }) async {
+  Future<void> connect({required String rawUrl, required String apiKey}) async {
     final url = ServerProfile.normalizeBaseUrl(rawUrl);
     // The scheme is the diagnosis for a whole class of "it will not connect"
     // reports — the address itself is the user's and never goes in. A recording
     // started on this screen has no server profile yet, so the session header
     // cannot carry it either.
-    _log('sign_in', fields: {
-      'scheme': Uri.tryParse(url)?.scheme,
-      'demo': DemoConfig.isDemoUrl(url) ? true : null,
-    });
+    _log(
+      'sign_in',
+      fields: {
+        'scheme': Uri.tryParse(url)?.scheme,
+        'demo': DemoConfig.isDemoUrl(url) ? true : null,
+      },
+    );
     if (url.isEmpty) {
       state = state.copyWith(error: SetupErrorCode.missingUrl);
       _log('sign_in_rejected', fields: {'reason': 'missingUrl'});
@@ -69,17 +69,18 @@ class SetupController extends AutoDisposeNotifier<SetupState> {
         return;
       }
       await ref.read(credentialsStoreProvider).writeApiKey(DemoConfig.token);
-      await ref.read(serverProfileProvider.notifier).save(
+      await ref
+          .read(serverProfileProvider.notifier)
+          .save(
             const ServerProfile(baseUrl: DemoConfig.baseUrl, label: 'Demo'),
           );
       return;
     }
     state = const SetupState(busy: true);
     try {
-      final result = await ref.read(authServiceProvider).verifyAndStoreApiKey(
-            baseUrl: url,
-            apiKey: apiKey.trim(),
-          );
+      final result = await ref
+          .read(authServiceProvider)
+          .verifyAndStoreApiKey(baseUrl: url, apiKey: apiKey.trim());
       await _saveProfile(result.baseUrl, result.who);
       _log('sign_in_ok');
     } on AppApiException catch (e) {
@@ -100,15 +101,20 @@ class SetupController extends AutoDisposeNotifier<SetupState> {
     String evt, {
     LogLevel lvl = LogLevel.info,
     Map<String, Object?> fields = const {},
-  }) =>
-      DiagnosticRecorder.active?.add(LogSource.app, evt, lvl: lvl, fields: fields);
+  }) => DiagnosticRecorder.active?.add(
+    LogSource.app,
+    evt,
+    lvl: lvl,
+    fields: fields,
+  );
 
   /// Saving the profile switches the router to the app shell (see routerProvider).
-  Future<void> _saveProfile(String url, WhoAmI who) =>
-      ref.read(serverProfileProvider.notifier).save(
-            ServerProfile(
-              baseUrl: url,
-              label: who.displayName.isEmpty ? null : who.displayName,
-            ),
-          );
+  Future<void> _saveProfile(String url, WhoAmI who) => ref
+      .read(serverProfileProvider.notifier)
+      .save(
+        ServerProfile(
+          baseUrl: url,
+          label: who.displayName.isEmpty ? null : who.displayName,
+        ),
+      );
 }

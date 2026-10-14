@@ -27,9 +27,9 @@ class ServerCapabilities {
   /// and an attempt on an older server still lands on the same explanation via
   /// the 404 that `AppErrorCode.unsupportedByServer` carries.
   factory ServerCapabilities.forVersion(String version) => ServerCapabilities(
-        version: version,
-        vehicleDelete: versionAtLeast(version, vehicleDeleteSince) ?? true,
-      );
+    version: version,
+    vehicleDelete: versionAtLeast(version, vehicleDeleteSince) ?? true,
+  );
 
   /// First version exposing `DELETE /api/vehicles/delete`.
   static const vehicleDeleteSince = '1.7.0';

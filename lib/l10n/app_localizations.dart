@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsUnitsMetricNote.
   ///
   /// In en, this message translates to:
-  /// **'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.'**
+  /// **'Set the units your LubeLogger server stores values in (metric = km & liters). The app converts them to your chosen display units.'**
   String get settingsUnitsMetricNote;
 
   /// No description provided for @settingsVisibleTabs.
@@ -320,11 +320,11 @@ abstract class AppLocalizations {
   /// **'Expenses by Type'**
   String get chartExpensesByType;
 
-  /// No description provided for @chartExpensesDistanceByMonth.
+  /// No description provided for @chartExpensesDistance.
   ///
   /// In en, this message translates to:
-  /// **'Expenses and Distance by Month'**
-  String get chartExpensesDistanceByMonth;
+  /// **'Expenses and Distance'**
+  String get chartExpensesDistance;
 
   /// No description provided for @chartRemindersByUrgency.
   ///
@@ -332,23 +332,143 @@ abstract class AppLocalizations {
   /// **'Reminders by Urgency'**
   String get chartRemindersByUrgency;
 
-  /// No description provided for @chartFuelMileageByMonth.
+  /// No description provided for @chartFuelMileage.
   ///
   /// In en, this message translates to:
-  /// **'Fuel Mileage by Month'**
-  String get chartFuelMileageByMonth;
+  /// **'Fuel Mileage'**
+  String get chartFuelMileage;
 
-  /// No description provided for @chartNoData.
+  /// No description provided for @chartNoDataInRange.
   ///
   /// In en, this message translates to:
-  /// **'No data yet'**
-  String get chartNoData;
+  /// **'No data in this period'**
+  String get chartNoDataInRange;
 
   /// No description provided for @chartNoReminders.
   ///
   /// In en, this message translates to:
   /// **'No reminders'**
   String get chartNoReminders;
+
+  /// No description provided for @chartRemindersTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} total'**
+  String chartRemindersTotal(int count);
+
+  /// No description provided for @chartTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get chartTotal;
+
+  /// Label on a chart's average line; value is a formatted number
+  ///
+  /// In en, this message translates to:
+  /// **'avg {value}'**
+  String chartAverage(String value);
+
+  /// Time-axis label for a calendar quarter
+  ///
+  /// In en, this message translates to:
+  /// **'Q{quarter}'**
+  String chartQuarter(int quarter);
+
+  /// No description provided for @chartRangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data range'**
+  String get chartRangeTitle;
+
+  /// No description provided for @chartRangeOneMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get chartRangeOneMonth;
+
+  /// No description provided for @chartRangeThreeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 months'**
+  String get chartRangeThreeMonths;
+
+  /// No description provided for @chartRangeSixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'6 months'**
+  String get chartRangeSixMonths;
+
+  /// No description provided for @chartRangeYear.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get chartRangeYear;
+
+  /// No description provided for @chartRangeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get chartRangeCustom;
+
+  /// Chart range button label; keep it very short
+  ///
+  /// In en, this message translates to:
+  /// **'1 mo'**
+  String get chartRangeOneMonthShort;
+
+  /// No description provided for @chartRangeThreeMonthsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'3 mo'**
+  String get chartRangeThreeMonthsShort;
+
+  /// No description provided for @chartRangeSixMonthsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'6 mo'**
+  String get chartRangeSixMonthsShort;
+
+  /// No description provided for @chartRangeYearShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1 yr'**
+  String get chartRangeYearShort;
+
+  /// Badge next to the range option that Settings sets as default
+  ///
+  /// In en, this message translates to:
+  /// **'default'**
+  String get chartRangeDefault;
+
+  /// No description provided for @chartRangeSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the default range for all charts in Settings.'**
+  String get chartRangeSettingsHint;
+
+  /// Screen-reader label of a chart's range button
+  ///
+  /// In en, this message translates to:
+  /// **'Data range: {range}'**
+  String chartRangeButton(String range);
+
+  /// No description provided for @settingsCharts.
+  ///
+  /// In en, this message translates to:
+  /// **'Charts'**
+  String get settingsCharts;
+
+  /// No description provided for @settingsChartDefaultRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Default chart range'**
+  String get settingsChartDefaultRange;
+
+  /// No description provided for @settingsChartsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can switch each chart on the vehicle dashboard separately.'**
+  String get settingsChartsNote;
 
   /// No description provided for @legendExpenses.
   ///
@@ -491,7 +611,7 @@ abstract class AppLocalizations {
   /// Long-press text on a record card's note icon.
   ///
   /// In en, this message translates to:
-  /// **'Has a note'**
+  /// **'Has a note'**
   String get cardHasNote;
 
   /// No description provided for @tabDashboard.
@@ -637,6 +757,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add record'**
   String get addRecordTitle;
+
+  /// No description provided for @addRecordHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden records ({count})'**
+  String addRecordHidden(int count);
 
   /// No description provided for @formFuelTitle.
   ///
@@ -1019,7 +1145,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleDeleteUnsupportedMessage.
   ///
   /// In en, this message translates to:
-  /// **'Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.'**
+  /// **'Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.'**
   String vehicleDeleteUnsupportedMessage(String required, String current);
 
   /// No description provided for @actionOk.
@@ -1121,13 +1247,13 @@ abstract class AppLocalizations {
   /// Shown for 413/502/504, where retrying the same file cannot help — so the message must not say 'try again'.
   ///
   /// In en, this message translates to:
-  /// **'The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.'**
+  /// **'The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.'**
   String attachmentUploadRejected(String size, int status);
 
   /// No description provided for @attachmentUploadInterrupted.
   ///
   /// In en, this message translates to:
-  /// **'The upload was interrupted ({size} MB). On a slow connection a large file may not get through.'**
+  /// **'The upload was interrupted ({size} MB). On a slow connection a large file may not get through.'**
   String attachmentUploadInterrupted(String size);
 
   /// No description provided for @attachmentOpenError.
@@ -1205,7 +1331,7 @@ abstract class AppLocalizations {
   /// No description provided for @validationNumber.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid number'**
+  /// **'Enter a valid number'**
   String get validationNumber;
 
   /// No description provided for @recordAdded.
@@ -1307,7 +1433,7 @@ abstract class AppLocalizations {
   /// No description provided for @errUnauthorized.
   ///
   /// In en, this message translates to:
-  /// **'Authentication failed or the key lacks the required permission.'**
+  /// **'Authentication failed, or the key lacks the required permission.'**
   String get errUnauthorized;
 
   /// No description provided for @errForbidden.
@@ -1355,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @errApiKeyRejected.
   ///
   /// In en, this message translates to:
-  /// **'The API key was rejected by the server.'**
+  /// **'The server rejected the API key.'**
   String get errApiKeyRejected;
 
   /// App version + build number, shown in Settings > About.
@@ -1421,7 +1547,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotificationsNote.
   ///
   /// In en, this message translates to:
-  /// **'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.'**
+  /// **'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.'**
   String get settingsNotificationsNote;
 
   /// No description provided for @notifRemindersToggle.
@@ -1469,512 +1595,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDiagnosticsNote.
   ///
   /// In en, this message translates to:
-  /// **'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.'**
+  /// **'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.'**
   String get settingsDiagnosticsNote;
 
   /// No description provided for @bugReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Report a bug or an idea'**
+  /// **'Report a bug or an idea'**
   String get bugReportTitle;
-
-  /// No description provided for @bugReportIntroHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'How it works'**
-  String get bugReportIntroHeader;
-
-  /// No description provided for @bugReportPrivacyHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'What ends up in the log'**
-  String get bugReportPrivacyHeader;
-
-  /// No description provided for @bugReportStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Start recording'**
-  String get bugReportStart;
-
-  /// No description provided for @bugReportRecordingHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Recording'**
-  String get bugReportRecordingHeader;
-
-  /// No description provided for @bugReportRecordingBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Go back and reproduce it. The bar follows you — use it to mark the moment it breaks, and to finish.'**
-  String get bugReportRecordingBody;
-
-  /// No description provided for @bugReportLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'A recording stops by itself after {minutes} minutes.'**
-  String bugReportLimit(int minutes);
-
-  /// No description provided for @bugReportLimitReached.
-  ///
-  /// In en, this message translates to:
-  /// **'Recording finished — the {minutes} minute limit was reached.'**
-  String bugReportLimitReached(int minutes);
-
-  /// No description provided for @bugReportSizeLimitReached.
-  ///
-  /// In en, this message translates to:
-  /// **'Recording finished — the log reached its {megabytes} MB limit.'**
-  String bugReportSizeLimitReached(int megabytes);
-
-  /// No description provided for @bugReportMark.
-  ///
-  /// In en, this message translates to:
-  /// **'Mark the moment'**
-  String get bugReportMark;
-
-  /// No description provided for @bugReportMarked.
-  ///
-  /// In en, this message translates to:
-  /// **'Moment marked'**
-  String get bugReportMarked;
-
-  /// No description provided for @bugReportStop.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish recording'**
-  String get bugReportStop;
-
-  /// No description provided for @bugReportStopShort.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish'**
-  String get bugReportStopShort;
-
-  /// No description provided for @bugReportShow.
-  ///
-  /// In en, this message translates to:
-  /// **'Show'**
-  String get bugReportShow;
-
-  /// No description provided for @bugReportBannerLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Recording'**
-  String get bugReportBannerLabel;
-
-  /// No description provided for @bugReportBarMove.
-  ///
-  /// In en, this message translates to:
-  /// **'Move the recording bar'**
-  String get bugReportBarMove;
-
-  /// No description provided for @bugReportBarCollapse.
-  ///
-  /// In en, this message translates to:
-  /// **'Collapse the recording bar'**
-  String get bugReportBarCollapse;
-
-  /// No description provided for @bugReportBarExpand.
-  ///
-  /// In en, this message translates to:
-  /// **'Expand the recording bar'**
-  String get bugReportBarExpand;
-
-  /// No description provided for @bugReportRecoveredHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'A recording survived a crash'**
-  String get bugReportRecoveredHeader;
-
-  /// No description provided for @bugReportRecoveredBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The app closed while it was recording. What it had written down is still on the phone — look at it, or throw it away.'**
-  String get bugReportRecoveredBody;
-
-  /// No description provided for @bugReportReviewHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Review before sending'**
-  String get bugReportReviewHeader;
-
-  /// No description provided for @bugReportReviewBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This is everything that was recorded. Read it through — below you choose whether it stays on the phone or goes out as a public issue.'**
-  String get bugReportReviewBody;
-
-  /// No description provided for @bugReportSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'{records} records · {errors} errors · {warnings} warnings'**
-  String bugReportSummary(int records, int errors, int warnings);
-
-  /// No description provided for @bugReportMarkers.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 marked moment} other{{count} marked moments}}'**
-  String bugReportMarkers(int count);
-
-  /// No description provided for @bugReportTruncated.
-  ///
-  /// In en, this message translates to:
-  /// **'The session was long — the oldest records were dropped.'**
-  String get bugReportTruncated;
-
-  /// No description provided for @bugReportEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing was recorded.'**
-  String get bugReportEmpty;
-
-  /// No description provided for @bugReportShowRaw.
-  ///
-  /// In en, this message translates to:
-  /// **'Show raw log'**
-  String get bugReportShowRaw;
-
-  /// No description provided for @bugReportHideRaw.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide raw log'**
-  String get bugReportHideRaw;
-
-  /// No description provided for @bugReportRawClipped.
-  ///
-  /// In en, this message translates to:
-  /// **'The first {kb} kB are not shown here. The file you save holds the whole session.'**
-  String bugReportRawClipped(int kb);
-
-  /// No description provided for @bugReportDestinationFile.
-  ///
-  /// In en, this message translates to:
-  /// **'Save to a file'**
-  String get bugReportDestinationFile;
-
-  /// No description provided for @bugReportDestinationIssue.
-  ///
-  /// In en, this message translates to:
-  /// **'Report on GitHub'**
-  String get bugReportDestinationIssue;
-
-  /// No description provided for @bugReportDestinationFileBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The log is saved where you choose and stays on your phone. You decide whether to send it anywhere.'**
-  String get bugReportDestinationFileBody;
-
-  /// No description provided for @bugReportDestinationIssueBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The log and your description are posted as a public issue on GitHub, where anyone can read them and they stay for good. Go through the log below first.'**
-  String get bugReportDestinationIssueBody;
-
-  /// No description provided for @bugReportDescriptionLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'What went wrong?'**
-  String get bugReportDescriptionLabel;
-
-  /// No description provided for @bugReportDescriptionHint.
-  ///
-  /// In en, this message translates to:
-  /// **'What you were doing, what you expected, what happened instead.'**
-  String get bugReportDescriptionHint;
-
-  /// No description provided for @bugReportDescriptionRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Say what went wrong — a log with no description is nearly unusable.'**
-  String get bugReportDescriptionRequired;
-
-  /// No description provided for @bugReportSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Save to a file'**
-  String get bugReportSave;
-
-  /// No description provided for @bugReportSaveShort.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get bugReportSaveShort;
-
-  /// No description provided for @bugReportSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Log saved to the file'**
-  String get bugReportSaved;
-
-  /// No description provided for @bugReportSaveFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'The log could not be saved.'**
-  String get bugReportSaveFailed;
-
-  /// No description provided for @bugReportSend.
-  ///
-  /// In en, this message translates to:
-  /// **'Report'**
-  String get bugReportSend;
-
-  /// No description provided for @bugReportSending.
-  ///
-  /// In en, this message translates to:
-  /// **'Sending…'**
-  String get bugReportSending;
-
-  /// No description provided for @bugReportSendWaiting.
-  ///
-  /// In en, this message translates to:
-  /// **'Sending in {clock}'**
-  String bugReportSendWaiting(String clock);
-
-  /// No description provided for @bugReportSendWaitingBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The relay spaces reports out. You can leave this screen — it goes on its own.'**
-  String get bugReportSendWaitingBody;
-
-  /// No description provided for @bugReportSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Report sent'**
-  String get bugReportSent;
-
-  /// No description provided for @bugReportSentBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you. The issue is open and the log is attached to it.'**
-  String get bugReportSentBody;
-
-  /// No description provided for @bugReportOpenIssue.
-  ///
-  /// In en, this message translates to:
-  /// **'Open the issue'**
-  String get bugReportOpenIssue;
-
-  /// No description provided for @bugReportDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get bugReportDone;
-
-  /// No description provided for @bugReportSendFailedNotYet.
-  ///
-  /// In en, this message translates to:
-  /// **'The relay is not accepting reports right now. Try again later, or save the log to a file.'**
-  String get bugReportSendFailedNotYet;
-
-  /// No description provided for @bugReportSendFailedRefused.
-  ///
-  /// In en, this message translates to:
-  /// **'The relay refused this report. Save the log to a file and attach it yourself.'**
-  String get bugReportSendFailedRefused;
-
-  /// No description provided for @bugReportSendFailedDuplicate.
-  ///
-  /// In en, this message translates to:
-  /// **'This one has already been reported.'**
-  String get bugReportSendFailedDuplicate;
-
-  /// No description provided for @bugReportSendFailedUnreachable.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not reach the relay. Check the connection, or save the log to a file.'**
-  String get bugReportSendFailedUnreachable;
-
-  /// No description provided for @bugReportSendFailedRejected.
-  ///
-  /// In en, this message translates to:
-  /// **'The relay rejected this report. Save the log to a file and attach it yourself.'**
-  String get bugReportSendFailedRejected;
-
-  /// No description provided for @bugReportSendFailedDemo.
-  ///
-  /// In en, this message translates to:
-  /// **'Demo mode does not publish reports. Save the log to a file instead.'**
-  String get bugReportSendFailedDemo;
-
-  /// No description provided for @bugReportDiscard.
-  ///
-  /// In en, this message translates to:
-  /// **'Discard'**
-  String get bugReportDiscard;
-
-  /// No description provided for @bugReportDiscardQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Discard this recording?'**
-  String get bugReportDiscardQuestion;
-
-  /// No description provided for @bugReportDiscardBody.
-  ///
-  /// In en, this message translates to:
-  /// **'The log will be deleted from the phone.'**
-  String get bugReportDiscardBody;
-
-  /// No description provided for @bugReportDiscardBodyQueued.
-  ///
-  /// In en, this message translates to:
-  /// **'The log will be deleted from the phone and the queued report cancelled.'**
-  String get bugReportDiscardBodyQueued;
-
-  /// No description provided for @bugReportKindQuestion.
-  ///
-  /// In en, this message translates to:
-  /// **'What are you reporting?'**
-  String get bugReportKindQuestion;
-
-  /// No description provided for @bugReportKindBug.
-  ///
-  /// In en, this message translates to:
-  /// **'Bug'**
-  String get bugReportKindBug;
-
-  /// No description provided for @bugReportKindChange.
-  ///
-  /// In en, this message translates to:
-  /// **'Change'**
-  String get bugReportKindChange;
-
-  /// No description provided for @bugReportKindFeature.
-  ///
-  /// In en, this message translates to:
-  /// **'Feature'**
-  String get bugReportKindFeature;
-
-  /// No description provided for @bugReportChangeHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Request a change'**
-  String get bugReportChangeHeader;
-
-  /// No description provided for @bugReportChangeBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Something works, but not the way it should.'**
-  String get bugReportChangeBody;
-
-  /// No description provided for @bugReportFeatureHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'Request a feature'**
-  String get bugReportFeatureHeader;
-
-  /// No description provided for @bugReportFeatureBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Something the app cannot do yet.'**
-  String get bugReportFeatureBody;
-
-  /// No description provided for @bugReportRequestPrivacyHeader.
-  ///
-  /// In en, this message translates to:
-  /// **'What gets sent'**
-  String get bugReportRequestPrivacyHeader;
-
-  /// No description provided for @bugReportChangeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'What should change?'**
-  String get bugReportChangeLabel;
-
-  /// No description provided for @bugReportChangeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'What it does now, and what it should do instead.'**
-  String get bugReportChangeHint;
-
-  /// No description provided for @bugReportFeatureLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'What is missing?'**
-  String get bugReportFeatureLabel;
-
-  /// No description provided for @bugReportFeatureHint.
-  ///
-  /// In en, this message translates to:
-  /// **'What you want to do, and why the app does not let you.'**
-  String get bugReportFeatureHint;
-
-  /// No description provided for @bugReportRequestRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Write what you are asking for — an empty request cannot be acted on.'**
-  String get bugReportRequestRequired;
-
-  /// No description provided for @bugReportRequestSentBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you. The issue is open.'**
-  String get bugReportRequestSentBody;
-
-  /// No description provided for @bugReportCancelSend.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel sending'**
-  String get bugReportCancelSend;
-
-  /// No description provided for @bugReportRequestFailedNotYet.
-  ///
-  /// In en, this message translates to:
-  /// **'The relay is not accepting reports right now. Try again later.'**
-  String get bugReportRequestFailedNotYet;
-
-  /// No description provided for @bugReportRequestFailedRefused.
-  ///
-  /// In en, this message translates to:
-  /// **'The relay refused this request. You can open the issue yourself on GitHub.'**
-  String get bugReportRequestFailedRefused;
-
-  /// No description provided for @bugReportRequestFailedUnreachable.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not reach the relay. Check the connection and try again.'**
-  String get bugReportRequestFailedUnreachable;
-
-  /// No description provided for @bugReportRequestFailedDemo.
-  ///
-  /// In en, this message translates to:
-  /// **'Demo mode does not publish reports.'**
-  String get bugReportRequestFailedDemo;
-
-  /// No description provided for @bugReportQueuedBug.
-  ///
-  /// In en, this message translates to:
-  /// **'This countdown is for the bug report you already sent.'**
-  String get bugReportQueuedBug;
-
-  /// No description provided for @bugReportQueuedChange.
-  ///
-  /// In en, this message translates to:
-  /// **'This countdown is for the change request you already sent.'**
-  String get bugReportQueuedChange;
-
-  /// No description provided for @bugReportQueuedFeature.
-  ///
-  /// In en, this message translates to:
-  /// **'This countdown is for the feature request you already sent.'**
-  String get bugReportQueuedFeature;
-
-  /// No description provided for @bugReportStepRecord.
-  ///
-  /// In en, this message translates to:
-  /// **'Start recording'**
-  String get bugReportStepRecord;
-
-  /// No description provided for @bugReportStepReproduce.
-  ///
-  /// In en, this message translates to:
-  /// **'Reproduce the problem'**
-  String get bugReportStepReproduce;
-
-  /// No description provided for @bugReportStepFinish.
-  ///
-  /// In en, this message translates to:
-  /// **'Come back and finish'**
-  String get bugReportStepFinish;
 
   /// No description provided for @bugReportLogScreens.
   ///
@@ -2024,41 +1652,11 @@ abstract class AppLocalizations {
   /// **'Plates, notes, your records — only how long they were'**
   String get bugReportLogNoData;
 
-  /// No description provided for @bugReportReviewFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'You read all of it before it leaves the phone.'**
-  String get bugReportReviewFirst;
-
-  /// No description provided for @bugReportRequestWhatYouWrite.
-  ///
-  /// In en, this message translates to:
-  /// **'What you write'**
-  String get bugReportRequestWhatYouWrite;
-
-  /// No description provided for @bugReportRequestVersions.
-  ///
-  /// In en, this message translates to:
-  /// **'App and server version'**
-  String get bugReportRequestVersions;
-
-  /// No description provided for @bugReportRequestNoLog.
-  ///
-  /// In en, this message translates to:
-  /// **'No log, no recording'**
-  String get bugReportRequestNoLog;
-
   /// No description provided for @bugReportRequestNoData.
   ///
   /// In en, this message translates to:
   /// **'Nothing about your vehicles or your phone'**
   String get bugReportRequestNoData;
-
-  /// No description provided for @bugReportRequestPublic.
-  ///
-  /// In en, this message translates to:
-  /// **'It becomes a public issue on GitHub — anyone can read it, and it stays.'**
-  String get bugReportRequestPublic;
 
   /// Fuel tab summary pill: total energy drawn from the battery
   ///
@@ -2078,16 +1676,16 @@ abstract class AppLocalizations {
   /// **'Average Consumption'**
   String get statAvgConsumption;
 
-  /// No description provided for @chartConsumptionByMonth.
+  /// No description provided for @chartConsumption.
   ///
   /// In en, this message translates to:
-  /// **'Consumption by Month'**
-  String get chartConsumptionByMonth;
+  /// **'Consumption'**
+  String get chartConsumption;
 
   /// Warning shown on the plan form when the item's progress is Done
   ///
   /// In en, this message translates to:
-  /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
+  /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
   String get planDoneReadOnly;
 
   /// No description provided for @syncTitle.
@@ -2225,7 +1823,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsBackgroundRefreshSub.
   ///
   /// In en, this message translates to:
-  /// **'Keeps the stored copy current, so the app opens on your records instead of a spinner.'**
+  /// **'Keeps the stored copy current, so the app opens on your records instead of a spinner.'**
   String get settingsBackgroundRefreshSub;
 
   /// No description provided for @settingsStoredData.

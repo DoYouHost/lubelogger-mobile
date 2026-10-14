@@ -5,6 +5,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/models/attachment.dart';
+import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers.dart';
 
@@ -97,10 +98,9 @@ Future<void> _downloadAndOpen(
   try {
     final dir = await getTemporaryDirectory();
     savePath = '${dir.path}/${_safeName(file.name)}';
-    await ref.read(vehiclesRepositoryProvider).downloadDocument(
-          file.location,
-          savePath,
-        );
+    await ref
+        .read(vehiclesRepositoryProvider)
+        .downloadDocument(file.location, savePath);
   } on Object catch (error) {
     savePath = null;
     _log(
@@ -172,9 +172,8 @@ class _ImageViewerPage extends StatelessWidget {
                       headers: apiKey == null ? null : {'x-api-key': apiKey!},
                     ),
               fit: BoxFit.contain,
-              loadingBuilder: (context, child, progress) => progress == null
-                  ? child
-                  : const CircularProgressIndicator(),
+              loadingBuilder: (context, child, progress) =>
+                  progress == null ? child : const CircularProgressIndicator(),
               errorBuilder: (context, error, stack) {
                 // This request goes out through `Image.network`, not through dio,
                 // so the HTTP probe never sees it: without this, a picture that
@@ -185,7 +184,7 @@ class _ImageViewerPage extends StatelessWidget {
                   fields: {'type': error.runtimeType.toString()},
                 );
                 return Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(DashSpace.xl),
                   child: Text(
                     l10n.attachmentOpenError,
                     style: const TextStyle(color: Colors.white70),

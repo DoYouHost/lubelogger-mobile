@@ -13,7 +13,7 @@ DiagnosticRecorder lubeloggerRecorder({
   required Future<SessionFacts> Function() loadFacts,
   Future<Directory?> Function() resolveDirectory = diagnosticsDirectory,
 }) => DiagnosticRecorder(
-  sessions: SettingsSessionStore(settings),
+  sessions: settings.diagnosticsSessions,
   redactor: lubeloggerRedactor,
   loadFacts: loadFacts,
   sessionDuration: recordingLimit,
@@ -21,20 +21,6 @@ DiagnosticRecorder lubeloggerRecorder({
   listeners: [LubeloggerSessionListener(settings)],
   resolveDirectory: resolveDirectory,
 );
-
-/// The running session's id, kept where the WorkManager isolate can read it.
-class SettingsSessionStore implements DiagnosticsSessionStore {
-  const SettingsSessionStore(this.settings);
-
-  final SettingsRepository settings;
-
-  @override
-  String? loadSession() => settings.loadDiagnosticsSession();
-
-  @override
-  Future<void> saveSession(String? session) =>
-      settings.saveDiagnosticsSession(session);
-}
 
 /// What LubeLogger adds when a recording opens.
 class LubeloggerSessionListener implements DiagnosticSessionListener {

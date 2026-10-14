@@ -59,13 +59,12 @@ class CachedPhotoImage extends ImageProvider<CachedPhotoImage> {
   ImageStreamCompleter loadImage(
     CachedPhotoImage key,
     ImageDecoderCallback decode,
-  ) =>
-      MultiFrameImageStreamCompleter(
-        codec: _load(decode),
-        scale: 1,
-        debugLabel: path,
-        informationCollector: () => [DiagnosticsProperty('Photo', path)],
-      );
+  ) => MultiFrameImageStreamCompleter(
+    codec: _load(decode),
+    scale: 1,
+    debugLabel: path,
+    informationCollector: () => [DiagnosticsProperty('Photo', path)],
+  );
 
   Future<ui.Codec> _load(ImageDecoderCallback decode) async {
     final bytes = await cache.bytes(path);

@@ -21,9 +21,10 @@ import 'core/cache/write_queue.dart';
 import 'core/diagnostics/diagnostics_wiring.dart';
 import 'core/diagnostics/report_config.dart';
 import 'core/diagnostics/session_facts.dart';
+import 'core/format/chart_range.dart';
+import 'core/format/expense_timeline.dart';
 import 'core/format/gas_stats.dart';
 import 'core/format/vehicle_units.dart';
-import 'core/format/monthly_breakdown.dart';
 import 'core/models/dated_cost.dart';
 import 'core/models/equipment_record.dart';
 import 'core/models/extra_field.dart';
@@ -51,8 +52,9 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('Override in ProviderScope'),
 );
 
-final credentialsStoreProvider =
-    Provider<CredentialsStore>((ref) => SecureCredentialsStore());
+final credentialsStoreProvider = Provider<CredentialsStore>(
+  (ref) => SecureCredentialsStore(),
+);
 
 final settingsRepositoryProvider = Provider<SettingsRepository>(
   (ref) => SettingsRepository(ref.watch(sharedPreferencesProvider)),
@@ -62,8 +64,8 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 /// locally; independent of the server's own locale.
 final unitsSettingsProvider =
     NotifierProvider<UnitsSettingsNotifier, UnitsSettings>(
-  UnitsSettingsNotifier.new,
-);
+      UnitsSettingsNotifier.new,
+    );
 
 class UnitsSettingsNotifier extends Notifier<UnitsSettings> {
   @override
@@ -98,8 +100,8 @@ class UnitsSettingsNotifier extends Notifier<UnitsSettings> {
 /// [VehicleTab.values] and filter by membership to keep a stable tab order.
 final visibleTabsProvider =
     NotifierProvider<VisibleTabsNotifier, Set<VehicleTab>>(
-  VisibleTabsNotifier.new,
-);
+      VisibleTabsNotifier.new,
+    );
 
 class VisibleTabsNotifier extends Notifier<Set<VehicleTab>> {
   @override
@@ -119,12 +121,69 @@ class VisibleTabsNotifier extends Notifier<Set<VehicleTab>> {
   }
 }
 
+/// The range every dashboard chart opens on, from Settings.
+final chartDefaultRangeProvider =
+    NotifierProvider<ChartDefaultRangeNotifier, ChartRangePreset>(
+      ChartDefaultRangeNotifier.new,
+    );
+
+class ChartDefaultRangeNotifier extends Notifier<ChartRangePreset> {
+  @override
+  ChartRangePreset build() =>
+      ref.watch(settingsRepositoryProvider).loadChartDefaultRange();
+
+  Future<void> set(ChartRangePreset preset) async {
+    await ref.read(settingsRepositoryProvider).saveChartDefaultRange(preset);
+    state = preset;
+  }
+}
+
+/// The dashboard charts whose range can be switched.
+enum DashboardChart { expensesByType, expensesDistance, economy }
+
+/// One chart on one vehicle's dashboard. Per vehicle because a custom range
+/// fitted to one vehicle's history is usually empty on another.
+typedef ChartKey = ({int vehicleId, DashboardChart chart});
+
+/// Ranges picked on individual charts. Kept for the app's lifetime only, and
+/// dropped when the default changes: a new default the charts didn't follow
+/// would look like the setting did nothing.
+final chartRangeOverridesProvider =
+    NotifierProvider<ChartRangeOverridesNotifier, Map<ChartKey, ChartRange>>(
+      ChartRangeOverridesNotifier.new,
+    );
+
+class ChartRangeOverridesNotifier extends Notifier<Map<ChartKey, ChartRange>> {
+  @override
+  Map<ChartKey, ChartRange> build() {
+    ref.watch(chartDefaultRangeProvider);
+    return const {};
+  }
+
+  /// Shows [key] over [range]; the default preset clears the override.
+  void set(ChartKey key, ChartRange range) {
+    final followsDefault =
+        range == PresetRange(ref.read(chartDefaultRangeProvider));
+    state = {
+      for (final e in state.entries)
+        if (e.key != key) e.key: e.value,
+      if (!followsDefault) key: range,
+    };
+  }
+}
+
+/// The range a chart is currently shown over.
+final chartRangeProvider = Provider.family<ChartRange, ChartKey>(
+  (ref, key) =>
+      ref.watch(chartRangeOverridesProvider)[key] ??
+      PresetRange(ref.watch(chartDefaultRangeProvider)),
+);
+
 /// The order record tabs appear in — on the vehicle screen (after the always-
 /// first Dashboard) and in the FAB add sheet. A full permutation of
 /// [VehicleTab.values]; visibility is tracked separately by
 /// [visibleTabsProvider]. Persisted locally; defaults to enum order.
-final tabOrderProvider =
-    NotifierProvider<TabOrderNotifier, List<VehicleTab>>(
+final tabOrderProvider = NotifierProvider<TabOrderNotifier, List<VehicleTab>>(
   TabOrderNotifier.new,
 );
 
@@ -166,13 +225,12 @@ final authServiceProvider = Provider<AuthService>(
 /// Active server profile; `null` = unconfigured (router → /setup).
 final serverProfileProvider =
     NotifierProvider<ServerProfileNotifier, ServerProfile?>(
-  ServerProfileNotifier.new,
-);
+      ServerProfileNotifier.new,
+    );
 
 class ServerProfileNotifier extends Notifier<ServerProfile?> {
   @override
-  ServerProfile? build() =>
-      ref.watch(settingsRepositoryProvider).loadProfile();
+  ServerProfile? build() => ref.watch(settingsRepositoryProvider).loadProfile();
 
   Future<void> save(ServerProfile profile) async {
     final settings = ref.read(settingsRepositoryProvider);
@@ -212,8 +270,8 @@ class ServerProfileNotifier extends Notifier<ServerProfile?> {
 /// turning it off cancels it. Persisted via [SettingsRepository].
 final reminderNotificationsProvider =
     NotifierProvider<ReminderNotificationsNotifier, bool>(
-  ReminderNotificationsNotifier.new,
-);
+      ReminderNotificationsNotifier.new,
+    );
 
 class ReminderNotificationsNotifier extends Notifier<bool> {
   @override
@@ -253,8 +311,8 @@ class ReminderNotificationsNotifier extends Notifier<bool> {
 /// says whether it also re-reads the lists.
 final backgroundRefreshProvider =
     NotifierProvider<BackgroundRefreshNotifier, bool>(
-  BackgroundRefreshNotifier.new,
-);
+      BackgroundRefreshNotifier.new,
+    );
 
 class BackgroundRefreshNotifier extends Notifier<bool> {
   @override
@@ -360,8 +418,9 @@ class SyncState {
   bool get hasWork => pending.isNotEmpty || rejected.isNotEmpty;
 }
 
-final syncStateProvider =
-    NotifierProvider<SyncStateNotifier, SyncState>(SyncStateNotifier.new);
+final syncStateProvider = NotifierProvider<SyncStateNotifier, SyncState>(
+  SyncStateNotifier.new,
+);
 
 class SyncStateNotifier extends Notifier<SyncState> {
   @override
@@ -442,8 +501,9 @@ final apiKeyProvider = FutureProvider<String?>(
 );
 
 /// App name/version/build number, for the Settings "About" section.
-final packageInfoProvider =
-    FutureProvider<PackageInfo>((ref) => PackageInfo.fromPlatform());
+final packageInfoProvider = FutureProvider<PackageInfo>(
+  (ref) => PackageInfo.fromPlatform(),
+);
 
 /// Describes the session for a report: app and server version, the device, the
 /// display settings.
@@ -453,18 +513,19 @@ final packageInfoProvider =
 /// off — and two copies of this argument list would be two places for the
 /// server version to be fetched differently.
 final sessionFactsProvider = Provider<Future<SessionFacts> Function()>(
-  (ref) => () => loadSessionFacts(
-    profile: ref.read(serverProfileProvider),
-    credentials: ref.read(credentialsStoreProvider),
-    // Read through the repository only when a profile exists: without one
-    // [apiClientProvider] throws by design, and a recording started from the
-    // setup screen has no server to ask anyway.
-    readServerVersion: ref.read(serverProfileProvider) == null
-        ? null
-        : () async =>
-            (await ref.read(vehiclesRepositoryProvider).serverVersion())
-                .currentVersion,
-  ),
+  (ref) =>
+      () => loadSessionFacts(
+        profile: ref.read(serverProfileProvider),
+        credentials: ref.read(credentialsStoreProvider),
+        // Read through the repository only when a profile exists: without one
+        // [apiClientProvider] throws by design, and a recording started from the
+        // setup screen has no server to ask anyway.
+        readServerVersion: ref.read(serverProfileProvider) == null
+            ? null
+            : () async =>
+                  (await ref.read(vehiclesRepositoryProvider).serverVersion())
+                      .currentVersion,
+      ),
 );
 
 /// Bug-report log recorder. Holding it in a provider keeps one instance per
@@ -495,8 +556,9 @@ final relayDioProvider = Provider<Dio>(
     ..options.receiveTimeout = kUploadReceiveTimeout,
 );
 
-final reportOutboxProvider =
-    Provider<ReportOutbox>((ref) => const ReportOutbox());
+final reportOutboxProvider = Provider<ReportOutbox>(
+  (ref) => const ReportOutbox(),
+);
 
 /// One per app: it owns the single outbox slot and a timer, and two of them
 /// would race each other over both.
@@ -580,31 +642,34 @@ final serverCapabilitiesProvider = Provider<ServerCapabilities>(
 /// fields rather than clearing them. Cached for the session.
 final extraFieldTemplatesProvider =
     FutureProvider<Map<ExtraFieldRecordType, List<ExtraField>>?>((ref) async {
-  try {
-    return await cachedRead(ref, (repo) => repo.extraFieldTemplates());
-  } on Object catch (error) {
-    // The HTTP probe records the failed call; this records that the app chose
-    // to carry on without templates, which is why an edit form may show a
-    // record's stale fields instead of the configured ones.
-    DiagnosticRecorder.active?.add(
-      LogSource.http,
-      'extra_fields_unavailable',
-      lvl: LogLevel.warn,
-      fields: {'type': error.runtimeType.toString()},
-    );
-    return null;
-  }
-});
+      try {
+        return await cachedRead(ref, (repo) => repo.extraFieldTemplates());
+      } on Object catch (error) {
+        // The HTTP probe records the failed call; this records that the app chose
+        // to carry on without templates, which is why an edit form may show a
+        // record's stale fields instead of the configured ones.
+        DiagnosticRecorder.active?.add(
+          LogSource.http,
+          'extra_fields_unavailable',
+          lvl: LogLevel.warn,
+          fields: {'type': error.runtimeType.toString()},
+        );
+        return null;
+      }
+    });
 
 /// One record type's custom-field template: null when unknown, empty when the
 /// server has none configured for it (it omits those types entirely).
-final extraFieldTemplateProvider = Provider.family<AsyncValue<List<ExtraField>?>,
-    ExtraFieldRecordType>(
-  (ref, type) => ref.watch(extraFieldTemplatesProvider).whenData(
-        (templates) =>
-            templates == null ? null : templates[type] ?? const <ExtraField>[],
-      ),
-);
+final extraFieldTemplateProvider =
+    Provider.family<AsyncValue<List<ExtraField>?>, ExtraFieldRecordType>(
+      (ref, type) => ref
+          .watch(extraFieldTemplatesProvider)
+          .whenData(
+            (templates) => templates == null
+                ? null
+                : templates[type] ?? const <ExtraField>[],
+          ),
+    );
 
 /// The authenticated account (username, email, admin/root). Powers the Settings
 /// "signed in as" line and gates the root-only backup action.
@@ -634,7 +699,10 @@ final vehicleUnitsProvider = Provider.family<VehicleUnits, int>((
   ref,
   vehicleId,
 ) {
-  final vehicle = ref.watch(vehicleInfoProvider(vehicleId)).valueOrNull?.vehicle;
+  final vehicle = ref
+      .watch(vehicleInfoProvider(vehicleId))
+      .valueOrNull
+      ?.vehicle;
   return VehicleUnits(
     ref.watch(unitsSettingsProvider),
     isElectric: vehicle?.isElectric ?? false,
@@ -650,15 +718,16 @@ final vehicleUnitsProvider = Provider.family<VehicleUnits, int>((
 ///
 /// Computed from [gasRecordsProvider] rather than fetching its own copy — the
 /// dashboard and the Fuel tab would otherwise ask for the same log twice.
-final gasStatsProvider = FutureProvider.family<GasStats, int>(
-  (ref, vehicleId) async {
-    final (records, info) = await (
-      ref.watch(gasRecordsProvider(vehicleId).future),
-      ref.watch(vehicleInfoProvider(vehicleId).future),
-    ).wait;
-    return GasStats.from(records, isElectric: info.vehicle.isElectric);
-  },
-);
+final gasStatsProvider = FutureProvider.family<GasStats, int>((
+  ref,
+  vehicleId,
+) async {
+  final (records, info) = await (
+    ref.watch(gasRecordsProvider(vehicleId).future),
+    ref.watch(vehicleInfoProvider(vehicleId).future),
+  ).wait;
+  return GasStats.from(records, isElectric: info.vehicle.isElectric);
+});
 
 /// Raw refuel log for one vehicle, powering the Fuel tab's per-record table
 /// (economy is computed by [fuelRows]). Distinct from [gasStatsProvider], which
@@ -670,52 +739,50 @@ final gasRecordsProvider = FutureProvider.family<List<GasRecord>, int>(
 /// Odometer readings for one vehicle, powering the Odometer tab's table.
 final odometerRecordsProvider =
     FutureProvider.family<List<OdometerRecord>, int>(
-  (ref, vehicleId) =>
-      cachedRead(ref, (repo) => repo.odometerRecords(vehicleId)),
-);
+      (ref, vehicleId) =>
+          cachedRead(ref, (repo) => repo.odometerRecords(vehicleId)),
+    );
 
 /// Date of the vehicle's highest-odometer reading among fuel-ups and dedicated
 /// odometer records — the "as of" date shown under the dashboard's "Last
-/// Reported Odometer" stat. Mirrors [MonthlyBreakdown]'s odometer timeline
-/// (gas + odometer records only; see its doc comment), not the server's
+/// Reported Odometer" stat. Reads [odometerReadingsProvider], the same timeline
+/// [ExpenseTimeline] charts (gas + odometer records only), not the server's
 /// `lastReportedOdometer`, which also considers service/repair/upgrade
 /// mileage — a rare enough source for the current max that this stays a close
 /// approximation without fetching those record types just for a date label.
 final lastOdometerDateProvider = FutureProvider.family<DateTime?, int>(
-  (ref, vehicleId) async {
-    final gas = await ref.watch(gasRecordsProvider(vehicleId).future);
-    final odometers = await ref.watch(odometerRecordsProvider(vehicleId).future);
-
-    DateTime? bestDate;
-    var bestOdometer = 0.0;
-    void consider(DateTime? date, double odometer) {
-      if (date != null && odometer > bestOdometer) {
-        bestOdometer = odometer;
-        bestDate = date;
-      }
-    }
-
-    for (final r in gas) {
-      consider(r.date, r.odometer);
-    }
-    for (final r in odometers) {
-      consider(r.date, r.odometer);
-    }
-    return bestDate;
-  },
+  (ref, vehicleId) async => highestReadingDate(
+    await ref.watch(odometerReadingsProvider(vehicleId).future),
+  ),
 );
+
+/// Every odometer reading from fuel-ups and dedicated odometer records, so a
+/// fuel-only vehicle still has a distance timeline.
+final odometerReadingsProvider =
+    FutureProvider.family<List<OdometerReading>, int>((ref, vehicleId) async {
+      final (gas, odometers) = await (
+        ref.watch(gasRecordsProvider(vehicleId).future),
+        ref.watch(odometerRecordsProvider(vehicleId).future),
+      ).wait;
+      return [
+        for (final g in gas) (date: g.date, odometer: g.odometer),
+        for (final o in odometers) (date: o.date, odometer: o.odometer),
+      ];
+    });
 
 /// Full records for one vehicle's generic (date + cost) record tab, keyed by
 /// vehicle + [RecordKind] (service / repair / upgrade / tax).
-final vehicleRecordsProvider = FutureProvider.family<List<VehicleRecord>,
-    ({int vehicleId, RecordKind kind})>(
-  (ref, key) =>
-      cachedRead(ref, (repo) => repo.records(key.kind, key.vehicleId)),
-);
+final vehicleRecordsProvider =
+    FutureProvider.family<
+      List<VehicleRecord>,
+      ({int vehicleId, RecordKind kind})
+    >(
+      (ref, key) =>
+          cachedRead(ref, (repo) => repo.records(key.kind, key.vehicleId)),
+    );
 
 /// Supply / part records for one vehicle, powering the Supplies tab.
-final supplyRecordsProvider =
-    FutureProvider.family<List<SupplyRecord>, int>(
+final supplyRecordsProvider = FutureProvider.family<List<SupplyRecord>, int>(
   (ref, vehicleId) => cachedRead(ref, (repo) => repo.supplyRecords(vehicleId)),
 );
 
@@ -737,61 +804,54 @@ final notesProvider = FutureProvider.family<List<NoteRecord>, int>(
 /// Equipment items for one vehicle, powering the Equipment tab.
 final equipmentRecordsProvider =
     FutureProvider.family<List<EquipmentRecord>, int>(
-  (ref, vehicleId) =>
-      cachedRead(ref, (repo) => repo.equipmentRecords(vehicleId)),
-);
+      (ref, vehicleId) =>
+          cachedRead(ref, (repo) => repo.equipmentRecords(vehicleId)),
+    );
 
-/// Monthly expense (by category) + distance breakdown for one vehicle,
-/// aggregated per calendar month for the combo chart.
+/// Every dated expense (by category) and distance gain of one vehicle, which the
+/// dashboard charts slice into the range each one shows.
 ///
 /// Every list it needs is already a provider of its own, so it composes those
 /// instead of re-fetching: opening the dashboard and then a record tab reads
 /// each endpoint once.
-final monthlyBreakdownProvider = FutureProvider.family<MonthlyBreakdown, int>(
-  (ref, vehicleId) async {
-    Future<List<VehicleRecord>> records(RecordKind kind) =>
-        ref.watch(vehicleRecordsProvider((
-          vehicleId: vehicleId,
-          kind: kind,
-        )).future);
+final expenseTimelineProvider = FutureProvider.family<ExpenseTimeline, int>((
+  ref,
+  vehicleId,
+) async {
+  Future<List<VehicleRecord>> records(RecordKind kind) => ref.watch(
+    vehicleRecordsProvider((vehicleId: vehicleId, kind: kind)).future,
+  );
 
-    final (service, repair, upgrade, tax, gas, odometers) = await (
-      records(RecordKind.service),
-      records(RecordKind.repair),
-      records(RecordKind.upgrade),
-      records(RecordKind.tax),
-      ref.watch(gasRecordsProvider(vehicleId).future),
-      ref.watch(odometerRecordsProvider(vehicleId).future),
-    ).wait;
+  final (service, repair, upgrade, tax, gas, readings) = await (
+    records(RecordKind.service),
+    records(RecordKind.repair),
+    records(RecordKind.upgrade),
+    records(RecordKind.tax),
+    ref.watch(gasRecordsProvider(vehicleId).future),
+    ref.watch(odometerReadingsProvider(vehicleId).future),
+  ).wait;
 
-    // Distance timeline: every odometer reading from fuel-ups and dedicated
-    // odometer records, so a fuel-only vehicle still charts distance.
-    final readings = <OdometerReading>[
-      for (final g in gas) (date: g.date, odometer: g.odometer),
-      for (final o in odometers) (date: o.date, odometer: o.odometer),
-    ];
+  List<DatedCost> costs(List<VehicleRecord> records) => [
+    for (final r in records) DatedCost(date: r.date, cost: r.cost),
+  ];
 
-    List<DatedCost> costs(List<VehicleRecord> records) =>
-        [for (final r in records) DatedCost(date: r.date, cost: r.cost)];
-
-    return MonthlyBreakdown.from(
-      costsByCategory: {
-        ExpenseCategory.service: costs(service),
-        ExpenseCategory.repair: costs(repair),
-        ExpenseCategory.upgrade: costs(upgrade),
-        ExpenseCategory.tax: costs(tax),
-        ExpenseCategory.fuel: [
-          for (final r in gas) DatedCost(date: r.date, cost: r.cost),
-        ],
-      },
-      odometerReadings: readings,
-    );
-  },
-);
+  return ExpenseTimeline.from(
+    costsByCategory: {
+      ExpenseCategory.service: costs(service),
+      ExpenseCategory.repair: costs(repair),
+      ExpenseCategory.upgrade: costs(upgrade),
+      ExpenseCategory.tax: costs(tax),
+      ExpenseCategory.fuel: [
+        for (final r in gas) DatedCost(date: r.date, cost: r.cost),
+      ],
+    },
+    odometerReadings: readings,
+  );
+});
 
 /// Drops every request behind one vehicle's screens, for pull-to-refresh.
 ///
-/// The stats and the monthly breakdown derive from these lists rather than
+/// The stats and the expense timeline derive from these lists rather than
 /// fetching their own copies, so they follow — invalidating *them* would only
 /// recompute from the same cache.
 ///

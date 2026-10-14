@@ -19,10 +19,7 @@ bool validateAndLog(BuildContext context, GlobalKey<FormState> form) {
     LogSource.ui,
     'submit',
     lvl: valid ? LogLevel.info : LogLevel.warn,
-    fields: {
-      'id': LogSurface.of(context),
-      'reason': valid ? null : 'invalid',
-    },
+    fields: {'id': LogSurface.of(context), 'reason': valid ? null : 'invalid'},
   );
   return valid;
 }

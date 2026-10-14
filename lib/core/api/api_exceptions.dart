@@ -1,6 +1,6 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
-
 
 /// Error codes for the API/auth layer. The core layer is UI-independent:
 /// translation to text happens at display time (see `lib/l10n/error_messages.dart`).
@@ -34,7 +34,13 @@ enum AppErrorCode {
 /// Base exception for the API layer. Carries an error code (for localization)
 /// and optional technical details for logs.
 sealed class AppApiException implements Exception {
-  const AppApiException(this.code, {this.statusCode, this.detail});
+  const AppApiException(
+    this.code, {
+    this.statusCode,
+    this.detail,
+    this.method,
+    this.path,
+  });
 
   final AppErrorCode code;
 
@@ -43,6 +49,16 @@ sealed class AppApiException implements Exception {
 
   /// Raw, user-invisible detail (e.g. `DioException.message`).
   final String? detail;
+
+  /// The call that failed. With several requests in flight, reconstructing it
+  /// from the `http` records around the failure is guesswork.
+  ///
+  /// [path] has been through [loggablePath], the same reduction `HttpProbe`
+  /// records with: no host, no query string, and no segment the user named.
+  /// Both are null for an exception the app raised itself rather than mapped
+  /// from a response.
+  final String? method;
+  final String? path;
 
   @override
   String toString() =>
@@ -53,17 +69,23 @@ sealed class AppApiException implements Exception {
 /// Server responded with an error (4xx/5xx except 401/403) or the response had
 /// an unexpected shape.
 class ApiException extends AppApiException {
-  const ApiException(super.code, {super.statusCode, super.detail});
+  const ApiException(
+    super.code, {
+    super.statusCode,
+    super.detail,
+    super.method,
+    super.path,
+  });
 }
 
 /// Authentication problem: bad credentials, rejected key, or insufficient scope.
 class AuthException extends AppApiException {
-  const AuthException(super.code, {super.detail});
+  const AuthException(super.code, {super.detail, super.method, super.path});
 }
 
 /// Server unreachable: timeout, connection refused, or no network.
 class NetworkException extends AppApiException {
-  const NetworkException(super.code, {super.detail});
+  const NetworkException(super.code, {super.detail, super.method, super.path});
 }
 
 /// Runs [body], mapping any [DioException] to an [AppApiException] via
@@ -93,20 +115,29 @@ Future<T?> guardOrNull<T>(Future<T?> Function() body) async {
   } on DioException catch (e) {
     final mapped = mapDioException(e);
     if (mapped is AuthException) throw mapped;
-    _logDegraded(mapped.code.name, mapped.statusCode);
+    _logDegraded(mapped.code.name, mapped);
     return null;
   } on Object catch (error) {
+    // Nothing mapped, so nothing names the request: a `TypeError` from a
+    // response the parser could not read never reached the probe either.
     _logDegraded(error.runtimeType.toString(), null);
     return null;
   }
 }
 
-void _logDegraded(String cause, int? status) =>
+void _logDegraded(String cause, AppApiException? failure) =>
     DiagnosticRecorder.active?.add(
       LogSource.http,
       'degraded',
       lvl: LogLevel.warn,
-      fields: {'cause': cause, 'status': status},
+      fields: {
+        'cause': cause,
+        'status': failure?.statusCode,
+        // Which call the screen carried on without. The probe records the
+        // request, but not the decision to render the screen anyway.
+        'method': failure?.method,
+        'path': failure?.path,
+      },
     );
 
 /// Maps a [DioException] to a typed application exception.
@@ -114,27 +145,44 @@ AppApiException mapDioException(DioException e) {
   if (e.error is AppApiException) {
     return e.error! as AppApiException;
   }
-  switch (e.type) {
-    case DioExceptionType.connectionTimeout:
-    case DioExceptionType.sendTimeout:
-    case DioExceptionType.receiveTimeout:
-    case DioExceptionType.transformTimeout:
-    case DioExceptionType.connectionError:
-      return NetworkException(AppErrorCode.serverUnreachable,
-          detail: e.message);
-    case DioExceptionType.badResponse:
-      final code = e.response?.statusCode;
-      if (code == 401) {
-        return const AuthException(AppErrorCode.unauthorized);
-      }
-      if (code == 403) {
-        return const AuthException(AppErrorCode.forbidden);
-      }
-      return ApiException(AppErrorCode.badResponse, statusCode: code);
-    case DioExceptionType.badCertificate:
-      return const NetworkException(AppErrorCode.badCertificate);
-    case DioExceptionType.cancel:
-    case DioExceptionType.unknown:
-      return NetworkException(AppErrorCode.connectionError, detail: e.message);
-  }
+  final method = e.requestOptions.method;
+  // The same reduction `HttpProbe` records with: no host, no query, and no
+  // segment the user named.
+  final path = loggablePath(e.requestOptions.uri.path);
+  return switch (classifyDioException(e)) {
+    DioFailure.unreachable => NetworkException(
+      AppErrorCode.serverUnreachable,
+      detail: e.message,
+      method: method,
+      path: path,
+    ),
+    DioFailure.unauthorized => AuthException(
+      AppErrorCode.unauthorized,
+      method: method,
+      path: path,
+    ),
+    DioFailure.forbidden => AuthException(
+      AppErrorCode.forbidden,
+      method: method,
+      path: path,
+    ),
+    // No code of its own here: a 429 reads as the status it is.
+    DioFailure.tooManyRequests || DioFailure.badResponse => ApiException(
+      AppErrorCode.badResponse,
+      statusCode: e.response?.statusCode,
+      method: method,
+      path: path,
+    ),
+    DioFailure.badCertificate => NetworkException(
+      AppErrorCode.badCertificate,
+      method: method,
+      path: path,
+    ),
+    DioFailure.cancelled || DioFailure.unknown => NetworkException(
+      AppErrorCode.connectionError,
+      detail: e.message,
+      method: method,
+      path: path,
+    ),
+  };
 }

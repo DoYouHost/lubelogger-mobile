@@ -1,4 +1,5 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_ui/app_report_ui.dart' show bugReportRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -9,8 +10,6 @@ import '../../core/models/vehicle.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
-import '../bug_report/recording_banner.dart' show bugReportRoute;
-import '../common/state_views.dart';
 import '../sync/sync_sheet.dart';
 import 'add_vehicle_form.dart';
 import 'widgets/vehicle_card.dart';
@@ -106,6 +105,9 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
             child: garage.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, _) => AsyncErrorView(
+                // Its own scroll view, so the enclosing RefreshIndicator still
+                // has something to pull.
+                scrollable: true,
                 message: l10n.garageLoadError,
                 onRetry: _refresh,
                 retryLabel: l10n.retry,
@@ -123,10 +125,15 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                   child: CustomScrollView(
                     slivers: [
                       SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                        padding: const EdgeInsets.fromLTRB(
+                          DashSpace.lg,
+                          DashSpace.lg,
+                          DashSpace.lg,
+                          DashSpace.xxl,
+                        ),
                         sliver: SliverResponsiveCards(
-                          spacing: 18,
-                          runSpacing: 18,
+                          spacing: DashSpace.lg,
+                          runSpacing: DashSpace.lg,
                           itemCount: vehicles.length + 1,
                           itemBuilder: (context, index) {
                             if (index == vehicles.length) {
@@ -145,7 +152,8 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                   extentRatio: 0.3,
                                   children: [
                                     _EditVehicleAction(
-                                      onPressed: () => _editVehicle(info.vehicle),
+                                      onPressed: () =>
+                                          _editVehicle(info.vehicle),
                                     ),
                                   ],
                                 ),
@@ -157,8 +165,9 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                                     apiKey: apiKey,
                                     currencySymbol: currency,
                                     units: units,
-                                    onTap: () => context
-                                        .push('/vehicle/${info.vehicle.id}'),
+                                    onTap: () => context.push(
+                                      '/vehicle/${info.vehicle.id}',
+                                    ),
                                   ),
                                 ),
                               ),
@@ -169,13 +178,13 @@ class _GarageScreenState extends ConsumerState<GarageScreen>
                     ],
                   ),
                 );
-                },
-              ),
+              },
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
   /// Opens Settings — unless a swipe action is open, in which case the tap just
   /// closes it (consistent with tapping a card while one is open).
@@ -234,7 +243,7 @@ class _EditVehicleAction extends StatelessWidget {
         'garage.edit',
         SizedBox.expand(
           child: Container(
-            margin: const EdgeInsets.only(left: 10),
+            margin: const EdgeInsets.only(left: DashSpace.md),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -254,14 +263,14 @@ class _EditVehicleAction extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(9),
+                  padding: const EdgeInsets.all(DashSpace.sm),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.24),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.edit_rounded, size: 22, color: ink),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DashSpace.sm),
                 Text(
                   l10n.actionEdit,
                   style: TextStyle(
@@ -291,10 +300,15 @@ class _EmptyGarage extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 32, 16, 32),
+      padding: const EdgeInsets.fromLTRB(
+        DashSpace.lg,
+        DashSpace.xxl,
+        DashSpace.lg,
+        DashSpace.xxl,
+      ),
       children: [
         Icon(Icons.garage_outlined, size: 56, color: t.textTertiary),
-        const SizedBox(height: 12),
+        const SizedBox(height: DashSpace.md),
         Text(
           l10n.garageEmpty,
           textAlign: TextAlign.center,
@@ -305,7 +319,7 @@ class _EmptyGarage extends StatelessWidget {
             color: t.textSecondary,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: DashSpace.xl),
         AddVehicleTile(onTap: onAdd),
       ],
     );

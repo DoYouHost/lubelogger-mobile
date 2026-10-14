@@ -102,7 +102,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUnitsMetricNote =>
-      'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.';
+      'Set the units your LubeLogger server stores values in (metric = km & liters). The app converts them to your chosen display units.';
 
   @override
   String get settingsVisibleTabs => 'Visible tabs';
@@ -127,19 +127,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chartExpensesByType => 'Expenses by Type';
 
   @override
-  String get chartExpensesDistanceByMonth => 'Expenses and Distance by Month';
+  String get chartExpensesDistance => 'Expenses and Distance';
 
   @override
   String get chartRemindersByUrgency => 'Reminders by Urgency';
 
   @override
-  String get chartFuelMileageByMonth => 'Fuel Mileage by Month';
+  String get chartFuelMileage => 'Fuel Mileage';
 
   @override
-  String get chartNoData => 'No data yet';
+  String get chartNoDataInRange => 'No data in this period';
 
   @override
   String get chartNoReminders => 'No reminders';
+
+  @override
+  String chartRemindersTotal(int count) {
+    return '$count total';
+  }
+
+  @override
+  String get chartTotal => 'Total';
+
+  @override
+  String chartAverage(String value) {
+    return 'avg $value';
+  }
+
+  @override
+  String chartQuarter(int quarter) {
+    return 'Q$quarter';
+  }
+
+  @override
+  String get chartRangeTitle => 'Data range';
+
+  @override
+  String get chartRangeOneMonth => '1 month';
+
+  @override
+  String get chartRangeThreeMonths => '3 months';
+
+  @override
+  String get chartRangeSixMonths => '6 months';
+
+  @override
+  String get chartRangeYear => '1 year';
+
+  @override
+  String get chartRangeCustom => 'Custom range';
+
+  @override
+  String get chartRangeOneMonthShort => '1 mo';
+
+  @override
+  String get chartRangeThreeMonthsShort => '3 mo';
+
+  @override
+  String get chartRangeSixMonthsShort => '6 mo';
+
+  @override
+  String get chartRangeYearShort => '1 yr';
+
+  @override
+  String get chartRangeDefault => 'default';
+
+  @override
+  String get chartRangeSettingsHint =>
+      'Change the default range for all charts in Settings.';
+
+  @override
+  String chartRangeButton(String range) {
+    return 'Data range: $range';
+  }
+
+  @override
+  String get settingsCharts => 'Charts';
+
+  @override
+  String get settingsChartDefaultRange => 'Default chart range';
+
+  @override
+  String get settingsChartsNote =>
+      'You can switch each chart on the vehicle dashboard separately.';
 
   @override
   String get legendExpenses => 'Expenses';
@@ -219,7 +289,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cardHasNote => 'Has a note';
+  String get cardHasNote => 'Has a note';
 
   @override
   String get tabDashboard => 'Dashboard';
@@ -312,6 +382,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addRecordTitle => 'Add record';
+
+  @override
+  String addRecordHidden(int count) {
+    return 'Hidden records ($count)';
+  }
 
   @override
   String get formFuelTitle => 'Add Fuel Record';
@@ -510,7 +585,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String vehicleDeleteUnsupportedMessage(String required, String current) {
-    return 'Deleting a vehicle requires LubeLogger $required or newer, but your server is running $current. Update the server to use this.';
+    return 'Deleting a vehicle requires LubeLogger $required or newer, but your server is running $current. Update the server to use this.';
   }
 
   @override
@@ -573,12 +648,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String attachmentUploadRejected(String size, int status) {
-    return 'The server rejected this upload ($size MB, HTTP $status). The file is probably too large for the server or for a proxy in front of it.';
+    return 'The server rejected this upload ($size MB, HTTP $status). The file is probably too large for the server or for a proxy in front of it.';
   }
 
   @override
   String attachmentUploadInterrupted(String size) {
-    return 'The upload was interrupted ($size MB). On a slow connection a large file may not get through.';
+    return 'The upload was interrupted ($size MB). On a slow connection a large file may not get through.';
   }
 
   @override
@@ -620,7 +695,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get validationRequired => 'Required';
 
   @override
-  String get validationNumber => 'Enter a valid number';
+  String get validationNumber => 'Enter a valid number';
 
   @override
   String get recordAdded => 'Record added';
@@ -675,7 +750,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errUnauthorized =>
-      'Authentication failed or the key lacks the required permission.';
+      'Authentication failed, or the key lacks the required permission.';
 
   @override
   String get errForbidden => 'You do not have permission for this action.';
@@ -704,7 +779,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errInvalidCredentials => 'Invalid username or password.';
 
   @override
-  String get errApiKeyRejected => 'The API key was rejected by the server.';
+  String get errApiKeyRejected => 'The server rejected the API key.';
 
   @override
   String appVersion(String version, String build) {
@@ -744,7 +819,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotificationsNote =>
-      'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.';
+      'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.';
 
   @override
   String get notifRemindersToggle => 'Past-due reminders';
@@ -773,307 +848,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDiagnosticsNote =>
-      'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.';
+      'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.';
 
   @override
-  String get bugReportTitle => 'Report a bug or an idea';
-
-  @override
-  String get bugReportIntroHeader => 'How it works';
-
-  @override
-  String get bugReportPrivacyHeader => 'What ends up in the log';
-
-  @override
-  String get bugReportStart => 'Start recording';
-
-  @override
-  String get bugReportRecordingHeader => 'Recording';
-
-  @override
-  String get bugReportRecordingBody =>
-      'Go back and reproduce it. The bar follows you — use it to mark the moment it breaks, and to finish.';
-
-  @override
-  String bugReportLimit(int minutes) {
-    return 'A recording stops by itself after $minutes minutes.';
-  }
-
-  @override
-  String bugReportLimitReached(int minutes) {
-    return 'Recording finished — the $minutes minute limit was reached.';
-  }
-
-  @override
-  String bugReportSizeLimitReached(int megabytes) {
-    return 'Recording finished — the log reached its $megabytes MB limit.';
-  }
-
-  @override
-  String get bugReportMark => 'Mark the moment';
-
-  @override
-  String get bugReportMarked => 'Moment marked';
-
-  @override
-  String get bugReportStop => 'Finish recording';
-
-  @override
-  String get bugReportStopShort => 'Finish';
-
-  @override
-  String get bugReportShow => 'Show';
-
-  @override
-  String get bugReportBannerLabel => 'Recording';
-
-  @override
-  String get bugReportBarMove => 'Move the recording bar';
-
-  @override
-  String get bugReportBarCollapse => 'Collapse the recording bar';
-
-  @override
-  String get bugReportBarExpand => 'Expand the recording bar';
-
-  @override
-  String get bugReportRecoveredHeader => 'A recording survived a crash';
-
-  @override
-  String get bugReportRecoveredBody =>
-      'The app closed while it was recording. What it had written down is still on the phone — look at it, or throw it away.';
-
-  @override
-  String get bugReportReviewHeader => 'Review before sending';
-
-  @override
-  String get bugReportReviewBody =>
-      'This is everything that was recorded. Read it through — below you choose whether it stays on the phone or goes out as a public issue.';
-
-  @override
-  String bugReportSummary(int records, int errors, int warnings) {
-    return '$records records · $errors errors · $warnings warnings';
-  }
-
-  @override
-  String bugReportMarkers(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count marked moments',
-      one: '1 marked moment',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get bugReportTruncated =>
-      'The session was long — the oldest records were dropped.';
-
-  @override
-  String get bugReportEmpty => 'Nothing was recorded.';
-
-  @override
-  String get bugReportShowRaw => 'Show raw log';
-
-  @override
-  String get bugReportHideRaw => 'Hide raw log';
-
-  @override
-  String bugReportRawClipped(int kb) {
-    return 'The first $kb kB are not shown here. The file you save holds the whole session.';
-  }
-
-  @override
-  String get bugReportDestinationFile => 'Save to a file';
-
-  @override
-  String get bugReportDestinationIssue => 'Report on GitHub';
-
-  @override
-  String get bugReportDestinationFileBody =>
-      'The log is saved where you choose and stays on your phone. You decide whether to send it anywhere.';
-
-  @override
-  String get bugReportDestinationIssueBody =>
-      'The log and your description are posted as a public issue on GitHub, where anyone can read them and they stay for good. Go through the log below first.';
-
-  @override
-  String get bugReportDescriptionLabel => 'What went wrong?';
-
-  @override
-  String get bugReportDescriptionHint =>
-      'What you were doing, what you expected, what happened instead.';
-
-  @override
-  String get bugReportDescriptionRequired =>
-      'Say what went wrong — a log with no description is nearly unusable.';
-
-  @override
-  String get bugReportSave => 'Save to a file';
-
-  @override
-  String get bugReportSaveShort => 'Save';
-
-  @override
-  String get bugReportSaved => 'Log saved to the file';
-
-  @override
-  String get bugReportSaveFailed => 'The log could not be saved.';
-
-  @override
-  String get bugReportSend => 'Report';
-
-  @override
-  String get bugReportSending => 'Sending…';
-
-  @override
-  String bugReportSendWaiting(String clock) {
-    return 'Sending in $clock';
-  }
-
-  @override
-  String get bugReportSendWaitingBody =>
-      'The relay spaces reports out. You can leave this screen — it goes on its own.';
-
-  @override
-  String get bugReportSent => 'Report sent';
-
-  @override
-  String get bugReportSentBody =>
-      'Thank you. The issue is open and the log is attached to it.';
-
-  @override
-  String get bugReportOpenIssue => 'Open the issue';
-
-  @override
-  String get bugReportDone => 'Done';
-
-  @override
-  String get bugReportSendFailedNotYet =>
-      'The relay is not accepting reports right now. Try again later, or save the log to a file.';
-
-  @override
-  String get bugReportSendFailedRefused =>
-      'The relay refused this report. Save the log to a file and attach it yourself.';
-
-  @override
-  String get bugReportSendFailedDuplicate =>
-      'This one has already been reported.';
-
-  @override
-  String get bugReportSendFailedUnreachable =>
-      'Could not reach the relay. Check the connection, or save the log to a file.';
-
-  @override
-  String get bugReportSendFailedRejected =>
-      'The relay rejected this report. Save the log to a file and attach it yourself.';
-
-  @override
-  String get bugReportSendFailedDemo =>
-      'Demo mode does not publish reports. Save the log to a file instead.';
-
-  @override
-  String get bugReportDiscard => 'Discard';
-
-  @override
-  String get bugReportDiscardQuestion => 'Discard this recording?';
-
-  @override
-  String get bugReportDiscardBody => 'The log will be deleted from the phone.';
-
-  @override
-  String get bugReportDiscardBodyQueued =>
-      'The log will be deleted from the phone and the queued report cancelled.';
-
-  @override
-  String get bugReportKindQuestion => 'What are you reporting?';
-
-  @override
-  String get bugReportKindBug => 'Bug';
-
-  @override
-  String get bugReportKindChange => 'Change';
-
-  @override
-  String get bugReportKindFeature => 'Feature';
-
-  @override
-  String get bugReportChangeHeader => 'Request a change';
-
-  @override
-  String get bugReportChangeBody =>
-      'Something works, but not the way it should.';
-
-  @override
-  String get bugReportFeatureHeader => 'Request a feature';
-
-  @override
-  String get bugReportFeatureBody => 'Something the app cannot do yet.';
-
-  @override
-  String get bugReportRequestPrivacyHeader => 'What gets sent';
-
-  @override
-  String get bugReportChangeLabel => 'What should change?';
-
-  @override
-  String get bugReportChangeHint =>
-      'What it does now, and what it should do instead.';
-
-  @override
-  String get bugReportFeatureLabel => 'What is missing?';
-
-  @override
-  String get bugReportFeatureHint =>
-      'What you want to do, and why the app does not let you.';
-
-  @override
-  String get bugReportRequestRequired =>
-      'Write what you are asking for — an empty request cannot be acted on.';
-
-  @override
-  String get bugReportRequestSentBody => 'Thank you. The issue is open.';
-
-  @override
-  String get bugReportCancelSend => 'Cancel sending';
-
-  @override
-  String get bugReportRequestFailedNotYet =>
-      'The relay is not accepting reports right now. Try again later.';
-
-  @override
-  String get bugReportRequestFailedRefused =>
-      'The relay refused this request. You can open the issue yourself on GitHub.';
-
-  @override
-  String get bugReportRequestFailedUnreachable =>
-      'Could not reach the relay. Check the connection and try again.';
-
-  @override
-  String get bugReportRequestFailedDemo =>
-      'Demo mode does not publish reports.';
-
-  @override
-  String get bugReportQueuedBug =>
-      'This countdown is for the bug report you already sent.';
-
-  @override
-  String get bugReportQueuedChange =>
-      'This countdown is for the change request you already sent.';
-
-  @override
-  String get bugReportQueuedFeature =>
-      'This countdown is for the feature request you already sent.';
-
-  @override
-  String get bugReportStepRecord => 'Start recording';
-
-  @override
-  String get bugReportStepReproduce => 'Reproduce the problem';
-
-  @override
-  String get bugReportStepFinish => 'Come back and finish';
+  String get bugReportTitle => 'Report a bug or an idea';
 
   @override
   String get bugReportLogScreens => 'Screens you open and buttons you press';
@@ -1103,25 +881,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Plates, notes, your records — only how long they were';
 
   @override
-  String get bugReportReviewFirst =>
-      'You read all of it before it leaves the phone.';
-
-  @override
-  String get bugReportRequestWhatYouWrite => 'What you write';
-
-  @override
-  String get bugReportRequestVersions => 'App and server version';
-
-  @override
-  String get bugReportRequestNoLog => 'No log, no recording';
-
-  @override
   String get bugReportRequestNoData =>
       'Nothing about your vehicles or your phone';
-
-  @override
-  String get bugReportRequestPublic =>
-      'It becomes a public issue on GitHub — anyone can read it, and it stays.';
 
   @override
   String fuelPillEnergy(String value) {
@@ -1137,11 +898,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statAvgConsumption => 'Average Consumption';
 
   @override
-  String get chartConsumptionByMonth => 'Consumption by Month';
+  String get chartConsumption => 'Consumption';
 
   @override
   String get planDoneReadOnly =>
-      'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
+      'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
 
   @override
   String get syncTitle => 'Sync';
@@ -1246,7 +1007,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsBackgroundRefreshSub =>
-      'Keeps the stored copy current, so the app opens on your records instead of a spinner.';
+      'Keeps the stored copy current, so the app opens on your records instead of a spinner.';
 
   @override
   String get settingsStoredData => 'Stored data';

@@ -21,15 +21,15 @@ class PendingWrite {
   });
 
   factory PendingWrite.fromJson(Map<String, dynamic> json) => PendingWrite(
-        id: json['id'] as String,
-        method: json['method'] as String,
-        path: json['path'] as String,
-        query: Map<String, dynamic>.from(json['query'] as Map? ?? const {}),
-        body: json['body'],
-        queuedAt: DateTime.fromMillisecondsSinceEpoch(json['queuedAt'] as int),
-        attempts: (json['attempts'] as num?)?.toInt() ?? 0,
-        lastError: json['lastError'] as String?,
-      );
+    id: json['id'] as String,
+    method: json['method'] as String,
+    path: json['path'] as String,
+    query: Map<String, dynamic>.from(json['query'] as Map? ?? const {}),
+    body: json['body'],
+    queuedAt: DateTime.fromMillisecondsSinceEpoch(json['queuedAt'] as int),
+    attempts: (json['attempts'] as num?)?.toInt() ?? 0,
+    lastError: json['lastError'] as String?,
+  );
 
   final String id;
   final String method;
@@ -46,26 +46,26 @@ class PendingWrite {
   final String? lastError;
 
   PendingWrite copyWith({int? attempts, String? lastError}) => PendingWrite(
-        id: id,
-        method: method,
-        path: path,
-        query: query,
-        body: body,
-        queuedAt: queuedAt,
-        attempts: attempts ?? this.attempts,
-        lastError: lastError ?? this.lastError,
-      );
+    id: id,
+    method: method,
+    path: path,
+    query: query,
+    body: body,
+    queuedAt: queuedAt,
+    attempts: attempts ?? this.attempts,
+    lastError: lastError ?? this.lastError,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'method': method,
-        'path': path,
-        'query': query,
-        'body': body,
-        'queuedAt': queuedAt.millisecondsSinceEpoch,
-        'attempts': attempts,
-        if (lastError != null) 'lastError': lastError,
-      };
+    'id': id,
+    'method': method,
+    'path': path,
+    'query': query,
+    'body': body,
+    'queuedAt': queuedAt.millisecondsSinceEpoch,
+    'attempts': attempts,
+    if (lastError != null) 'lastError': lastError,
+  };
 }
 
 /// Writes waiting for a server that wasn't there, in the order they were made.
@@ -129,19 +129,19 @@ class WriteQueue extends ChangeNotifier {
     return write;
   }
 
-  Future<void> remove(String id) =>
-      _save(_pendingKey, [for (final w in pending) if (w.id != id) w]);
+  Future<void> remove(String id) => _save(_pendingKey, [
+    for (final w in pending)
+      if (w.id != id) w,
+  ]);
 
-  Future<void> recordAttempt(PendingWrite write, String error) => _save(
-        _pendingKey,
-        [
-          for (final w in pending)
-            if (w.id == write.id)
-              w.copyWith(attempts: w.attempts + 1, lastError: error)
-            else
-              w,
-        ],
-      );
+  Future<void> recordAttempt(PendingWrite write, String error) =>
+      _save(_pendingKey, [
+        for (final w in pending)
+          if (w.id == write.id)
+            w.copyWith(attempts: w.attempts + 1, lastError: error)
+          else
+            w,
+      ]);
 
   /// Moves a write the server refused out of the queue, keeping its reason.
   Future<void> reject(PendingWrite write, String reason) async {
@@ -158,9 +158,14 @@ class WriteQueue extends ChangeNotifier {
 
   /// Forgets one refused write, or all of them when [id] is null.
   Future<void> discardRejected([String? id]) => _save(
-        _rejectedKey,
-        id == null ? const [] : [for (final w in rejected) if (w.id != id) w],
-      );
+    _rejectedKey,
+    id == null
+        ? const []
+        : [
+            for (final w in rejected)
+              if (w.id != id) w,
+          ],
+  );
 
   Future<void> clear() async {
     await _prefs.remove(_pendingKey);
@@ -184,7 +189,10 @@ class WriteQueue extends ChangeNotifier {
   }
 
   Future<void> _save(String key, List<PendingWrite> writes) async {
-    await _prefs.setString(key, jsonEncode([for (final w in writes) w.toJson()]));
+    await _prefs.setString(
+      key,
+      jsonEncode([for (final w in writes) w.toJson()]),
+    );
     notifyListeners();
   }
 }

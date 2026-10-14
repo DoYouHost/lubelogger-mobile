@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../format/chart_range.dart';
 import '../models/vehicle_tab.dart';
 import 'server_profile.dart';
 import 'units_settings.dart';
@@ -18,7 +19,7 @@ class SettingsRepository {
   static const _tabOrderKey = 'tab_order';
   static const _remindersEnabledKey = 'reminder_notifications_enabled';
   static const _backgroundRefreshKey = 'background_refresh_enabled';
-  static const _diagnosticsSessionKey = 'diagnostics_session';
+  static const _chartRangeKey = 'chart_default_range';
 
   final SharedPreferences _prefs;
 
@@ -68,17 +69,14 @@ class SettingsRepository {
   Set<VehicleTab> loadVisibleTabs() {
     final names = _prefs.getStringList(_visibleTabsKey);
     if (names == null) return VehicleTab.values.toSet();
-    return {
-      for (final n in names) ?VehicleTab.byName(n),
-    };
+    return {for (final n in names) ?VehicleTab.byName(n)};
   }
 
   Future<void> saveVisibleTabs(Set<VehicleTab> tabs) {
     _logChange('tabs_visible', _hiddenTabs(tabs));
-    return _prefs.setStringList(
-      _visibleTabsKey,
-      [for (final t in tabs) t.name],
-    );
+    return _prefs.setStringList(_visibleTabsKey, [
+      for (final t in tabs) t.name,
+    ]);
   }
 
   /// The order record tabs appear in — on the vehicle screen (after the always-
@@ -90,9 +88,7 @@ class SettingsRepository {
   List<VehicleTab> loadTabOrder() {
     final names = _prefs.getStringList(_tabOrderKey);
     if (names == null) return VehicleTab.values.toList();
-    final ordered = [
-      for (final n in names) ?VehicleTab.byName(n),
-    ];
+    final ordered = [for (final n in names) ?VehicleTab.byName(n)];
     final seen = ordered.toSet();
     return [
       ...ordered,
@@ -103,10 +99,7 @@ class SettingsRepository {
 
   Future<void> saveTabOrder(List<VehicleTab> order) {
     _logChange('tab_order', [for (final t in order) t.name]);
-    return _prefs.setStringList(
-      _tabOrderKey,
-      [for (final t in order) t.name],
-    );
+    return _prefs.setStringList(_tabOrderKey, [for (final t in order) t.name]);
   }
 
   /// Whether the background check may post past-due reminder notifications.
@@ -132,21 +125,31 @@ class SettingsRepository {
     return _prefs.setBool(_backgroundRefreshKey, enabled);
   }
 
-  /// Id of the diagnostic recording in progress, or null when nothing is being
-  /// recorded — the id doubles as the flag. Written by the UI isolate and read
-  /// by the WorkManager one, which is how a recording started in the app reaches
-  /// an isolate that shares no Dart state with it.
+  /// The range dashboard charts open on. Three months unless the user chose
+  /// otherwise; an unknown stored name falls back to that too.
+  ChartRangePreset loadChartDefaultRange() =>
+      ChartRangePreset.byName(_prefs.getString(_chartRangeKey) ?? '') ??
+      ChartRangePreset.threeMonths;
+
+  Future<void> saveChartDefaultRange(ChartRangePreset preset) {
+    _logChange('chart_range', preset.name);
+    return _prefs.setString(_chartRangeKey, preset.name);
+  }
+
+  /// The diagnostic recording in progress, over the preferences key both
+  /// applications shipped. Written by the UI isolate and read by the
+  /// WorkManager one, which is how a recording started in the app reaches an
+  /// isolate that shares no Dart state with it.
   ///
   /// A leftover id at startup means the app died mid-recording; the bug-report
   /// controller clears it and offers the salvaged files.
-  String? loadDiagnosticsSession() {
-    final id = _prefs.getString(_diagnosticsSessionKey);
-    return (id == null || id.isEmpty) ? null : id;
-  }
+  DiagnosticsSessionStore get diagnosticsSessions =>
+      SharedPreferencesSessionStore(_prefs);
 
-  Future<void> saveDiagnosticsSession(String? session) => session == null
-      ? _prefs.remove(_diagnosticsSessionKey)
-      : _prefs.setString(_diagnosticsSessionKey, session);
+  String? loadDiagnosticsSession() => diagnosticsSessions.loadSession();
+
+  Future<void> saveDiagnosticsSession(String? session) =>
+      diagnosticsSessions.saveSession(session);
 
   /// Every preference that changes what the user sees, for the top of a bug
   /// report.
@@ -170,6 +173,7 @@ class SettingsRepository {
       // names that say nothing, printed at the top of every report.
       if (!_sameOrder(order, defaultOrder)) 'tab_order': order,
       'reminders': loadRemindersEnabled(),
+      'chart_range': loadChartDefaultRange().name,
     };
   }
 
@@ -178,19 +182,19 @@ class SettingsRepository {
   /// `dd/MM/yyyy` next to a date the server sent as `01/15/2024` is the whole
   /// diagnosis.
   static Map<String, Object?> _unitFacts(UnitsSettings units) => {
-        'base': units.base.name,
-        'currency': units.currency.name,
-        'distance': units.distance.name,
-        'economy': units.economy.name,
-        'date_fmt': units.dateOrder.pattern.join(units.dateSeparator.value),
-      };
+    'base': units.base.name,
+    'currency': units.currency.name,
+    'distance': units.distance.name,
+    'economy': units.economy.name,
+    'date_fmt': units.dateOrder.pattern.join(units.dateSeparator.value),
+  };
 
   /// Hidden rather than visible: the default is that nothing is hidden, so this
   /// is empty in the common case and names exactly what the user turned off.
   static List<String> _hiddenTabs(Set<VehicleTab> visible) => [
-        for (final t in VehicleTab.values)
-          if (!visible.contains(t)) t.name,
-      ];
+    for (final t in VehicleTab.values)
+      if (!visible.contains(t)) t.name,
+  ];
 
   static bool _sameOrder(List<String> a, List<String> b) {
     if (a.length != b.length) return false;
@@ -205,10 +209,7 @@ class SettingsRepository {
   /// Here rather than in the notifiers that call it, because this class is the
   /// single door every preference goes through — a setting added later is logged
   /// by the same line that persists it, and cannot be forgotten separately.
-  static void _logChange(String name, Object? value) =>
-      DiagnosticRecorder.active?.add(
-        LogSource.app,
-        'setting',
-        fields: {'name': name, 'value': value},
-      );
+  static void _logChange(String name, Object? value) => DiagnosticRecorder
+      .active
+      ?.add(LogSource.app, 'setting', fields: {'name': name, 'value': value});
 }

@@ -12,11 +12,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appTitle => 'LubeLogger';
 
   @override
-  String get connectToServer => 'Połącz z serwerem';
+  String get connectToServer => 'Połącz z serwerem';
 
   @override
   String get setupIntro =>
-      'Podaj adres serwera LubeLogger i klucz API, aby rozpocząć.';
+      'Podaj adres serwera LubeLogger i klucz API, aby rozpocząć.';
 
   @override
   String get serverAddressLabel => 'Adres serwera';
@@ -30,7 +30,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get apiKeyExplain =>
-      'Wygeneruj klucz API w LubeLogger w Ustawieniach. Zalecane: bez wygasania, z ograniczonym zakresem.';
+      'Wygeneruj klucz API w LubeLogger w Ustawieniach. Zalecane: bez wygasania, z ograniczonym zakresem.';
 
   @override
   String get apiKeyLabel => 'Klucz API';
@@ -85,7 +85,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsServer => 'Serwer';
 
   @override
-  String get settingsAbout => 'O aplikacji';
+  String get settingsAbout => 'O aplikacji';
 
   @override
   String get settingsStorageBase => 'Dane serwera';
@@ -103,14 +103,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsUnitsMetricNote =>
-      'Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.';
+      'Ustaw jednostki, w jakich Twój serwer LubeLogger zapisuje dane (metryczne = km i litry). Aplikacja przeliczy je do wybranych jednostek wyświetlania.';
 
   @override
   String get settingsVisibleTabs => 'Widoczne zakładki';
 
   @override
   String get settingsVisibleTabsNote =>
-      'Wybierz, które zakładki mają się pojawiać na ekranie pojazdu i w menu dodawania, oraz przeciągnij, aby zmienić ich kolejność. Pulpit jest zawsze pokazywany jako pierwszy.';
+      'Wybierz, które zakładki mają się pojawiać na ekranie pojazdu i w menu dodawania, oraz przeciągnij, aby zmienić ich kolejność. Pulpit jest zawsze pokazywany jako pierwszy.';
 
   @override
   String get dashLoadError =>
@@ -129,19 +129,89 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chartExpensesByType => 'Wydatki wg typu';
 
   @override
-  String get chartExpensesDistanceByMonth => 'Wydatki i dystans wg miesiąca';
+  String get chartExpensesDistance => 'Wydatki i dystans';
 
   @override
   String get chartRemindersByUrgency => 'Przypomnienia wg pilności';
 
   @override
-  String get chartFuelMileageByMonth => 'Spalanie wg miesiąca';
+  String get chartFuelMileage => 'Spalanie';
 
   @override
-  String get chartNoData => 'Brak danych';
+  String get chartNoDataInRange => 'Brak danych w tym okresie';
 
   @override
   String get chartNoReminders => 'Brak przypomnień';
+
+  @override
+  String chartRemindersTotal(int count) {
+    return '$count łącznie';
+  }
+
+  @override
+  String get chartTotal => 'Razem';
+
+  @override
+  String chartAverage(String value) {
+    return 'śr. $value';
+  }
+
+  @override
+  String chartQuarter(int quarter) {
+    return '$quarter kw.';
+  }
+
+  @override
+  String get chartRangeTitle => 'Zakres danych';
+
+  @override
+  String get chartRangeOneMonth => '1 miesiąc';
+
+  @override
+  String get chartRangeThreeMonths => '3 miesiące';
+
+  @override
+  String get chartRangeSixMonths => '6 miesięcy';
+
+  @override
+  String get chartRangeYear => 'Rok';
+
+  @override
+  String get chartRangeCustom => 'Własny zakres';
+
+  @override
+  String get chartRangeOneMonthShort => '1 mies.';
+
+  @override
+  String get chartRangeThreeMonthsShort => '3 mies.';
+
+  @override
+  String get chartRangeSixMonthsShort => '6 mies.';
+
+  @override
+  String get chartRangeYearShort => 'Rok';
+
+  @override
+  String get chartRangeDefault => 'domyślny';
+
+  @override
+  String get chartRangeSettingsHint =>
+      'Domyślny zakres wszystkich wykresów zmienisz w Ustawieniach.';
+
+  @override
+  String chartRangeButton(String range) {
+    return 'Zakres danych: $range';
+  }
+
+  @override
+  String get settingsCharts => 'Wykresy';
+
+  @override
+  String get settingsChartDefaultRange => 'Domyślny zakres wykresów';
+
+  @override
+  String get settingsChartsNote =>
+      'Każdy wykres na pulpicie pojazdu możesz przełączyć osobno.';
 
   @override
   String get legendExpenses => 'Wydatki';
@@ -192,7 +262,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get planProgressBacklog => 'Zaległe';
 
   @override
-  String get planProgressInProgress => 'W toku';
+  String get planProgressInProgress => 'W toku';
 
   @override
   String get planProgressTesting => 'Testowanie';
@@ -320,6 +390,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get addRecordTitle => 'Dodaj wpis';
 
   @override
+  String addRecordHidden(int count) {
+    return 'Ukryte pozycje ($count)';
+  }
+
+  @override
   String get formFuelTitle => 'Dodaj tankowanie';
 
   @override
@@ -401,7 +476,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get formReminderMetricOdometer => 'Licznik';
 
   @override
-  String get formReminderMetricBoth => 'Data i licznik';
+  String get formReminderMetricBoth => 'Data i licznik';
 
   @override
   String get formReminderDueDate => 'Termin';
@@ -500,7 +575,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get confirmDeleteVehicleMessage =>
-      'Spowoduje to trwałe usunięcie pojazdu i wszystkich jego wpisów. Tej operacji nie można cofnąć.';
+      'Spowoduje to trwałe usunięcie pojazdu i wszystkich jego wpisów. Tej operacji nie można cofnąć.';
 
   @override
   String confirmDeleteVehicleFinalTitle(String vehicle) {
@@ -509,7 +584,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get confirmDeleteVehicleFinalMessage =>
-      'To ostatnia szansa, aby anulować. Pojazd i wszystkie jego wpisy zostaną bezpowrotnie usunięte.';
+      'To ostatnia szansa, aby anulować. Pojazd i wszystkie jego wpisy zostaną bezpowrotnie usunięte.';
 
   @override
   String get actionDeletePermanently => 'Usuń trwale';
@@ -519,7 +594,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String vehicleDeleteUnsupportedMessage(String required, String current) {
-    return 'Usuwanie pojazdu wymaga LubeLogger $required lub nowszego, a Twój serwer działa w wersji $current. Zaktualizuj serwer, aby z tego korzystać.';
+    return 'Usuwanie pojazdu wymaga LubeLogger $required lub nowszego, a Twój serwer działa w wersji $current. Zaktualizuj serwer, aby z tego korzystać.';
   }
 
   @override
@@ -683,7 +758,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get errServerUnreachable =>
-      'Nie można połączyć się z serwerem. Sprawdź adres i sieć.';
+      'Nie można połączyć się z serwerem. Sprawdź adres i sieć.';
 
   @override
   String get errUnauthorized =>
@@ -699,7 +774,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get errUnsupportedByServer =>
-      'Twój serwer LubeLogger jest za stary na tę operację. Zaktualizuj go, aby z niej korzystać.';
+      'Twój serwer LubeLogger jest za stary na tę operację. Zaktualizuj go, aby z niej korzystać.';
 
   @override
   String get errBadCertificate =>
@@ -758,14 +833,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingsNotificationsNote =>
-      'Sprawdzaj w tle przypomnienia po terminie (mniej więcej co 3 godziny) i wysyłaj powiadomienie. Każde przypomnienie powiadamia raz, dopóki nie zostanie rozwiązane.';
+      'Sprawdzaj w tle przypomnienia po terminie (mniej więcej co 3 godziny) i wysyłaj powiadomienie. Każde przypomnienie powiadamia raz, dopóki nie zostanie rozwiązane.';
 
   @override
   String get notifRemindersToggle => 'Przypomnienia po terminie';
 
   @override
   String get notifPermissionDenied =>
-      'Wymagane jest pozwolenie na powiadomienia. Włącz je w ustawieniach systemu.';
+      'Wymagane jest pozwolenie na powiadomienia. Włącz je w ustawieniach systemu.';
 
   @override
   String get notifReminderChannelName => 'Przypomnienia';
@@ -783,322 +858,27 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get settingsDiagnostics => 'Błędy i pomysły';
+  String get settingsDiagnostics => 'Błędy i pomysły';
 
   @override
   String get settingsDiagnosticsNote =>
-      'Zgłoś błąd wraz z nagraniem tego, co robiła aplikacja, albo poproś o zmianę lub nową funkcję.';
+      'Zgłoś błąd wraz z nagraniem tego, co robiła aplikacja, albo poproś o zmianę lub nową funkcję.';
 
   @override
   String get bugReportTitle => 'Zgłoś błąd lub pomysł';
 
   @override
-  String get bugReportIntroHeader => 'Jak to działa';
+  String get bugReportLogScreens => 'Otwierane ekrany i naciskane przyciski';
 
   @override
-  String get bugReportPrivacyHeader => 'Co trafia do logu';
-
-  @override
-  String get bugReportStart => 'Rozpocznij nagrywanie';
-
-  @override
-  String get bugReportRecordingHeader => 'Nagrywanie trwa';
-
-  @override
-  String get bugReportRecordingBody =>
-      'Wróć do aplikacji i odtwórz problem. Pasek idzie z Tobą — zaznacz nim moment awarii i zakończ nagrywanie.';
-
-  @override
-  String bugReportLimit(int minutes) {
-    return 'Nagrywanie zatrzyma się samo po $minutes min.';
-  }
-
-  @override
-  String bugReportLimitReached(int minutes) {
-    return 'Nagrywanie zakończone — minął limit $minutes min.';
-  }
-
-  @override
-  String bugReportSizeLimitReached(int megabytes) {
-    return 'Nagrywanie zakończone — log osiągnął limit $megabytes MB.';
-  }
-
-  @override
-  String get bugReportMark => 'Oznacz moment';
-
-  @override
-  String get bugReportMarked => 'Moment oznaczony';
-
-  @override
-  String get bugReportStop => 'Zakończ nagrywanie';
-
-  @override
-  String get bugReportStopShort => 'Zakończ';
-
-  @override
-  String get bugReportShow => 'Pokaż';
-
-  @override
-  String get bugReportBannerLabel => 'Nagrywanie';
-
-  @override
-  String get bugReportBarMove => 'Przesuń pasek nagrywania';
-
-  @override
-  String get bugReportBarCollapse => 'Zwiń pasek nagrywania';
-
-  @override
-  String get bugReportBarExpand => 'Rozwiń pasek nagrywania';
-
-  @override
-  String get bugReportRecoveredHeader => 'Nagranie przetrwało awarię';
-
-  @override
-  String get bugReportRecoveredBody =>
-      'Aplikacja zamknęła się w trakcie nagrywania. To, co zdążyła zapisać, jest nadal w telefonie — obejrzyj albo wyrzuć.';
-
-  @override
-  String get bugReportReviewHeader => 'Przejrzyj przed wysłaniem';
-
-  @override
-  String get bugReportReviewBody =>
-      'To wszystko, co zostało nagrane. Przejrzyj to — poniżej wybierasz, czy log zostaje w telefonie, czy idzie jako publiczne zgłoszenie.';
-
-  @override
-  String bugReportSummary(int records, int errors, int warnings) {
-    return '$records rekordów · $errors błędów · $warnings ostrzeżeń';
-  }
-
-  @override
-  String bugReportMarkers(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count oznaczonych momentów',
-      few: '$count oznaczone momenty',
-      one: '1 oznaczony moment',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get bugReportTruncated =>
-      'Sesja była długa — najstarsze rekordy zostały odrzucone.';
-
-  @override
-  String get bugReportEmpty => 'Nic nie zostało nagrane.';
-
-  @override
-  String get bugReportShowRaw => 'Pokaż surowy log';
-
-  @override
-  String get bugReportHideRaw => 'Ukryj surowy log';
-
-  @override
-  String bugReportRawClipped(int kb) {
-    return 'Pierwsze $kb kB nie są tu pokazane. Zapisany plik zawiera całą sesję.';
-  }
-
-  @override
-  String get bugReportDestinationFile => 'Zapisz do pliku';
-
-  @override
-  String get bugReportDestinationIssue => 'Zgłoś na GitHubie';
-
-  @override
-  String get bugReportDestinationFileBody =>
-      'Log zapisze się tam, gdzie wskażesz, i zostanie w telefonie. Sam decydujesz, czy gdziekolwiek go wyślesz.';
-
-  @override
-  String get bugReportDestinationIssueBody =>
-      'Log i Twój opis trafią jako publiczne zgłoszenie na GitHuba — każdy będzie mógł je przeczytać i zostaną tam na zawsze. Przejrzyj najpierw log poniżej.';
-
-  @override
-  String get bugReportDescriptionLabel => 'Co poszło nie tak?';
-
-  @override
-  String get bugReportDescriptionHint =>
-      'Co robiłeś, czego się spodziewałeś, co stało się zamiast tego.';
-
-  @override
-  String get bugReportDescriptionRequired =>
-      'Napisz, co poszło nie tak — log bez opisu jest prawie bezużyteczny.';
-
-  @override
-  String get bugReportSave => 'Zapisz do pliku';
-
-  @override
-  String get bugReportSaveShort => 'Zapisz';
-
-  @override
-  String get bugReportSaved => 'Log zapisany do pliku';
-
-  @override
-  String get bugReportSaveFailed => 'Nie udało się zapisać logu.';
-
-  @override
-  String get bugReportSend => 'Zgłoś';
-
-  @override
-  String get bugReportSending => 'Wysyłanie…';
-
-  @override
-  String bugReportSendWaiting(String clock) {
-    return 'Wysyłka za $clock';
-  }
-
-  @override
-  String get bugReportSendWaitingBody =>
-      'Relay rozkłada zgłoszenia w czasie. Możesz zamknąć ten ekran — wyśle się samo.';
-
-  @override
-  String get bugReportSent => 'Zgłoszenie wysłane';
-
-  @override
-  String get bugReportSentBody =>
-      'Dzięki. Zgłoszenie jest otwarte, a log do niego dołączony.';
-
-  @override
-  String get bugReportOpenIssue => 'Otwórz zgłoszenie';
-
-  @override
-  String get bugReportDone => 'Gotowe';
-
-  @override
-  String get bugReportSendFailedNotYet =>
-      'Relay w tej chwili nie przyjmuje zgłoszeń. Spróbuj później albo zapisz log do pliku.';
-
-  @override
-  String get bugReportSendFailedRefused =>
-      'Relay odmówił przyjęcia tego zgłoszenia. Zapisz log do pliku i dołącz go sam.';
-
-  @override
-  String get bugReportSendFailedDuplicate => 'To już zostało zgłoszone.';
-
-  @override
-  String get bugReportSendFailedUnreachable =>
-      'Nie udało się połączyć z relayem. Sprawdź połączenie albo zapisz log do pliku.';
-
-  @override
-  String get bugReportSendFailedRejected =>
-      'Relay odrzucił to zgłoszenie. Zapisz log do pliku i dołącz go sam.';
-
-  @override
-  String get bugReportSendFailedDemo =>
-      'Tryb demo nie publikuje zgłoszeń. Zapisz log do pliku.';
-
-  @override
-  String get bugReportDiscard => 'Odrzuć';
-
-  @override
-  String get bugReportDiscardQuestion => 'Odrzucić to nagranie?';
-
-  @override
-  String get bugReportDiscardBody => 'Log zostanie usunięty z telefonu.';
-
-  @override
-  String get bugReportDiscardBodyQueued =>
-      'Log zostanie usunięty z telefonu, a zakolejkowana wysyłka anulowana.';
-
-  @override
-  String get bugReportKindQuestion => 'Co zgłaszasz?';
-
-  @override
-  String get bugReportKindBug => 'Błąd';
-
-  @override
-  String get bugReportKindChange => 'Zmianę';
-
-  @override
-  String get bugReportKindFeature => 'Funkcję';
-
-  @override
-  String get bugReportChangeHeader => 'Prośba o zmianę';
-
-  @override
-  String get bugReportChangeBody => 'Coś działa, ale nie tak, jak powinno.';
-
-  @override
-  String get bugReportFeatureHeader => 'Propozycja funkcji';
-
-  @override
-  String get bugReportFeatureBody => 'Czegoś aplikacja jeszcze nie potrafi.';
-
-  @override
-  String get bugReportRequestPrivacyHeader => 'Co zostanie wysłane';
-
-  @override
-  String get bugReportChangeLabel => 'Co powinno się zmienić?';
-
-  @override
-  String get bugReportChangeHint =>
-      'Co robi teraz, a co powinno robić zamiast tego.';
-
-  @override
-  String get bugReportFeatureLabel => 'Czego brakuje?';
-
-  @override
-  String get bugReportFeatureHint =>
-      'Co chcesz zrobić i dlaczego aplikacja na to nie pozwala.';
-
-  @override
-  String get bugReportRequestRequired =>
-      'Napisz, o co prosisz — z pustego zgłoszenia nic nie wynika.';
-
-  @override
-  String get bugReportRequestSentBody => 'Dziękujemy. Zgłoszenie jest otwarte.';
-
-  @override
-  String get bugReportCancelSend => 'Anuluj wysyłanie';
-
-  @override
-  String get bugReportRequestFailedNotYet =>
-      'Relay w tej chwili nie przyjmuje zgłoszeń. Spróbuj później.';
-
-  @override
-  String get bugReportRequestFailedRefused =>
-      'Relay odmówił przyjęcia tego zgłoszenia. Możesz otworzyć je samodzielnie na GitHubie.';
-
-  @override
-  String get bugReportRequestFailedUnreachable =>
-      'Nie udało się połączyć z relayem. Sprawdź połączenie i spróbuj ponownie.';
-
-  @override
-  String get bugReportRequestFailedDemo => 'Tryb demo nie publikuje zgłoszeń.';
-
-  @override
-  String get bugReportQueuedBug =>
-      'To odliczanie dotyczy wysłanego już zgłoszenia błędu.';
-
-  @override
-  String get bugReportQueuedChange =>
-      'To odliczanie dotyczy wysłanej już prośby o zmianę.';
-
-  @override
-  String get bugReportQueuedFeature =>
-      'To odliczanie dotyczy wysłanej już prośby o funkcję.';
-
-  @override
-  String get bugReportStepRecord => 'Włącz nagrywanie';
-
-  @override
-  String get bugReportStepReproduce => 'Odtwórz problem';
-
-  @override
-  String get bugReportStepFinish => 'Wróć tutaj i zakończ';
-
-  @override
-  String get bugReportLogScreens => 'Otwierane ekrany i naciskane przyciski';
-
-  @override
-  String get bugReportLogRequests => 'Zapytania do serwera i jego odpowiedzi';
+  String get bugReportLogRequests => 'Zapytania do serwera i jego odpowiedzi';
 
   @override
   String get bugReportLogErrors => 'Błędy, także te, których nie widzisz';
 
   @override
   String get bugReportLogSetup =>
-      'Wersja aplikacji i serwera, Twój telefon, jednostki i format daty';
+      'Wersja aplikacji i serwera, Twój telefon, jednostki i format daty';
 
   @override
   String get bugReportLogNoKey => 'Klucz API ani hasło';
@@ -1108,30 +888,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get bugReportLogNoAddress =>
-      'Adres serwera — tylko http albo https, nazwa albo IP, i port';
+      'Adres serwera — tylko http albo https, nazwa albo IP, i port';
 
   @override
   String get bugReportLogNoData =>
       'Tablice, notatki, Twoje wpisy — tylko ich długość';
 
   @override
-  String get bugReportReviewFirst => 'Wszystko czytasz, zanim opuści telefon.';
-
-  @override
-  String get bugReportRequestWhatYouWrite => 'To, co napiszesz';
-
-  @override
-  String get bugReportRequestVersions => 'Wersja aplikacji i serwera';
-
-  @override
-  String get bugReportRequestNoLog => 'Żadnego loga, żadnego nagrania';
-
-  @override
-  String get bugReportRequestNoData => 'Nic o Twoich pojazdach ani telefonie';
-
-  @override
-  String get bugReportRequestPublic =>
-      'Powstaje publiczne zgłoszenie na GitHubie — każdy może je przeczytać i zostaje na stałe.';
+  String get bugReportRequestNoData => 'Nic o Twoich pojazdach ani telefonie';
 
   @override
   String fuelPillEnergy(String value) {
@@ -1147,11 +911,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get statAvgConsumption => 'Średnie zużycie energii';
 
   @override
-  String get chartConsumptionByMonth => 'Zużycie energii wg miesiąca';
+  String get chartConsumption => 'Zużycie energii';
 
   @override
   String get planDoneReadOnly =>
-      'Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera.';
+      'Ten plan jest ukończony. API LubeLoggera nie przyjmuje ukończonego planu, a każdy stan, który przyjmie, cofnąłby go — więc tutaj można go odczytać i usunąć, ale nie edytować. Zmień go na tablicy planera.';
 
   @override
   String get syncTitle => 'Synchronizacja';
@@ -1201,7 +965,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get syncStillOffline =>
-      'Serwer nadal nie odpowiada — zostają w kolejce.';
+      'Serwer nadal nie odpowiada — zostają w kolejce.';
 
   @override
   String syncAttempts(int count) {
@@ -1221,7 +985,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get syncRejectedExplain =>
-      'Serwer odpowiedział i ich nie przyjął, więc ponowne wysłanie tylko to powtórzy. Przeczytaj powód i odrzuć.';
+      'Serwer odpowiedział i ich nie przyjął, więc ponowne wysłanie tylko to powtórzy. Przeczytaj powód i odrzuć.';
 
   @override
   String get syncDiscard => 'Odrzuć';
@@ -1251,17 +1015,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get syncPendingTooltip => 'Zmiany czekające na wysłanie';
 
   @override
-  String get syncOfflineTooltip => 'Brak połączenia z serwerem';
+  String get syncOfflineTooltip => 'Brak połączenia z serwerem';
 
   @override
   String get settingsOfflineSection => 'Offline';
 
   @override
-  String get settingsBackgroundRefresh => 'Odświeżaj w tle';
+  String get settingsBackgroundRefresh => 'Odświeżaj w tle';
 
   @override
   String get settingsBackgroundRefreshSub =>
-      'Utrzymuje zapisaną kopię aktualną, żeby aplikacja otwierała się na Twoich rekordach, a nie na kółku ładowania.';
+      'Utrzymuje zapisaną kopię aktualną, żeby aplikacja otwierała się na Twoich rekordach, a nie na kółku ładowania.';
 
   @override
   String get settingsStoredData => 'Zapisane dane';

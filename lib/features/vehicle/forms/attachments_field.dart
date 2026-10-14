@@ -53,8 +53,12 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
     String evt, {
     LogLevel lvl = LogLevel.info,
     Map<String, Object?> fields = const {},
-  }) =>
-      DiagnosticRecorder.active?.add(LogSource.ui, evt, lvl: lvl, fields: fields);
+  }) => DiagnosticRecorder.active?.add(
+    LogSource.ui,
+    evt,
+    lvl: lvl,
+    fields: fields,
+  );
 
   Future<void> _pick() async {
     final l10n = AppLocalizations.of(context);
@@ -188,14 +192,14 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
             ),
           ),
           if (_files.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: DashSpace.sm),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: DashSpace.sm,
+              runSpacing: DashSpace.sm,
               children: [for (final f in _files) _chip(t, f)],
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: DashSpace.md),
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
@@ -211,10 +215,13 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
             ),
           ),
           if (_error != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: DashSpace.sm),
             Text(
               _error!,
-              style: TextStyle(color: t.danger, fontFamily: DashTokens.fontUi),
+              style: TextStyle(
+                color: t.dangerInk,
+                fontFamily: DashTokens.fontUi,
+              ),
             ),
           ],
         ],
@@ -223,7 +230,12 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
   }
 
   Widget _chip(DashTokens t, Attachment file) => Container(
-    padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+    padding: const EdgeInsets.fromLTRB(
+      DashSpace.md,
+      DashSpace.xs,
+      DashSpace.xs,
+      DashSpace.xs,
+    ),
     decoration: BoxDecoration(
       color: t.subCard,
       borderRadius: BorderRadius.circular(10),
@@ -236,7 +248,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
           onTap: () => openAttachment(context, ref, file),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.symmetric(vertical: DashSpace.xs),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -245,7 +257,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
                   size: 15,
                   color: t.textTertiary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: DashSpace.sm),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 180),
                   child: Text(

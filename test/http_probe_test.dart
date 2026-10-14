@@ -21,20 +21,19 @@ class _FakeAdapter implements HttpClientAdapter {
     RequestOptions options,
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
-  ) async =>
-      answer(options);
+  ) async => answer(options);
 
   @override
   void close({bool force = false}) {}
 }
 
 ResponseBody _json(Object? body, {int status = 200}) => ResponseBody.fromString(
-      jsonEncode(body),
-      status,
-      headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
-      },
-    );
+  jsonEncode(body),
+  status,
+  headers: {
+    Headers.contentTypeHeader: [Headers.jsonContentType],
+  },
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -52,8 +51,10 @@ void main() {
 
   /// Only the records the HTTP probe wrote — the session also carries its own
   /// start and stop markers.
-  List<Map<String, Object?>> httpOnly(List<Map<String, Object?>> records) =>
-      [for (final r in records) if (r['src'] == 'http') r];
+  List<Map<String, Object?>> httpOnly(List<Map<String, Object?>> records) => [
+    for (final r in records)
+      if (r['src'] == 'http') r,
+  ];
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -78,10 +79,12 @@ void main() {
   });
 
   test('a response records method, path, status, count and vehicle', () async {
-    dio.httpClientAdapter = _FakeAdapter((_) => _json([
-          {'id': 1, 'date': '2026-08-01', 'odometer': '1000'},
-          {'id': 2, 'date': '2026-08-02', 'odometer': '1100'},
-        ]));
+    dio.httpClientAdapter = _FakeAdapter(
+      (_) => _json([
+        {'id': 1, 'date': '2026-08-01', 'odometer': '1000'},
+        {'id': 2, 'date': '2026-08-02', 'odometer': '1100'},
+      ]),
+    );
     await recorder.start();
     await dio.get<dynamic>(
       '/api/vehicle/gasrecords',
@@ -98,14 +101,16 @@ void main() {
   });
 
   test('the sampled record keeps its shape and drops the user text', () async {
-    dio.httpClientAdapter = _FakeAdapter((_) => _json([
-          {
-            'id': 4,
-            'licensePlate': 'WX 1234A',
-            'year': '2016',
-            'notes': 'bought from a friend',
-          },
-        ]));
+    dio.httpClientAdapter = _FakeAdapter(
+      (_) => _json([
+        {
+          'id': 4,
+          'licensePlate': 'WX 1234A',
+          'year': '2016',
+          'notes': 'bought from a friend',
+        },
+      ]),
+    );
     await recorder.start();
     await dio.get<dynamic>('/api/vehicles');
 
@@ -117,9 +122,11 @@ void main() {
   });
 
   test('an unchanged answer degrades to `same`', () async {
-    dio.httpClientAdapter = _FakeAdapter((_) => _json([
-          {'id': 1, 'date': '2026-08-01'},
-        ]));
+    dio.httpClientAdapter = _FakeAdapter(
+      (_) => _json([
+        {'id': 1, 'date': '2026-08-01'},
+      ]),
+    );
     await recorder.start();
     await dio.get<dynamic>('/api/vehicles');
     await dio.get<dynamic>('/api/vehicles');
@@ -224,9 +231,13 @@ void main() {
 
   test('a 200 with an empty body on a read is called out', () async {
     dio.httpClientAdapter = _FakeAdapter(
-      (_) => ResponseBody.fromString('', 200, headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
-      }),
+      (_) => ResponseBody.fromString(
+        '',
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      ),
     );
     await recorder.start();
     await dio.get<dynamic>('/api/vehicles');
@@ -235,8 +246,9 @@ void main() {
   });
 
   test('a failure records the type, the status and a body preview', () async {
-    dio.httpClientAdapter =
-        _FakeAdapter((_) => _json({'message': 'no scope'}, status: 401));
+    dio.httpClientAdapter = _FakeAdapter(
+      (_) => _json({'message': 'no scope'}, status: 401),
+    );
     await recorder.start();
     await expectLater(
       dio.get<dynamic>('/api/vehicles'),
@@ -272,14 +284,16 @@ void main() {
 
   test('the API key never reaches a record', () async {
     dio.httpClientAdapter = _FakeAdapter(
-      (_) => _json(
-        {'success': false, 'message': 'key sekretny-klucz-123 rejected'},
-        status: 403,
-      ),
+      (_) => _json({
+        'success': false,
+        'message': 'key sekretny-klucz-123 rejected',
+      }, status: 403),
     );
     await recorder.start();
-    DiagnosticRecorder.active!.redactor
-        .remember('sekretny-klucz-123', '[APIKEY]');
+    DiagnosticRecorder.active!.redactor.remember(
+      'sekretny-klucz-123',
+      '[APIKEY]',
+    );
     await expectLater(
       dio.get<dynamic>('/api/vehicles'),
       throwsA(isA<DioException>()),
@@ -301,9 +315,11 @@ void main() {
   });
 
   test('a session starts with a clean set of fingerprints', () async {
-    dio.httpClientAdapter = _FakeAdapter((_) => _json([
-          {'id': 1, 'date': '2026-08-01'},
-        ]));
+    dio.httpClientAdapter = _FakeAdapter(
+      (_) => _json([
+        {'id': 1, 'date': '2026-08-01'},
+      ]),
+    );
     await recorder.start();
     await dio.get<dynamic>('/api/vehicles');
     await recorder.stop();
@@ -313,24 +329,30 @@ void main() {
     expect(httpOnly(await stopAndRead()).single.containsKey('first'), isTrue);
   });
 
-  test('the session header carries the server fingerprint, not the URL',
-      () async {
-    final fingerprinted = lubeloggerRecorder(
-      settings: SettingsRepository(await SharedPreferences.getInstance()),
-      loadFacts: () async => SessionFacts(
-        app: '0.2.7+207',
-        serverUrl: ServerFingerprint.tryParse('https://lube.example.com:8443'),
-      ),
-      resolveDirectory: () async => null,
-    );
-    await fingerprinted.start();
-    final header = jsonDecode(
-      const LineSplitter().convert(await fingerprinted.stop()).first,
-    ) as Map<String, Object?>;
+  test(
+    'the session header carries the server fingerprint, not the URL',
+    () async {
+      final fingerprinted = lubeloggerRecorder(
+        settings: SettingsRepository(await SharedPreferences.getInstance()),
+        loadFacts: () async => SessionFacts(
+          app: '0.2.7+207',
+          serverUrl: ServerFingerprint.tryParse(
+            'https://lube.example.com:8443',
+          ),
+        ),
+        resolveDirectory: () async => null,
+      );
+      await fingerprinted.start();
+      final header =
+          jsonDecode(
+                const LineSplitter().convert(await fingerprinted.stop()).first,
+              )
+              as Map<String, Object?>;
 
-    expect(header['scheme'], 'https');
-    expect(header['host_kind'], 'name');
-    expect(header['port'], 8443);
-    expect(header.toString(), isNot(contains('lube.example.com')));
-  });
+      expect(header['scheme'], 'https');
+      expect(header['host_kind'], 'name');
+      expect(header['port'], 8443);
+      expect(header.toString(), isNot(contains('lube.example.com')));
+    },
+  );
 }

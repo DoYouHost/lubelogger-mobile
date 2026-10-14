@@ -1,6 +1,7 @@
 // Numeric record-form entry: plain free-form typing, no leading zeros and no
 // fixed decimal places.
 
+import 'package:app_util/app_util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/form_fields.dart';
@@ -35,6 +36,24 @@ void main() {
       expect(typeDecimal('-5'), '5');
     });
 
+    test('a pasted grouped number is rewritten plain', () {
+      String paste(String text) => decimalInputFormatters.first
+          .formatEditUpdate(
+            TextEditingValue.empty,
+            TextEditingValue(
+              text: text,
+              selection: TextSelection.collapsed(offset: text.length),
+            ),
+          )
+          .text;
+
+      expect(paste('1 250,50'), '1250.5');
+      expect(paste('1,250.50'), '1250.5');
+      expect(paste('1\u00a0250'), '1250');
+      expect(paste('12 apples'), '', reason: 'not a number, so refused');
+      expect(paste('-5 000'), '', reason: 'the forms take no negatives');
+    });
+
     test('never pads or shifts digits', () {
       expect(typeDecimal('2'), '2');
       expect(typeDecimal('21'), '21');
@@ -56,7 +75,7 @@ void main() {
 
     test('round-trips through the form parser', () {
       for (final v in [0, 7, 45.5, 213.79, 320775.0]) {
-        expect(parseFormNumber(formatFormNumber(v)), v);
+        expect(parseUserDecimal(formatFormNumber(v)), v);
       }
     });
   });

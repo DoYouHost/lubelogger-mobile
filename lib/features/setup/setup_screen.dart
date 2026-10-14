@@ -59,16 +59,24 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           backgroundColor: Colors.transparent,
           appBar: dashAppBar(context, title: l10n.connectToServer),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(DashSpace.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Padding(
-                  padding: EdgeInsets.only(bottom: 4, left: 2),
+                  padding: EdgeInsets.only(
+                    bottom: DashSpace.xs,
+                    left: DashSpace.xs,
+                  ),
                   child: LubeLoggerWordmark(fontSize: 30),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(2, 4, 2, 18),
+                  padding: const EdgeInsets.fromLTRB(
+                    DashSpace.xs,
+                    DashSpace.xs,
+                    DashSpace.xs,
+                    DashSpace.lg,
+                  ),
                   child: Text(
                     l10n.setupIntro,
                     style: TextStyle(
@@ -91,7 +99,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   Widget _card(DashTokens t, AppLocalizations l10n, SetupState state) =>
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(DashSpace.lg),
         decoration: BoxDecoration(
           gradient: t.cardGradient,
           borderRadius: BorderRadius.circular(16),
@@ -114,8 +122,8 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 helperText: l10n.serverAddressHelper,
                 prefixIcon: Icon(Icons.dns_outlined, color: t.textTertiary),
               ),
-            ),
-            const SizedBox(height: 16),
+            ).tagged('setup.url'),
+            const SizedBox(height: DashSpace.lg),
             Text(
               l10n.apiKeyExplain,
               style: TextStyle(
@@ -125,7 +133,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 color: t.textSecondary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DashSpace.md),
             TextField(
               controller: _apiKey,
               enabled: !state.busy,
@@ -146,10 +154,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     color: t.textTertiary,
                   ),
                   onPressed: () => setState(() => _obscureKey = !_obscureKey),
-                ),
+                ).tagged('setup.apiKey.reveal'),
               ),
-            ),
-            const SizedBox(height: 18),
+            ).tagged('setup.apiKey'),
+            const SizedBox(height: DashSpace.lg),
             FilledButton(
               style: dashPrimaryButtonStyle(t),
               onPressed: state.busy ? null : _submit,
@@ -157,7 +165,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   ? _busyLabel(l10n.connecting)
                   : Text(l10n.connect),
             ).tagged('setup.connect'),
-            const SizedBox(height: 4),
+            const SizedBox(height: DashSpace.xs),
             Center(
               child: TextButton.icon(
                 onPressed: state.busy ? null : _fillDemo,
@@ -181,14 +189,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             ),
             if (state.error != null)
               Padding(
-                padding: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.only(top: DashSpace.lg),
                 child: Text(
                   setupErrorText(l10n, state.error!),
                   style: TextStyle(
                     fontFamily: DashTokens.fontUi,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: t.danger,
+                    color: t.dangerInk,
                   ),
                 ),
               ),
@@ -197,25 +205,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       );
 
   Widget _busyLabel(String text) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Color(0xFF1A1206),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(text),
-        ],
-      );
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Color(0xFF1A1206),
+        ),
+      ),
+      const SizedBox(width: DashSpace.md),
+      Text(text),
+    ],
+  );
 
   TextStyle _fieldStyle(DashTokens t, {required bool mono}) => TextStyle(
-        fontFamily: mono ? DashTokens.fontMono : DashTokens.fontUi,
-        fontSize: mono ? 13 : 14,
-        fontWeight: FontWeight.w600,
-        color: t.textPrimary,
-      );
+    fontFamily: mono ? DashTokens.fontMono : DashTokens.fontUi,
+    fontSize: mono ? 13 : 14,
+    fontWeight: FontWeight.w600,
+    color: t.textPrimary,
+  );
 }

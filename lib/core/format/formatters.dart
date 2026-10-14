@@ -65,12 +65,12 @@ class Formatters {
 
   /// Grouped format with exactly [decimals] decimal places.
   static NumberFormat _plain(int decimals) => _plainFormats.putIfAbsent(
-        decimals,
-        () => NumberFormat(
-          decimals == 0 ? '#,##0' : '#,##0.${'0' * decimals}',
-          _locale,
-        ),
-      );
+    decimals,
+    () => NumberFormat(
+      decimals == 0 ? '#,##0' : '#,##0.${'0' * decimals}',
+      _locale,
+    ),
+  );
 
   /// Money format for [symbol] with [decimalDigits] decimals, laid out by the
   /// currency's own locale ([_currencyLocales]) — its currency pattern decides
@@ -120,16 +120,14 @@ class Formatters {
     double rawValue,
     MeasurementSystem base,
     DistanceUnit unit,
-  ) =>
-      rawValue * distanceFactor(base, unit);
+  ) => rawValue * distanceFactor(base, unit);
 
   /// A value the user entered in [unit], back in [base]'s stored unit.
   static double storedDistance(
     double displayValue,
     MeasurementSystem base,
     DistanceUnit unit,
-  ) =>
-      displayValue / distanceFactor(base, unit);
+  ) => displayValue / distanceFactor(base, unit);
 
   /// Raw stored distance [rawValue] (in [base]'s distance unit) converted to the
   /// display [unit] and labelled, e.g. `320,775 km` or `199,316 mi`.

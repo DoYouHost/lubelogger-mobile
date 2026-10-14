@@ -1,17 +1,25 @@
+import 'package:flutter/material.dart'
+    show FloatingActionButton, kFloatingActionButtonMargin;
 import 'package:flutter/widgets.dart';
 
 /// Layout helpers for adapting the (single-column, portrait-first) design to
 /// wider viewports — phone landscape and tablets — so horizontal space is used
 /// instead of stretching one column edge-to-edge.
 
-/// Max width for modal bottom sheets. When the screen is wider the sheet is
-/// centered at this width rather than spanning the full landscape width, which
-/// would leave forms with uncomfortably long fields.
-const double kBottomSheetMaxWidth = 640;
-
 /// Max width for a centered full-screen content column (e.g. Settings), so its
 /// rows stay readable in landscape instead of running the whole width.
 const double kContentMaxWidth = 760;
+
+/// Bottom padding for a scroll view under a floating action button, so its last
+/// card can scroll fully above the button instead of ending behind it.
+double fabScrollClearance(BuildContext context) =>
+    MediaQuery.paddingOf(context).bottom +
+    _fabSize +
+    kFloatingActionButtonMargin +
+    16;
+
+/// A regular [FloatingActionButton]'s diameter; Material exports no constant.
+const double _fabSize = 56;
 
 /// First width at which a second column of cards fits.
 const double _wideBreakpoint = 600;
@@ -80,7 +88,9 @@ class SliverResponsiveCards extends StatelessWidget {
       itemCount: rows,
       itemBuilder: (context, row) => Padding(
         // Like the wrap's runSpacing: between rows only, never trailing.
-        padding: EdgeInsets.only(bottom: row == rows - 1 ? 0 : runSpacing),
+        padding: row == rows - 1
+            ? EdgeInsets.zero
+            : EdgeInsets.only(bottom: runSpacing),
         child: columns == 1
             ? itemBuilder(context, row)
             : _row(context, row, columns),
@@ -105,29 +115,6 @@ class SliverResponsiveCards extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// Centers [child] and caps its width at [maxWidth], for full-screen scrollable
-/// content that would otherwise stretch across a landscape/tablet width.
-class ContentConstraint extends StatelessWidget {
-  const ContentConstraint({
-    super.key,
-    required this.child,
-    this.maxWidth = kContentMaxWidth,
-  });
-
-  final Widget child;
-  final double maxWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: child,
-      ),
     );
   }
 }

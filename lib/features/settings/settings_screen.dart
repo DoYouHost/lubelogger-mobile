@@ -1,15 +1,18 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_report_ui/app_report_ui.dart' show bugReportRoute;
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/format/chart_range.dart';
 import '../../core/layout/responsive.dart';
 import '../../core/settings/units_settings.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
-import '../bug_report/recording_banner.dart' show bugReportRoute;
 import '../common/vehicle_tab_ui.dart';
+import '../dashboard/widgets/chart_range_sheet.dart';
 
 /// Basic settings: display units (currency / distance / fuel economy) and the
 /// server connection (with log out).
@@ -29,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
     final remindersOn = ref.watch(reminderNotificationsProvider);
     final remindersCtl = ref.read(reminderNotificationsProvider.notifier);
     final backgroundRefresh = ref.watch(backgroundRefreshProvider);
+    final chartRange = ref.watch(chartDefaultRangeProvider);
     final cacheBytes = ref.watch(cacheSizeProvider).valueOrNull;
     final serverSymbol =
         ref.watch(serverInfoProvider).valueOrNull?.currencySymbol ?? r'$';
@@ -41,9 +45,15 @@ class SettingsScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: dashAppBar(context, title: l10n.settingsTitle),
-        body: ContentConstraint(
+        body: MaxContentWidth(
+          maxWidth: kContentMaxWidth,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            padding: const EdgeInsets.fromLTRB(
+              DashSpace.lg,
+              DashSpace.sm,
+              DashSpace.lg,
+              DashSpace.xxl,
+            ),
             children: [
               _Section(
                 id: 'units',
@@ -66,12 +76,13 @@ class SettingsScreen extends ConsumerWidget {
                       ],
                       selected: {units.base},
                       onSelectionChanged: (s) => unitsCtl.setBase(s.first),
-                    ),
+                    ).tagged('settings.storageBase'),
                   ),
                   _divider(t),
                   _SettingRow(
                     label: l10n.settingsCurrency,
                     control: _Dropdown<CurrencyOption>(
+                      id: 'settings.currency',
                       value: units.currency,
                       items: CurrencyOption.values,
                       labelOf: (c) => c.fixedSymbol == null
@@ -91,12 +102,13 @@ class SettingsScreen extends ConsumerWidget {
                       ],
                       selected: {units.distance},
                       onSelectionChanged: (s) => unitsCtl.setDistance(s.first),
-                    ),
+                    ).tagged('settings.distance'),
                   ),
                   _divider(t),
                   _SettingRow(
                     label: l10n.settingsFuelEconomy,
                     control: _Dropdown<FuelEconomyUnit>(
+                      id: 'settings.fuelEconomy',
                       value: units.economy,
                       items: FuelEconomyUnit.values,
                       labelOf: (e) => e.label,
@@ -107,6 +119,7 @@ class SettingsScreen extends ConsumerWidget {
                   _SettingRow(
                     label: l10n.settingsDateFormat,
                     control: _Dropdown<DateOrder>(
+                      id: 'settings.dateFormat',
                       value: units.dateOrder,
                       items: DateOrder.values,
                       labelOf: (o) => o.labelWith(units.dateSeparator),
@@ -117,6 +130,7 @@ class SettingsScreen extends ConsumerWidget {
                   _SettingRow(
                     label: l10n.settingsDateSeparator,
                     control: _Dropdown<DateSeparator>(
+                      id: 'settings.dateSeparator',
                       value: units.dateSeparator,
                       items: DateSeparator.values,
                       labelOf: (s) => units.dateOrder.labelWith(s),
@@ -125,7 +139,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: DashSpace.lg),
               _Section(
                 id: 'tabs',
                 title: l10n.settingsVisibleTabs,
@@ -153,13 +167,34 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: DashSpace.lg),
+              _Section(
+                id: 'charts',
+                title: l10n.settingsCharts,
+                footnote: l10n.settingsChartsNote,
+                children: [
+                  _SettingRow(
+                    label: l10n.settingsChartDefaultRange,
+                    control: _Dropdown<ChartRangePreset>(
+                      id: 'settings.chartRange',
+                      value: chartRange,
+                      items: ChartRangePreset.values,
+                      labelOf: (p) => chartPresetLabel(p, l10n),
+                      onChanged: ref
+                          .read(chartDefaultRangeProvider.notifier)
+                          .set,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: DashSpace.lg),
               _Section(
                 id: 'notifications',
                 title: l10n.settingsNotifications,
                 footnote: l10n.settingsNotificationsNote,
                 children: [
                   _ToggleRow(
+                    id: 'settings.reminders',
                     icon: Icons.notifications_active_outlined,
                     label: l10n.notifRemindersToggle,
                     value: remindersOn,
@@ -174,18 +209,20 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: DashSpace.lg),
               _Section(
                 id: 'offline',
                 title: l10n.settingsOfflineSection,
                 footnote: l10n.settingsBackgroundRefreshSub,
                 children: [
                   _ToggleRow(
+                    id: 'settings.backgroundRefresh',
                     icon: Icons.cloud_sync_outlined,
                     label: l10n.settingsBackgroundRefresh,
                     value: backgroundRefresh,
-                    onChanged:
-                        ref.read(backgroundRefreshProvider.notifier).setEnabled,
+                    onChanged: ref
+                        .read(backgroundRefreshProvider.notifier)
+                        .setEnabled,
                   ),
                   _SettingRow(
                     label: l10n.settingsStoredData,
@@ -193,7 +230,9 @@ class SettingsScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          l10n.settingsStoredDataSize(_bytes(cacheBytes ?? 0)),
+                          l10n.settingsStoredDataSize(
+                            formatBytes(cacheBytes ?? 0),
+                          ),
                           style: TextStyle(
                             fontFamily: DashTokens.fontUi,
                             fontSize: 13,
@@ -209,26 +248,27 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: DashSpace.lg),
               _Section(
                 id: 'diagnostics',
                 title: l10n.settingsDiagnostics,
                 footnote: l10n.settingsDiagnosticsNote,
                 children: [
                   _LinkRow(
+                    id: 'settings.bugReport',
                     label: l10n.bugReportTitle,
                     onTap: () => context.push(bugReportRoute),
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: DashSpace.lg),
               _Section(
                 id: 'server',
                 title: l10n.settingsServer,
                 children: [
                   if (who?.displayName.isNotEmpty ?? profile?.label != null)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.only(bottom: DashSpace.xs),
                       child: Text(
                         l10n.signedInAs(who?.displayName ?? profile!.label!),
                         style: TextStyle(
@@ -241,7 +281,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   if (who != null && who.emailAddress.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.only(bottom: DashSpace.sm),
                       child: Text(
                         who.emailAddress,
                         style: TextStyle(
@@ -253,9 +293,10 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   if (who != null && (who.isRoot || who.isAdmin))
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: DashSpace.sm),
                       child: Wrap(
-                        spacing: 6,
+                        spacing: DashSpace.sm,
+                        runSpacing: DashSpace.sm,
                         children: [
                           if (who.isRoot) _roleChip(t, l10n.roleRoot),
                           if (who.isAdmin) _roleChip(t, l10n.roleAdmin),
@@ -271,13 +312,13 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   if (who?.isRoot ?? false) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DashSpace.lg),
                     const _BackupButton(),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: DashSpace.lg),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: t.danger,
+                      foregroundColor: t.dangerInk,
                       side: BorderSide(color: t.danger.withValues(alpha: 0.5)),
                     ),
                     icon: const Icon(Icons.logout, size: 18),
@@ -287,7 +328,7 @@ class SettingsScreen extends ConsumerWidget {
                   ).tagged('settings.logout'),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: DashSpace.lg),
               _Section(
                 id: 'about',
                 title: l10n.settingsAbout,
@@ -303,7 +344,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   if (packageInfo != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.only(top: DashSpace.xs),
                       child: Text(
                         l10n.appVersion(
                           packageInfo.version,
@@ -318,7 +359,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   if (serverVersion != null) ...[
                     Padding(
-                      padding: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.only(top: DashSpace.xs),
                       child: Text(
                         l10n.serverVersionLabel(serverVersion.currentVersion),
                         style: TextStyle(
@@ -330,7 +371,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     if (serverVersion.updateAvailable)
                       Padding(
-                        padding: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.only(top: DashSpace.sm),
                         child: Row(
                           children: [
                             Icon(
@@ -338,7 +379,7 @@ class SettingsScreen extends ConsumerWidget {
                               size: 15,
                               color: t.accentGold,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: DashSpace.sm),
                             Flexible(
                               child: Text(
                                 l10n.updateAvailable(
@@ -358,6 +399,7 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                   _divider(t),
                   _LinkRow(
+                    id: 'settings.licenses',
                     label: l10n.openSourceLicenses,
                     onTap: () => showLicensePage(
                       context: context,
@@ -391,15 +433,12 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  static String _bytes(int value) {
-    if (value < 1024) return '$value B';
-    if (value < 1024 * 1024) return '${(value / 1024).round()} kB';
-    return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
-
   /// A small pill labelling an account role (Admin / Root).
   Widget _roleChip(DashTokens t, String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    padding: const EdgeInsets.symmetric(
+      horizontal: DashSpace.sm,
+      vertical: DashSpace.xs,
+    ),
     decoration: BoxDecoration(
       color: t.accentGold.withValues(alpha: 0.14),
       borderRadius: BorderRadius.circular(20),
@@ -456,7 +495,7 @@ class _BackupButtonState extends ConsumerState<_BackupButton> {
             )
           : const Icon(Icons.backup_outlined, size: 18),
       label: Text(l10n.settingsBackup),
-    );
+    ).tagged('settings.backup');
   }
 }
 
@@ -484,7 +523,7 @@ class _Section extends StatelessWidget {
       'settings.$id',
       Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(DashSpace.lg),
         decoration: BoxDecoration(
           gradient: t.cardGradient,
           borderRadius: BorderRadius.circular(16),
@@ -503,10 +542,10 @@ class _Section extends StatelessWidget {
                 color: t.textSecondary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DashSpace.md),
             ...children,
             if (footnote != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: DashSpace.md),
               Text(
                 footnote!,
                 style: TextStyle(
@@ -526,34 +565,39 @@ class _Section extends StatelessWidget {
 /// A tappable row that navigates elsewhere (e.g. the licenses page): label on
 /// the left, chevron on the right.
 class _LinkRow extends StatelessWidget {
-  const _LinkRow({required this.label, required this.onTap});
+  const _LinkRow({required this.id, required this.label, required this.onTap});
 
+  /// Log identifier of the row.
+  final String id;
   final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: DashTokens.fontUi,
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w600,
-                  color: t.textPrimary,
+    return logTag(
+      id,
+      InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: DashSpace.xs),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: DashTokens.fontUi,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            Icon(Icons.chevron_right, color: t.textTertiary),
-          ],
+              Icon(Icons.chevron_right, color: t.textTertiary),
+            ],
+          ),
         ),
       ),
     );
@@ -583,7 +627,7 @@ class _SettingRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: DashSpace.md),
         control,
       ],
     );
@@ -594,12 +638,15 @@ class _SettingRow extends StatelessWidget {
 /// the visible-tabs toggles.
 class _ToggleRow extends StatelessWidget {
   const _ToggleRow({
+    required this.id,
     required this.icon,
     required this.label,
     required this.value,
     required this.onChanged,
   });
 
+  /// Log identifier of the row; the switch in it inherits it.
+  final String id;
   final IconData icon;
   final String label;
   final bool value;
@@ -608,33 +655,36 @@ class _ToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: () => onChanged(!value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: t.textTertiary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: DashTokens.fontUi,
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w600,
-                  color: t.textPrimary,
+    return logTag(
+      id,
+      InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: DashSpace.xs),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: t.textTertiary),
+              const SizedBox(width: DashSpace.md),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: DashTokens.fontUi,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.textPrimary,
+                  ),
                 ),
               ),
-            ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: Colors.white,
-              activeTrackColor: t.accentGold,
-            ),
-          ],
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: Colors.white,
+                activeTrackColor: t.accentGold,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -664,40 +714,46 @@ class _TabOrderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DashTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: DashSpace.xs),
       child: Row(
         children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Icon(
-                Icons.drag_indicator,
-                size: 20,
-                color: t.textTertiary,
+          logTag(
+            'settings.tabOrder.drag',
+            ReorderableDragStartListener(
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.only(right: DashSpace.sm),
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 20,
+                  color: t.textTertiary,
+                ),
               ),
             ),
           ),
           Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => onChanged(!value),
-              child: Row(
-                children: [
-                  Icon(icon, size: 18, color: t.textTertiary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: DashTokens.fontUi,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                        color: t.textPrimary,
+            child: logTag(
+              'settings.tabOrder.row',
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => onChanged(!value),
+                child: Row(
+                  children: [
+                    Icon(icon, size: 18, color: t.textTertiary),
+                    const SizedBox(width: DashSpace.md),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontFamily: DashTokens.fontUi,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                          color: t.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -706,7 +762,7 @@ class _TabOrderRow extends StatelessWidget {
             onChanged: onChanged,
             activeThumbColor: Colors.white,
             activeTrackColor: t.accentGold,
-          ),
+          ).tagged('settings.tabOrder.toggle'),
         ],
       ),
     );
@@ -716,12 +772,16 @@ class _TabOrderRow extends StatelessWidget {
 /// Themed dropdown for an enum-backed setting.
 class _Dropdown<T> extends StatelessWidget {
   const _Dropdown({
+    required this.id,
     required this.value,
     required this.items,
     required this.labelOf,
     required this.onChanged,
   });
 
+  /// Log identifier of the select; each row carries `<id>.option`, since the
+  /// menu opens in a route the select's tag does not reach.
+  final String id;
   final T value;
   final List<T> items;
   final String Function(T) labelOf;
@@ -744,12 +804,15 @@ class _Dropdown<T> extends StatelessWidget {
         icon: Icon(Icons.arrow_drop_down, color: t.textSecondary),
         items: [
           for (final item in items)
-            DropdownMenuItem(value: item, child: Text(labelOf(item))),
+            DropdownMenuItem(
+              value: item,
+              child: logTag('$id.option', Text(labelOf(item))),
+            ),
         ],
         onChanged: (v) {
           if (v != null) onChanged(v);
         },
-      ),
+      ).tagged(id),
     );
   }
 }

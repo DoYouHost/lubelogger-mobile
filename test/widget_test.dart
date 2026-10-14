@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lubelogger_mobile/features/bug_report/report_wiring.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:lubelogger_mobile/app.dart';
@@ -16,7 +17,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          reportBindingsOverride,
+        ],
         child: const LubeLoggerApp(),
       ),
     );

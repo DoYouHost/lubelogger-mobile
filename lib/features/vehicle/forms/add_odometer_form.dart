@@ -1,6 +1,6 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/diagnostics/log_form.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -27,11 +27,8 @@ Future<bool?> showAddOdometerForm(
   int vehicleId, {
   OdometerRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.odometer',
       _AddOdometerForm(vehicleId: vehicleId, existing: existing),
@@ -73,9 +70,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     _odometer.addListener(() => setState(() {}));
     if (e != null) {
       _odometer.text = formatFormNumber(
-        ref.read(vehicleUnitsProvider(widget.vehicleId)).toDisplayOdometer(
-              e.odometer,
-            ),
+        ref
+            .read(vehicleUnitsProvider(widget.vehicleId))
+            .toDisplayOdometer(e.odometer),
       );
       _tags.text = e.tags;
       _notes.text = e.notes;
@@ -105,9 +102,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       _isEditing
           ? null
           : ref
-              .watch(vehicleInfoProvider(widget.vehicleId))
-              .valueOrNull
-              ?.lastReportedOdometer,
+                .watch(vehicleInfoProvider(widget.vehicleId))
+                .valueOrNull
+                ?.lastReportedOdometer,
     );
     final previousText = previous == null
         ? null
@@ -121,7 +118,12 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       // Lift the sheet above the keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.xl,
+          DashSpace.xs,
+          DashSpace.xl,
+          DashSpace.xl,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -145,7 +147,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   ),
                   if (_isEditing)
                     IconButton(
-                      icon: Icon(Icons.delete_outline, color: t.danger),
+                      icon: Icon(Icons.delete_outline, color: t.dangerInk),
                       onPressed: _submitting ? null : _confirmDelete,
                     ).tagged('form.delete'),
                   IconButton(
@@ -156,39 +158,40 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   ).tagged('form.close'),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DashSpace.sm),
               DateField(
                 text: units.formatDate(_date),
                 onPick: _submitting ? null : _pickDate,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _odometer,
                 enabled: !_submitting,
                 keyboardType: numberKeyboard(decimal: false),
                 inputFormatters: integerInputFormatters,
                 style: const TextStyle(fontFamily: DashTokens.fontMono),
-                decoration: dashFieldDecoration(
-                  t,
-                  labelText: l10n.formOdometerLabel(units.distanceLabel),
-                ).copyWith(
-                  // One line under the field, which turns from the hint into
-                  // the warning. A lower reading is legitimate often enough (a
-                  // swapped cluster, a correction) that it must not block the
-                  // save — hence this and a confirmation on submit, rather than
-                  // a validator error.
-                  helperText: previousText == null
-                      ? null
-                      : goesBackwards
+                decoration:
+                    dashFieldDecoration(
+                      t,
+                      labelText: l10n.formOdometerLabel(units.distanceLabel),
+                    ).copyWith(
+                      // One line under the field, which turns from the hint into
+                      // the warning. A lower reading is legitimate often enough (a
+                      // swapped cluster, a correction) that it must not block the
+                      // save — hence this and a confirmation on submit, rather than
+                      // a validator error.
+                      helperText: previousText == null
+                          ? null
+                          : goesBackwards
                           ? l10n.formOdometerBackwards(previousText)
                           : l10n.formOdometerLast(previousText),
-                  helperStyle: goesBackwards
-                      ? TextStyle(color: t.accentOrange)
-                      : null,
-                  helperMaxLines: 2,
-                ),
+                      helperStyle: goesBackwards
+                          ? TextStyle(color: t.accentOrange)
+                          : null,
+                      helperMaxLines: 2,
+                    ),
                 validator: (raw) {
-                  final value = parseFormNumber(raw);
+                  final value = parseUserDecimal(raw);
                   if (value == null) {
                     return (raw == null || raw.trim().isEmpty)
                         ? l10n.validationRequired
@@ -198,7 +201,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   return null;
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
@@ -207,7 +210,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   labelText: l10n.formTagsOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _notes,
                 enabled: !_submitting,
@@ -218,30 +221,30 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   labelText: l10n.formNotesOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               ExtraFieldsField(
                 recordType: ExtraFieldRecordType.odometer,
                 initial: _extraFields,
                 enabled: !_submitting,
                 onChanged: (fields) => _extraFields = fields,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               AttachmentsField(
                 initial: _files,
                 enabled: !_submitting,
                 onChanged: (files) => _files = files,
               ),
               if (_error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DashSpace.md),
                 Text(
                   _error!,
                   style: TextStyle(
-                    color: t.danger,
+                    color: t.dangerInk,
                     fontFamily: DashTokens.fontUi,
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: DashSpace.xl),
               Row(
                 children: [
                   Expanded(
@@ -252,7 +255,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                       child: Text(l10n.actionCancel),
                     ).tagged('form.cancel'),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: DashSpace.md),
                   Expanded(
                     child: FilledButton(
                       onPressed: _submitting ? null : _submit,
@@ -300,19 +303,18 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   /// [_previousReading]'s inputs, read rather than watched — for the submit
   /// path, which runs outside a build.
   double? _previousReadingNow() => _previousReading(
-        ref.read(odometerRecordsProvider(widget.vehicleId)).valueOrNull ??
-            const [],
-        _isEditing
-            ? null
-            : ref
-                .read(vehicleInfoProvider(widget.vehicleId))
-                .valueOrNull
-                ?.lastReportedOdometer,
-      );
+    ref.read(odometerRecordsProvider(widget.vehicleId)).valueOrNull ?? const [],
+    _isEditing
+        ? null
+        : ref
+              .read(vehicleInfoProvider(widget.vehicleId))
+              .valueOrNull
+              ?.lastReportedOdometer,
+  );
 
   /// Reading currently in the field, in stored units.
   double? get _enteredReading {
-    final value = parseFormNumber(_odometer.text);
+    final value = parseUserDecimal(_odometer.text);
     if (value == null || value <= 0) return null;
     return ref
         .read(vehicleUnitsProvider(widget.vehicleId))
@@ -320,9 +322,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
+    final picked = await pickDate(
+      context,
+      initial: _date,
       firstDate: DateTime(1900),
       lastDate: DateTime(_date.year + 1, 12, 31),
     );
@@ -342,7 +344,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     final repo = ref.read(vehiclesRepositoryProvider);
     final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
     final odometer = units.toStoredDistance(
-      parseFormNumber(_odometer.text)!.toDouble(),
+      parseUserDecimal(_odometer.text)!.toDouble(),
     );
     final existing = widget.existing;
     try {
@@ -410,7 +412,8 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
     if (previous == null || entered == null || entered >= previous) return true;
 
     final units = ref.read(vehicleUnitsProvider(widget.vehicleId));
-    final value = '${Formatters.odometer(units.toDisplayOdometer(previous))} '
+    final value =
+        '${Formatters.odometer(units.toDisplayOdometer(previous))} '
         '${units.distanceLabel}';
     return confirmRisky(
       context,
@@ -455,7 +458,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   }
 
   /// Refreshes every view derived from odometer readings after a write.
-  /// [lastOdometerDateProvider] and [monthlyBreakdownProvider] recompute via
+  /// [lastOdometerDateProvider] and [expenseTimelineProvider] recompute via
   /// their watch on the records list.
   void _invalidateOdometerProviders() {
     ref.invalidate(odometerRecordsProvider(widget.vehicleId));

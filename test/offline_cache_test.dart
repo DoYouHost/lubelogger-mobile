@@ -76,17 +76,24 @@ void main() {
   ({Dio dio, VehiclesRepository repo}) client({HttpCache? cache}) {
     final dio = Dio(BaseOptions(baseUrl: 'https://one.example'))
       ..httpClientAdapter = server
-      ..interceptors.add(OfflineInterceptor(
-        cache: cache ?? cacheFor(),
-        queue: queue,
-        status: OfflineStatus(),
-      ));
+      ..interceptors.add(
+        OfflineInterceptor(
+          cache: cache ?? cacheFor(),
+          queue: queue,
+          status: OfflineStatus(),
+        ),
+      );
     return (dio: dio, repo: VehiclesRepository(dio));
   }
 
   const oneVehicle = [
     {
-      'vehicleData': {'id': 1, 'year': 2019, 'make': 'Toyota', 'model': 'Yaris'},
+      'vehicleData': {
+        'id': 1,
+        'year': 2019,
+        'make': 'Toyota',
+        'model': 'Yaris',
+      },
       'lastReportedOdometer': 1000,
     },
   ];
@@ -140,21 +147,26 @@ void main() {
 
     test('still fails when there is nothing stored', () async {
       server.up = false;
-      await expectLater(client().repo.allInfo(), throwsA(isA<NetworkException>()));
+      await expectLater(
+        client().repo.allInfo(),
+        throwsA(isA<NetworkException>()),
+      );
     });
 
-    test('a refusal is an answer, not an outage — no stale copy for it',
-        () async {
-      server.body = oneVehicle;
-      final c = client();
-      await c.repo.allInfo();
+    test(
+      'a refusal is an answer, not an outage — no stale copy for it',
+      () async {
+        server.body = oneVehicle;
+        final c = client();
+        await c.repo.allInfo();
 
-      // 401 means the key lost its scope. Serving yesterday's records instead
-      // would hide that completely.
-      server.status = 401;
-      server.body = {'success': false};
-      await expectLater(c.repo.allInfo(), throwsA(isA<AuthException>()));
-    });
+        // 401 means the key lost its scope. Serving yesterday's records instead
+        // would hide that completely.
+        server.status = 401;
+        server.body = {'success': false};
+        await expectLater(c.repo.allInfo(), throwsA(isA<AuthException>()));
+      },
+    );
 
     test('cache-first answers without asking at all', () async {
       server.body = oneVehicle;
@@ -189,27 +201,29 @@ void main() {
       expect(after.servedFromCache, isTrue);
     });
 
-    test('a revalidation that changed the data stops the next one looping',
-        () async {
-      server.body = oneVehicle;
-      final c = client();
-      await c.repo.allInfo();
+    test(
+      'a revalidation that changed the data stops the next one looping',
+      () async {
+        server.body = oneVehicle;
+        final c = client();
+        await c.repo.allInfo();
 
-      // The refresh a cache-first read triggers, finding something new.
-      server.body = [
-        {...oneVehicle.first, 'lastReportedOdometer': 2000},
-      ];
-      final refresh = CacheProbe();
-      await c.repo.withCache(refresh, revalidate: true).allInfo();
-      expect(refresh.changed, isTrue);
+        // The refresh a cache-first read triggers, finding something new.
+        server.body = [
+          {...oneVehicle.first, 'lastReportedOdometer': 2000},
+        ];
+        final refresh = CacheProbe();
+        await c.repo.withCache(refresh, revalidate: true).allInfo();
+        expect(refresh.changed, isTrue);
 
-      // The re-read that change causes must not ask for a refresh of its own,
-      // or the two would trade places forever.
-      final reread = CacheProbe();
-      await c.repo.withCache(reread, cacheFirst: true).allInfo();
-      expect(reread.servedFromCache, isTrue);
-      expect(reread.shouldRevalidate, isFalse);
-    });
+        // The re-read that change causes must not ask for a refresh of its own,
+        // or the two would trade places forever.
+        final reread = CacheProbe();
+        await c.repo.withCache(reread, cacheFirst: true).allInfo();
+        expect(reread.servedFromCache, isTrue);
+        expect(reread.shouldRevalidate, isFalse);
+      },
+    );
   });
 
   group('opening the app with a stored copy', () {
@@ -247,57 +261,59 @@ void main() {
       expect(garage.single.vehicle.id, 1);
     });
 
-    test('answers off the disk, then refreshes and rebuilds only on a change',
-        () async {
-      server.body = oneVehicle;
-      final c = client();
-      await c.repo.allInfo();
-      server.calls.clear();
+    test(
+      'answers off the disk, then refreshes and rebuilds only on a change',
+      () async {
+        server.body = oneVehicle;
+        final c = client();
+        await c.repo.allInfo();
+        server.calls.clear();
 
-      final container = containerOn(c.repo);
-      // Settled values only: an invalidated provider also emits a loading state
-      // still carrying the old records, which is not the screen changing.
-      final seen = <double>[];
-      container.listen(
-        garageProvider,
-        (_, next) {
+        final container = containerOn(c.repo);
+        // Settled values only: an invalidated provider also emits a loading state
+        // still carrying the old records, which is not the screen changing.
+        final seen = <double>[];
+        container.listen(garageProvider, (_, next) {
           if (next.isLoading || !next.hasValue) return;
           seen.add(next.requireValue.single.lastReportedOdometer);
-        },
-        fireImmediately: true,
-      );
+        }, fireImmediately: true);
 
-      // Nothing new on the server: the refresh happens and the screen is left
-      // exactly where it was.
-      expect(
-        (await container.read(garageProvider.future)).single.lastReportedOdometer,
-        1000,
-      );
-      await until(() => server.requests == 1);
-      await settle();
-      expect(seen, [1000], reason: 'an unchanged refresh must not rebuild');
+        // Nothing new on the server: the refresh happens and the screen is left
+        // exactly where it was.
+        expect(
+          (await container.read(
+            garageProvider.future,
+          )).single.lastReportedOdometer,
+          1000,
+        );
+        await until(() => server.requests == 1);
+        await settle();
+        expect(seen, [1000], reason: 'an unchanged refresh must not rebuild');
 
-      // Now the server has something to say. The stored answer arrives first
-      // and the new one replaces it.
-      server.body = [
-        {...oneVehicle.first, 'lastReportedOdometer': 2000},
-      ];
-      container.invalidate(garageProvider);
-      expect(
-        (await container.read(garageProvider.future)).single.lastReportedOdometer,
-        1000,
-        reason: 'the disk answers before the server does',
-      );
-      await until(() => seen.length >= 3);
-      await settle();
+        // Now the server has something to say. The stored answer arrives first
+        // and the new one replaces it.
+        server.body = [
+          {...oneVehicle.first, 'lastReportedOdometer': 2000},
+        ];
+        container.invalidate(garageProvider);
+        expect(
+          (await container.read(
+            garageProvider.future,
+          )).single.lastReportedOdometer,
+          1000,
+          reason: 'the disk answers before the server does',
+        );
+        await until(() => seen.length >= 3);
+        await settle();
 
-      expect(seen, [1000, 1000, 2000]);
-      expect(
-        server.requests,
-        2,
-        reason: 'one refresh per read — the re-read came off the disk',
-      );
-    });
+        expect(seen, [1000, 1000, 2000]);
+        expect(
+          server.requests,
+          2,
+          reason: 'one refresh per read — the re-read came off the disk',
+        );
+      },
+    );
   });
 
   group('writing without a server', () {

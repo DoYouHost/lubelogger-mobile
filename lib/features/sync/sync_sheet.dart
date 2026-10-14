@@ -2,19 +2,13 @@ import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/layout/responsive.dart';
 import '../../core/theme/dash_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers.dart';
 import 'pending_write_label.dart';
 
-Future<void> showSyncSheet(BuildContext context) => showModalBottomSheet<void>(
-      context: context,
-      constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (_) => const _SyncSheet(),
-    );
+Future<void> showSyncSheet(BuildContext context) =>
+    dashSheet<void>(context, builder: (_) => const _SyncSheet());
 
 /// App-bar entry to the sync sheet, shown only when there is something to say:
 /// writes still on the phone, writes the server refused, or a server that has
@@ -36,7 +30,13 @@ class SyncStatusAction extends ConsumerWidget {
 
     final pending = sync.pending.length;
     final refused = sync.rejected.isNotEmpty;
-    final accent = refused ? t.danger : (pending > 0 ? t.accentGold : t.textTertiary);
+    // The count sits on the fill and the icon on the app bar, so each takes the
+    // colour that reads where it is.
+    final fill = refused ? t.dangerInk : t.accentGold;
+    final label = refused ? t.onDanger : t.onAccent;
+    final ink = refused
+        ? t.dangerInk
+        : (pending > 0 ? t.accentGoldInk : t.textTertiary);
 
     return IconButton(
       tooltip: pending > 0 ? l10n.syncPendingTooltip : l10n.syncOfflineTooltip,
@@ -44,13 +44,13 @@ class SyncStatusAction extends ConsumerWidget {
       icon: Badge(
         isLabelVisible: pending > 0,
         label: Text('$pending'),
-        backgroundColor: accent,
-        textColor: t.accentGoldInk,
+        backgroundColor: fill,
+        textColor: label,
         child: Icon(
           pending > 0 || refused
               ? Icons.cloud_upload_outlined
               : Icons.cloud_off_outlined,
-          color: accent,
+          color: ink,
         ),
       ),
     ).tagged('sync.open');
@@ -73,7 +73,12 @@ class _SyncSheet extends ConsumerWidget {
         left: false,
         right: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          padding: const EdgeInsets.fromLTRB(
+            DashSpace.xl,
+            DashSpace.xs,
+            DashSpace.xl,
+            DashSpace.xl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +92,7 @@ class _SyncSheet extends ConsumerWidget {
                   color: t.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: DashSpace.sm),
               Text(
                 sync.offline || sync.lastContact == null
                     ? l10n.syncOffline
@@ -95,10 +100,10 @@ class _SyncSheet extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: DashTokens.fontUi,
                   fontSize: 13,
-                  color: sync.offline ? t.danger : t.textTertiary,
+                  color: sync.offline ? t.dangerInk : t.textTertiary,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: DashSpace.lg),
               if (sync.pending.isEmpty)
                 Text(
                   l10n.syncNothingPending,
@@ -118,7 +123,7 @@ class _SyncSheet extends ConsumerWidget {
                     color: t.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DashSpace.sm),
                 for (final write in sync.pending)
                   _WriteRow(
                     title: describePendingWrite(write, l10n),
@@ -128,7 +133,7 @@ class _SyncSheet extends ConsumerWidget {
                     icon: Icons.schedule,
                     tint: t.accentGold,
                   ),
-                const SizedBox(height: 14),
+                const SizedBox(height: DashSpace.lg),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -140,23 +145,24 @@ class _SyncSheet extends ConsumerWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.cloud_upload_outlined),
-                    label:
-                        Text(sync.syncing ? l10n.syncSending : l10n.syncSendNow),
+                    label: Text(
+                      sync.syncing ? l10n.syncSending : l10n.syncSendNow,
+                    ),
                   ).tagged('sync.send'),
                 ),
               ],
               if (sync.rejected.isNotEmpty) ...[
-                const SizedBox(height: 22),
+                const SizedBox(height: DashSpace.xl),
                 Text(
                   l10n.syncRejectedTitle,
                   style: TextStyle(
                     fontFamily: DashTokens.fontUi,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: t.danger,
+                    color: t.dangerInk,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: DashSpace.xs),
                 Text(
                   l10n.syncRejectedExplain,
                   style: TextStyle(
@@ -166,18 +172,18 @@ class _SyncSheet extends ConsumerWidget {
                     color: t.textTertiary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DashSpace.sm),
                 for (final write in sync.rejected)
                   _WriteRow(
                     title: describePendingWrite(write, l10n),
                     subtitle: write.lastError,
                     icon: Icons.error_outline,
-                    tint: t.danger,
+                    tint: t.dangerInk,
                     onDiscard: () => ref
                         .read(syncStateProvider.notifier)
                         .discardRejected(write.id),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DashSpace.sm),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -215,7 +221,8 @@ class _SyncSheet extends ConsumerWidget {
   static String _when(BuildContext context, DateTime moment) {
     final material = MaterialLocalizations.of(context);
     final now = DateTime.now();
-    final sameDay = moment.year == now.year &&
+    final sameDay =
+        moment.year == now.year &&
         moment.month == now.month &&
         moment.day == now.day;
     return sameDay
@@ -244,12 +251,12 @@ class _WriteRow extends StatelessWidget {
     final t = DashTokens.of(context);
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: DashSpace.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: tint),
-          const SizedBox(width: 10),
+          const SizedBox(width: DashSpace.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,10 +283,7 @@ class _WriteRow extends StatelessWidget {
             ),
           ),
           if (onDiscard != null)
-            TextButton(
-              onPressed: onDiscard,
-              child: Text(l10n.syncDiscard),
-            ),
+            TextButton(onPressed: onDiscard, child: Text(l10n.syncDiscard)),
         ],
       ),
     );

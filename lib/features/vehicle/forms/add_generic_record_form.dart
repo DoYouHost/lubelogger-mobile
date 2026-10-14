@@ -1,6 +1,6 @@
+import 'package:app_util/app_util.dart';
 import 'package:flutter/material.dart';
 import '../../../core/diagnostics/log_form.dart';
-import '../../../core/layout/responsive.dart';
 import '../../common/confirm_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
@@ -32,11 +32,8 @@ Future<bool?> showGenericRecordForm(
   RecordKind kind, {
   VehicleRecord? existing,
 }) {
-  return showModalBottomSheet<bool>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<bool>(
+    context,
     builder: (_) => logSurface(
       'form.${kind.name}',
       _AddGenericRecordForm(
@@ -143,7 +140,12 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
       // Lift the sheet above the keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.xl,
+          DashSpace.xs,
+          DashSpace.xl,
+          DashSpace.xl,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -165,7 +167,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                   ),
                   if (_isEditing)
                     IconButton(
-                      icon: Icon(Icons.delete_outline, color: t.danger),
+                      icon: Icon(Icons.delete_outline, color: t.dangerInk),
                       onPressed: _submitting ? null : _confirmDelete,
                     ).tagged('form.delete'),
                   IconButton(
@@ -176,12 +178,12 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                   ).tagged('form.close'),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DashSpace.sm),
               DateField(
                 text: units.formatDate(_date),
                 onPick: _submitting ? null : _pickDate,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _description,
                 enabled: !_submitting,
@@ -194,20 +196,20 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                     : null,
               ),
               if (_hasOdometer) ...[
-                const SizedBox(height: 14),
+                const SizedBox(height: DashSpace.lg),
                 _numberField(
                   controller: _odometer,
                   label: l10n.formOdometerLabel(units.distanceLabel),
                   decimal: false,
                 ),
               ],
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               _numberField(
                 controller: _cost,
                 label: l10n.colCost,
                 allowZero: true,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
@@ -216,7 +218,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                   labelText: l10n.formTagsOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _notes,
                 enabled: !_submitting,
@@ -227,30 +229,30 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                   labelText: l10n.formNotesOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               ExtraFieldsField(
                 recordType: widget.kind.extraFieldType,
                 initial: _extraFields,
                 enabled: !_submitting,
                 onChanged: (fields) => _extraFields = fields,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               AttachmentsField(
                 initial: _files,
                 enabled: !_submitting,
                 onChanged: (files) => _files = files,
               ),
               if (_error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DashSpace.md),
                 Text(
                   _error!,
                   style: TextStyle(
-                    color: t.danger,
+                    color: t.dangerInk,
                     fontFamily: DashTokens.fontUi,
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: DashSpace.xl),
               Row(
                 children: [
                   Expanded(
@@ -261,7 +263,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
                       child: Text(l10n.actionCancel),
                     ).tagged('form.cancel'),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: DashSpace.md),
                   Expanded(
                     child: FilledButton(
                       onPressed: _submitting ? null : _submit,
@@ -301,7 +303,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
       style: const TextStyle(fontFamily: DashTokens.fontMono),
       decoration: dashFieldDecoration(t, labelText: label),
       validator: (raw) {
-        final value = parseFormNumber(raw);
+        final value = parseUserDecimal(raw);
         if (value == null) {
           return (raw == null || raw.trim().isEmpty)
               ? l10n.validationRequired
@@ -316,9 +318,9 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
+    final picked = await pickDate(
+      context,
+      initial: _date,
       firstDate: DateTime(1900),
       lastDate: DateTime(_date.year + 1, 12, 31),
     );
@@ -340,7 +342,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
     final odometer = _hasOdometer
         ? ref
               .read(vehicleUnitsProvider(widget.vehicleId))
-              .toStoredDistance(parseFormNumber(_odometer.text)!.toDouble())
+              .toStoredDistance(parseUserDecimal(_odometer.text)!.toDouble())
         : null;
     try {
       if (existing == null) {
@@ -349,7 +351,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           vehicleId: widget.vehicleId,
           date: _date,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),
@@ -362,7 +364,7 @@ class _AddGenericRecordFormState extends ConsumerState<_AddGenericRecordForm> {
           id: existing.id,
           date: _date,
           description: _description.text.trim(),
-          cost: parseFormNumber(_cost.text)!,
+          cost: parseUserDecimal(_cost.text)!,
           odometer: odometer,
           notes: _notes.text.trim(),
           tags: _tags.text.trim(),

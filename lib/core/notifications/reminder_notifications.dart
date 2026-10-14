@@ -66,7 +66,10 @@ ReminderAlert? reminderAlertFor(
 /// The outcome of a reminder check: what to post now, and the set to persist as
 /// "already notified" for the next run.
 class ReminderNotifyPlan {
-  const ReminderNotifyPlan({required this.toNotify, required this.nextNotified});
+  const ReminderNotifyPlan({
+    required this.toNotify,
+    required this.nextNotified,
+  });
 
   /// Alerts that became past due since the last check — the ones to post now.
   final List<ReminderAlert> toNotify;

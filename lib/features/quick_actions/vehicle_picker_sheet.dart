@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/layout/responsive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_diagnostics/app_diagnostics.dart';
 
@@ -18,10 +17,9 @@ Future<int?> showVehiclePicker(
   BuildContext context,
   List<VehicleInfo> vehicles,
 ) {
-  return showModalBottomSheet<int>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    showDragHandle: true,
+  return dashSheet<int>(
+    context,
+    scrollControlled: false,
     builder: (_) => _VehiclePickerSheet(vehicles: vehicles),
   );
 }
@@ -51,7 +49,12 @@ class _VehiclePickerSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              padding: const EdgeInsets.fromLTRB(
+                DashSpace.xl,
+                DashSpace.xs,
+                DashSpace.xl,
+                DashSpace.md,
+              ),
               child: Text(
                 l10n.quickActionSelectVehicle,
                 style: TextStyle(
@@ -65,7 +68,7 @@ class _VehiclePickerSheet extends ConsumerWidget {
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: DashSpace.sm),
                 itemCount: vehicles.length,
                 itemBuilder: (context, i) {
                   final vehicle = vehicles[i].vehicle;
@@ -156,9 +159,7 @@ class _Avatar extends StatelessWidget {
                     .round(),
               ),
               fit: BoxFit.cover,
-              errorBuilder: ImageProbe.errorBuilder(
-                Center(child: placeholder),
-              ),
+              errorBuilder: ImageProbe.errorBuilder(Center(child: placeholder)),
               loadingBuilder: (context, child, progress) =>
                   progress == null ? child : const SizedBox.shrink(),
             ),

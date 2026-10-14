@@ -12,6 +12,8 @@
 /// export models, and ASP.NET's JSON defaults parse neither from a string.
 library;
 
+import 'package:app_util/app_util.dart';
+
 /// `Enum/ExtraFieldType.cs`. A kind this app doesn't know is edited as plain
 /// text — matching the web UI's own `default:` branch — and written back
 /// unchanged (see [ExtraField.wireFieldType]).
@@ -67,9 +69,9 @@ class ExtraField {
     return ExtraField(
       name: (json['name'] as String?) ?? '',
       value: (json['value'] as String?) ?? '',
-      isRequired: _toBool(json['isRequired']),
+      isRequired: toBoolOrFalse(json['isRequired']),
       fieldType: parsed ?? ExtraFieldType.text,
-      wireFieldType: parsed == null ? _toIntOrNull(rawType) : null,
+      wireFieldType: parsed == null ? toIntOrNull(rawType) : null,
     );
   }
 
@@ -83,53 +85,36 @@ class ExtraField {
   final int? wireFieldType;
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'value': value,
-        'isRequired': isRequired,
-        'fieldType': wireFieldType ?? fieldType.wireValue,
-      };
+    'name': name,
+    'value': value,
+    'isRequired': isRequired,
+    'fieldType': wireFieldType ?? fieldType.wireValue,
+  };
 
   ExtraField copyWith({String? value}) => ExtraField(
-        name: name,
-        value: value ?? this.value,
-        isRequired: isRequired,
-        fieldType: fieldType,
-        wireFieldType: wireFieldType,
-      );
+    name: name,
+    value: value ?? this.value,
+    isRequired: isRequired,
+    fieldType: fieldType,
+    wireFieldType: wireFieldType,
+  );
 
   /// This field's value carried onto [definition]'s name, kind and
   /// required-ness — the per-field half of [mergeExtraFields].
   ExtraField withDefinition(ExtraField definition) => ExtraField(
-        name: definition.name,
-        value: value,
-        isRequired: definition.isRequired,
-        fieldType: definition.fieldType,
-        wireFieldType: definition.wireFieldType,
-      );
+    name: definition.name,
+    value: value,
+    isRequired: definition.isRequired,
+    fieldType: definition.fieldType,
+    wireFieldType: definition.wireFieldType,
+  );
 
-  static List<ExtraField> listFrom(Object? raw) {
-    if (raw is! List) return const [];
-    return [
-      for (final e in raw)
-        if (e is Map<String, dynamic>) ExtraField.fromJson(e),
-    ];
-  }
+  static List<ExtraField> listFrom(Object? raw) =>
+      parseJsonList(raw, ExtraField.fromJson);
 
-  static List<Map<String, dynamic>> jsonList(List<ExtraField> fields) =>
-      [for (final f in fields) f.toJson()];
-
-  static bool _toBool(Object? raw) => switch (raw) {
-        final bool b => b,
-        final String s => s.toLowerCase() == 'true',
-        final num n => n != 0,
-        _ => false,
-      };
-
-  static int? _toIntOrNull(Object? raw) => switch (raw) {
-        final num n => n.toInt(),
-        final String s => int.tryParse(s.trim()),
-        _ => null,
-      };
+  static List<Map<String, dynamic>> jsonList(List<ExtraField> fields) => [
+    for (final f in fields) f.toJson(),
+  ];
 }
 
 /// Reconciles a record's stored fields with the household's current [template],

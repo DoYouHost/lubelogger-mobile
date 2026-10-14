@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/layout/responsive.dart';
 import '../common/confirm_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,11 +22,8 @@ import '../vehicle/forms/record_form_scaffold.dart';
 /// own info provider. When editing, a delete action (LubeLogger 1.7.0+) removes
 /// the vehicle and all its records after a confirmation.
 Future<int?> showVehicleForm(BuildContext context, {Vehicle? existing}) {
-  return showModalBottomSheet<int>(
-    context: context,
-    constraints: const BoxConstraints(maxWidth: kBottomSheetMaxWidth),
-    isScrollControlled: true,
-    showDragHandle: true,
+  return dashSheet<int>(
+    context,
     builder: (_) =>
         logSurface('form.vehicle', _VehicleForm(existing: existing)),
   );
@@ -145,7 +141,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _make,
           enabled: !_submitting,
@@ -153,7 +149,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           decoration: dashFieldDecoration(t, labelText: l10n.formVehicleMake),
           validator: _requiredValidator,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _model,
           enabled: !_submitting,
@@ -161,7 +157,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           decoration: dashFieldDecoration(t, labelText: l10n.formVehicleModel),
           validator: _requiredValidator,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _licensePlate,
           enabled: !_submitting,
@@ -172,22 +168,27 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           ),
           validator: _requiredValidator,
         ),
-        const SizedBox(height: 14),
-        DropdownButtonFormField<_FuelType>(
-          initialValue: _fuelType,
-          decoration: dashFieldDecoration(
-            t,
-            labelText: l10n.formVehicleFuelType,
-          ),
-          items: [
+        const SizedBox(height: DashSpace.lg),
+        dashCombo<_FuelType>(
+          context,
+          id: 'form.fuel_type',
+          label: Text(l10n.formVehicleFuelType),
+          initialSelection: _fuelType,
+          enabled: !_submitting,
+          entries: [
             for (final v in _FuelType.values)
-              DropdownMenuItem(value: v, child: Text(v.label(l10n))),
+              DropdownMenuEntry(
+                value: v,
+                label: v.label(l10n),
+                labelWidget: logTag(
+                  'form.fuel_type.option',
+                  Text(v.label(l10n)),
+                ),
+              ),
           ],
-          onChanged: _submitting
-              ? null
-              : (v) => setState(() => _fuelType = v ?? _fuelType),
+          onSelected: (v) => setState(() => _fuelType = v ?? _fuelType),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: DashSpace.sm),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.formVehicleUseHours),
@@ -202,13 +203,13 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
               ? null
               : (v) => setState(() => _odometerOptional = v),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DashSpace.sm),
         TextFormField(
           controller: _tags,
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         ExtraFieldsField(
           recordType: ExtraFieldRecordType.vehicle,
           initial: _extraFields,
@@ -233,14 +234,13 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
     required String title,
     required String message,
     required String confirmLabel,
-  }) =>
-      confirmDelete(
-        context,
-        what: step,
-        title: title,
-        message: message,
-        confirmLabel: confirmLabel,
-      );
+  }) => confirmDelete(
+    context,
+    what: step,
+    title: title,
+    message: message,
+    confirmLabel: confirmLabel,
+  );
 
   /// Confirms twice, then deletes the vehicle and all its records (irreversible
   /// server-side cascade). On success, refreshes the garage and closes the form.

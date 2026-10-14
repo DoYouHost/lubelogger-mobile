@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/layout/responsive.dart';
 import '../../../core/theme/dash_theme.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../common/state_views.dart';
 import 'record_filter.dart';
 
 /// One icon + value pair in a [RecordCard]'s meta row (design: odometer,
@@ -18,7 +17,7 @@ class RecordMetaItem {
   /// [tooltip] is what says so out loud, for a long press and for a screen
   /// reader.
   const RecordMetaItem.flag(this.icon, {required String this.tooltip})
-      : value = '';
+    : value = '';
 
   final IconData icon;
   final String value;
@@ -69,7 +68,7 @@ class RecordCard extends StatelessWidget {
     final t = DashTokens.of(context);
     final radius = BorderRadius.circular(14);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: DashSpace.sm),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: t.subCard,
@@ -84,7 +83,10 @@ class RecordCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: radius,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DashSpace.md,
+                vertical: DashSpace.md,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -106,7 +108,7 @@ class RecordCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: DashSpace.sm),
                       Text(
                         headline,
                         style: TextStyle(
@@ -119,7 +121,7 @@ class RecordCard extends StatelessWidget {
                     ],
                   ),
                   if (description != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: DashSpace.xs),
                     Text(
                       description!,
                       maxLines: 2,
@@ -133,25 +135,25 @@ class RecordCard extends StatelessWidget {
                     ),
                   ],
                   if (meta.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: DashSpace.sm),
                     Wrap(
-                      spacing: 14,
-                      runSpacing: 4,
+                      spacing: DashSpace.lg,
+                      runSpacing: DashSpace.xs,
                       children: [for (final m in meta) _MetaItem(item: m)],
                     ),
                   ],
                   if (tags.isNotEmpty && onTagTap != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: DashSpace.sm),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
+                      spacing: DashSpace.sm,
+                      runSpacing: DashSpace.xs,
                       children: [
                         for (final tag in tags)
                           RecordTagChip(
                             tag: tag,
                             selected: activeTags.contains(tag),
                             onTap: () => onTagTap!(tag),
-                          ),
+                          ).tagged('records.tag'),
                       ],
                     ),
                   ],
@@ -180,7 +182,7 @@ class _MetaItem extends StatelessWidget {
       children: [
         Icon(item.icon, size: 14, color: t.textTertiary),
         if (item.value.isNotEmpty) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: DashSpace.xs),
           Text(
             item.value,
             style: TextStyle(
@@ -205,11 +207,7 @@ class _MetaItem extends StatelessWidget {
 /// Cards are handed over as a builder rather than a list so the tab body can
 /// keep them lazy — see [SliverResponsiveCards].
 class RecordsContent {
-  const RecordsContent({
-    required this.count,
-    required this.card,
-    this.header,
-  });
+  const RecordsContent({required this.count, required this.card, this.header});
 
   final int count;
   final IndexedWidgetBuilder card;
@@ -240,7 +238,7 @@ class RecordsTabBody<T> extends StatefulWidget {
   final IconData emptyIcon;
   final String emptyLabel;
   final RecordsContent Function(List<T> records, RecordListControls<T> filter)
-      builder;
+  builder;
   final RecordFacets<T>? facets;
 
   @override
@@ -267,13 +265,13 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
   }
 
   void _toggleTag(String tag) => setState(() {
-        if (!_tags.remove(tag)) _tags.add(tag);
-      });
+    if (!_tags.remove(tag)) _tags.add(tag);
+  });
 
   void _clearFilters() => setState(() {
-        _tags.clear();
-        _query.clear();
-      });
+    _tags.clear();
+    _query.clear();
+  });
 
   RecordListControls<T> _controls(RecordFacets<T> facets) {
     final needles = _query.text.trim().toLowerCase().split(RegExp(r'\s+'))
@@ -291,8 +289,10 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
         // `?tags=` query does the opposite, but that one is typed, not tapped.)
         if (!_tags.every(recordTags.contains)) return false;
         if (needles.isEmpty) return true;
-        final haystack =
-            [...facets.searchIn(record), ...recordTags].join(' ').toLowerCase();
+        final haystack = [
+          ...facets.searchIn(record),
+          ...recordTags,
+        ].join(' ').toLowerCase();
         // All words must appear, in any order or field — typing two words to
         // narrow is the reflex, and requiring them adjacent breaks it.
         return needles.every(haystack.contains);
@@ -308,6 +308,9 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
       child: widget.async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => AsyncErrorView(
+          // Its own scroll view, so the enclosing RefreshIndicator still
+          // has something to pull.
+          scrollable: true,
           message: l10n.dashLoadError,
           onRetry: widget.onRefresh,
           retryLabel: l10n.retry,
@@ -363,7 +366,7 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               bar,
-              const SizedBox(height: 24),
+              const SizedBox(height: DashSpace.xl),
               EmptyStateView(
                 message: controls.filtering
                     ? l10n.recordsNoMatches
@@ -375,7 +378,7 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
                 TextButton(
                   onPressed: _clearFilters,
                   child: Text(l10n.recordsClearFilters),
-                ),
+                ).tagged('records.clearFilters'),
             ],
           ),
         ),
@@ -397,11 +400,21 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
       slivers: [
         if (top != null)
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              DashSpace.lg,
+              DashSpace.sm,
+              DashSpace.lg,
+              0,
+            ),
             sliver: SliverToBoxAdapter(child: top),
           ),
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, top == null ? 8 : 0, 16, 32),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            top == null ? 8 : 0,
+            16,
+            fabScrollClearance(context),
+          ),
           sliver: SliverResponsiveCards(
             itemCount: content.count,
             itemBuilder: content.card,
@@ -421,8 +434,12 @@ class SummaryPillRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(spacing: 6, runSpacing: 6, children: pills),
+      padding: const EdgeInsets.only(bottom: DashSpace.md),
+      child: Wrap(
+        spacing: DashSpace.sm,
+        runSpacing: DashSpace.sm,
+        children: pills,
+      ),
     );
   }
 }

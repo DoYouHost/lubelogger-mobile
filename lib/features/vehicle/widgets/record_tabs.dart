@@ -115,7 +115,9 @@ class OdometerTab extends ConsumerWidget {
         double? previous;
         for (final r in ascending) {
           final o = r.odometer;
-          deltas[r.id] = (previous != null && o > previous) ? o - previous : null;
+          deltas[r.id] = (previous != null && o > previous)
+              ? o - previous
+              : null;
           previous = o > 0 ? o : previous;
         }
         final displayed = filter.apply(records);
@@ -127,7 +129,10 @@ class OdometerTab extends ConsumerWidget {
               date: _date(r.date, units),
               headline: _odoUnit(r.odometer, units),
               meta: [
-                RecordMetaItem(Icons.trending_up, _odoUnit(deltas[r.id], units)),
+                RecordMetaItem(
+                  Icons.trending_up,
+                  _odoUnit(deltas[r.id], units),
+                ),
                 ..._extras(l10n, files: r.files, notes: r.notes),
               ],
               tags: splitTags(r.tags),
@@ -205,9 +210,7 @@ class GenericRecordsTab extends ConsumerWidget {
               date: _date(r.date, units),
               headline: Formatters.currency(r.cost, symbol),
               headlineColor: t.accentGoldInk,
-              description: r.description.isEmpty
-                  ? _placeholder
-                  : r.description,
+              description: r.description.isEmpty ? _placeholder : r.description,
               meta: [
                 if (kind.hasOdometer)
                   RecordMetaItem(Icons.speed, _odoUnit(r.odometer, units)),
@@ -303,13 +306,10 @@ class FuelTab extends ConsumerWidget {
         // only then narrowed — computing them from a filtered list would
         // silently restate every figure on the screen.
         final rows = fuelRows(records, isElectric: units.isElectric);
-        final displayed = filter.sortStably(
-          [
-            for (var i = rows.length - 1; i >= 0; i--)
-              if (filter.matches(rows[i].record)) rows[i],
-          ],
-          (row) => row.record,
-        );
+        final displayed = filter.sortStably([
+          for (var i = rows.length - 1; i >= 0; i--)
+            if (filter.matches(rows[i].record)) rows[i],
+        ], (row) => row.record);
         // The pills stay lifetime figures, filter or no filter: an average
         // recomputed over an arbitrary subset of fill-ups is not this vehicle's
         // consumption, and the bar sits directly above them to say so.
@@ -361,12 +361,14 @@ class FuelTab extends ConsumerWidget {
                     _odoUnit(stats.distanceSpan, units),
                   ),
                   accent: t.accentOrange,
+                  accentInk: t.accentOrangeInk,
                 ),
               DashPill(
                 label: (units.isElectric ? l10n.fuelPillEnergy : l10n.fuelPillFuel)(
                   '${Formatters.odometer(totalFuel)} ${units.consumptionLabel}',
                 ),
                 accent: t.accentOrange,
+                accentInk: t.accentOrangeInk,
               ),
               DashPill(
                 label: l10n.fuelPillCost(
@@ -392,10 +394,7 @@ class FuelTab extends ConsumerWidget {
                   Icons.trending_up,
                   _odoUnit(row.rawDelta, units),
                 ),
-                RecordMetaItem(
-                  Icons.local_gas_station,
-                  econMeta(row.rawRatio),
-                ),
+                RecordMetaItem(Icons.local_gas_station, econMeta(row.rawRatio)),
                 RecordMetaItem(Icons.sell, priceMeta(row.record)),
                 ..._extras(
                   l10n,
@@ -406,11 +405,8 @@ class FuelTab extends ConsumerWidget {
               tags: splitTags(row.record.tags),
               activeTags: filter.activeTags,
               onTagTap: filter.onTagTap,
-              onTap: () => showAddFuelForm(
-                context,
-                vehicleId,
-                existing: row.record,
-              ),
+              onTap: () =>
+                  showAddFuelForm(context, vehicleId, existing: row.record),
             );
           },
         );
@@ -445,12 +441,7 @@ class SupplyTab extends ConsumerWidget {
       facets: RecordFacets<SupplyRecord>(
         // A part is looked for by its number or its supplier at least as often
         // as by what it was called.
-        searchIn: (r) => [
-          r.description,
-          r.notes,
-          r.partNumber,
-          r.partSupplier,
-        ],
+        searchIn: (r) => [r.description, r.notes, r.partNumber, r.partSupplier],
         tagsOf: (r) => r.tags,
         sorts: [
           RecordSort(
@@ -478,9 +469,7 @@ class SupplyTab extends ConsumerWidget {
               date: _date(r.date, units),
               headline: Formatters.currency(r.cost, symbol),
               headlineColor: t.accentGoldInk,
-              description: r.description.isEmpty
-                  ? _placeholder
-                  : r.description,
+              description: r.description.isEmpty ? _placeholder : r.description,
               meta: [
                 if (r.partNumber.isNotEmpty)
                   RecordMetaItem(Icons.tag, r.partNumber),
@@ -564,9 +553,7 @@ class PlanTab extends ConsumerWidget {
               date: _date(r.dateCreated, units),
               headline: Formatters.currency(r.cost, symbol),
               headlineColor: t.accentGoldInk,
-              description: r.description.isEmpty
-                  ? _placeholder
-                  : r.description,
+              description: r.description.isEmpty ? _placeholder : r.description,
               meta: [
                 RecordMetaItem(
                   Icons.flag_outlined,
@@ -781,7 +768,7 @@ class EquipmentTab extends ConsumerWidget {
               headline: r.isEquipped
                   ? l10n.equipmentEquipped
                   : l10n.equipmentRemoved,
-              headlineColor: r.isEquipped ? _equippedGreen : t.textTertiary,
+              headlineColor: r.isEquipped ? equippedInk(t) : t.textTertiary,
               description: r.notes.isEmpty ? null : r.notes,
               meta: [
                 if (r.distanceTraveled != null)
@@ -795,7 +782,8 @@ class EquipmentTab extends ConsumerWidget {
               tags: splitTags(r.tags),
               activeTags: filter.activeTags,
               onTagTap: filter.onTagTap,
-              onTap: () => showAddEquipmentForm(context, vehicleId, existing: r),
+              onTap: () =>
+                  showAddEquipmentForm(context, vehicleId, existing: r),
             );
           },
         );
@@ -804,8 +792,12 @@ class EquipmentTab extends ConsumerWidget {
   }
 }
 
-/// Positive-status green for an equipped item (matches the dashboard's OK green).
-const _equippedGreen = Color(0xFF4CAF6E);
+/// Positive-status green for an equipped item: the dashboard's OK green in the
+/// dark theme, and that hue darkened in the light one, where the swatch reads
+/// 2.3:1 as a headline. `brand_contrast_test.dart` measures both.
+@visibleForTesting
+Color equippedInk(DashTokens t) =>
+    t.isDark ? const Color(0xFF4CAF6E) : const Color(0xFF317147);
 
 String _planPriority(PlanPriority p, AppLocalizations l10n) => switch (p) {
   PlanPriority.critical => l10n.planPriorityCritical,
@@ -832,9 +824,9 @@ String _urgencyLabel(ReminderUrgency u, AppLocalizations l10n) => switch (u) {
 
 Color _urgencyColor(ReminderUrgency u, DashTokens t) => switch (u) {
   ReminderUrgency.notUrgent => t.textTertiary,
-  ReminderUrgency.urgent => t.accentOrange,
-  ReminderUrgency.veryUrgent => t.danger,
-  ReminderUrgency.pastDue => t.danger,
+  ReminderUrgency.urgent => t.accentOrangeInk,
+  ReminderUrgency.veryUrgent => t.dangerInk,
+  ReminderUrgency.pastDue => t.dangerInk,
   ReminderUrgency.unknown => t.textTertiary,
 };
 

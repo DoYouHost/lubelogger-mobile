@@ -52,15 +52,16 @@ class VehicleCard extends StatelessWidget {
               children: [
                 _photo(t),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    DashSpace.lg,
+                    DashSpace.lg,
+                    DashSpace.lg,
+                    DashSpace.lg,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (v.year > 0)
-                        Text(
-                          '${v.year}',
-                          style: _sub(t),
-                        ),
+                      if (v.year > 0) Text('${v.year}', style: _sub(t)),
                       Text(
                         v.makeModel,
                         style: TextStyle(
@@ -72,7 +73,7 @@ class VehicleCard extends StatelessWidget {
                       ),
                       if (v.licensePlate.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.only(top: DashSpace.xs),
                           child: Text(v.licensePlate, style: _sub(t)),
                         ),
                     ],
@@ -87,33 +88,31 @@ class VehicleCard extends StatelessWidget {
   }
 
   Widget _photo(DashTokens t) => Stack(
-        children: [
-          SizedBox(
-            height: _photoHeight,
-            width: double.infinity,
-            child: _image(t),
-          ),
-          Positioned(
-            top: 12,
-            left: 12,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Badge(
-                  icon: Icons.speed,
-                  label: VehicleUnits(units, useHours: info.vehicle.useHours)
-                      .distance(info.lastReportedOdometer),
-                ),
-                const SizedBox(height: 8),
-                _Badge(
-                  icon: Icons.payments_outlined,
-                  label: Formatters.currency(info.totalCost, currencySymbol),
-                ),
-              ],
+    children: [
+      SizedBox(height: _photoHeight, width: double.infinity, child: _image(t)),
+      Positioned(
+        top: 12,
+        left: 12,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Badge(
+              icon: Icons.speed,
+              label: VehicleUnits(
+                units,
+                useHours: info.vehicle.useHours,
+              ).distance(info.lastReportedOdometer),
             ),
-          ),
-        ],
-      );
+            const SizedBox(height: DashSpace.sm),
+            _Badge(
+              icon: Icons.payments_outlined,
+              label: Formatters.currency(info.totalCost, currencySymbol),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 
   Widget _image(DashTokens t) {
     final placeholder = ColoredBox(
@@ -144,11 +143,11 @@ class VehicleCard extends StatelessWidget {
   }
 
   TextStyle _sub(DashTokens t) => TextStyle(
-        fontFamily: DashTokens.fontUi,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: t.textTertiary,
-      );
+    fontFamily: DashTokens.fontUi,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: t.textTertiary,
+  );
 }
 
 /// Dark translucent pill overlaid on the vehicle photo.
@@ -161,7 +160,10 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DashSpace.md,
+        vertical: DashSpace.sm,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xCC000000),
         borderRadius: BorderRadius.circular(999),
@@ -170,7 +172,7 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 6),
+          const SizedBox(width: DashSpace.sm),
           Text(
             label,
             style: const TextStyle(
@@ -242,10 +244,7 @@ class _DashedBorderPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       var distance = 0.0;
       while (distance < metric.length) {
-        canvas.drawPath(
-          metric.extractPath(distance, distance + dash),
-          paint,
-        );
+        canvas.drawPath(metric.extractPath(distance, distance + dash), paint);
         distance += dash + gap;
       }
     }

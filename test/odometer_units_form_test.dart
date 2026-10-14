@@ -12,6 +12,10 @@ import 'package:lubelogger_mobile/data/vehicles_repository.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/add_odometer_form.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:lubelogger_mobile/providers.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 class _CapturingAdapter implements HttpClientAdapter {
   RequestOptions? captured;
@@ -42,13 +46,13 @@ void main() {
   const vehicleId = 1;
 
   OdometerRecord record(double odometer) => OdometerRecord(
-        id: 7,
-        date: DateTime(2026, 4, 5),
-        odometer: odometer,
-        initialOdometer: 0,
-        notes: '',
-        tags: '',
-      );
+    id: 7,
+    date: DateTime(2026, 4, 5),
+    odometer: odometer,
+    initialOdometer: 0,
+    notes: '',
+    tags: '',
+  );
 
   Future<_CapturingAdapter> pump(
     WidgetTester tester, {
@@ -97,17 +101,18 @@ void main() {
   }
 
   Future<void> save(WidgetTester tester) async {
-    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.tap(find.widgetWithText(FilledButton, en.actionSave));
     await tester.pumpAndSettle();
   }
 
-  String odometerField(WidgetTester tester) =>
-      tester.widget<TextFormField>(find.byType(TextFormField).first).controller!
-          .text;
+  String odometerField(WidgetTester tester) => tester
+      .widget<TextFormField>(find.byType(TextFormField).first)
+      .controller!
+      .text;
 
   double sentOdometer(_CapturingAdapter adapter) => double.parse(
-        (adapter.captured!.data as Map<String, dynamic>)['odometer'] as String,
-      );
+    (adapter.captured!.data as Map<String, dynamic>)['odometer'] as String,
+  );
 
   testWidgets('a metric reading edited in miles is stored back in km', (
     tester,
@@ -121,7 +126,7 @@ void main() {
     // The list shows this record as 62,137 mi; the field has to agree with it,
     // not show the raw 100000 under a "mi" label.
     expect(odometerField(tester), '62137');
-    expect(find.text('Odometer reading (mi)'), findsOneWidget);
+    expect(find.text(en.formOdometerLabel('mi')), findsOneWidget);
 
     await save(tester);
     // Back within a mile of where it started, rather than 62,137 km.
@@ -153,7 +158,7 @@ void main() {
     );
 
     expect(odometerField(tester), '1250');
-    expect(find.text('Odometer reading (h)'), findsOneWidget);
+    expect(find.text(en.formOdometerLabel('h')), findsOneWidget);
     await save(tester);
     expect(sentOdometer(adapter), 1250);
   });

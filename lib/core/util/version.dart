@@ -13,7 +13,9 @@ bool? versionAtLeast(String version, String minimum) {
   final actual = _components(version);
   if (actual == null) return null;
   final required = _components(minimum) ?? const <int>[];
-  final length = actual.length > required.length ? actual.length : required.length;
+  final length = actual.length > required.length
+      ? actual.length
+      : required.length;
   for (var i = 0; i < length; i++) {
     final a = i < actual.length ? actual[i] : 0;
     final b = i < required.length ? required[i] : 0;

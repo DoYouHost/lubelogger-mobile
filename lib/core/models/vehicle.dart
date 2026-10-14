@@ -23,20 +23,20 @@ class Vehicle {
   });
 
   factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        year: (json['year'] as num?)?.toInt() ?? 0,
-        make: (json['make'] as String?) ?? '',
-        model: (json['model'] as String?) ?? '',
-        licensePlate: (json['licensePlate'] as String?) ?? '',
-        imageLocation: (json['imageLocation'] as String?) ?? '',
-        tags: _stringList(json['tags']),
-        isElectric: json['isElectric'] == true,
-        isDiesel: json['isDiesel'] == true,
-        useHours: json['useHours'] == true,
-        odometerOptional: json['odometerOptional'] == true,
-        identifier: (json['vehicleIdentifier'] as String?) ?? 'LicensePlate',
-        extraFields: ExtraField.listFrom(json['extraFields']),
-      );
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    year: (json['year'] as num?)?.toInt() ?? 0,
+    make: (json['make'] as String?) ?? '',
+    model: (json['model'] as String?) ?? '',
+    licensePlate: (json['licensePlate'] as String?) ?? '',
+    imageLocation: (json['imageLocation'] as String?) ?? '',
+    tags: _stringList(json['tags']),
+    isElectric: json['isElectric'] == true,
+    isDiesel: json['isDiesel'] == true,
+    useHours: json['useHours'] == true,
+    odometerOptional: json['odometerOptional'] == true,
+    identifier: (json['vehicleIdentifier'] as String?) ?? 'LicensePlate',
+    extraFields: ExtraField.listFrom(json['extraFields']),
+  );
 
   final int id;
   final int year;
@@ -73,6 +73,9 @@ class Vehicle {
 
   static List<String> _stringList(Object? raw) {
     if (raw is! List) return const [];
-    return [for (final e in raw) if (e != null) e.toString()];
+    return [
+      for (final e in raw)
+        if (e != null) e.toString(),
+    ];
   }
 }

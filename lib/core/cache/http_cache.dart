@@ -67,7 +67,8 @@ class HttpCache {
     final file = await _fileFor(key);
     if (!file.existsSync()) return null;
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       return CachedBody(
         body: json['body'],
         storedAt: DateTime.fromMillisecondsSinceEpoch(json['storedAt'] as int),

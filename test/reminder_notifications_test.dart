@@ -9,17 +9,16 @@ ReminderRecord reminder({
   DateTime? dueDate,
   double? dueOdometer,
   String description = 'Oil change',
-}) =>
-    ReminderRecord(
-      id: id,
-      description: description,
-      urgency: urgency,
-      metric: metric,
-      dueDate: dueDate,
-      dueOdometer: dueOdometer,
-      notes: '',
-      tags: '',
-    );
+}) => ReminderRecord(
+  id: id,
+  description: description,
+  urgency: urgency,
+  metric: metric,
+  dueDate: dueDate,
+  dueOdometer: dueOdometer,
+  notes: '',
+  tags: '',
+);
 
 ReminderAlert alert(int reminderId, {int vehicleId = 1, DateTime? dueDate}) =>
     reminderAlertFor(
@@ -38,8 +37,11 @@ void main() {
         ReminderUrgency.veryUrgent,
         ReminderUrgency.unknown,
       ]) {
-        expect(reminderAlertFor(1, 'Car', reminder(id: 1, urgency: u)), isNull,
-            reason: 'urgency $u must not alert');
+        expect(
+          reminderAlertFor(1, 'Car', reminder(id: 1, urgency: u)),
+          isNull,
+          reason: 'urgency $u must not alert',
+        );
       }
     });
 
@@ -59,17 +61,29 @@ void main() {
   group('reminderDueKey', () {
     test('same reminder + same due target → same key', () {
       final k1 = reminderDueKey(
-          vehicleId: 1, reminderId: 5, dueDate: DateTime(2026, 5, 1));
+        vehicleId: 1,
+        reminderId: 5,
+        dueDate: DateTime(2026, 5, 1),
+      );
       final k2 = reminderDueKey(
-          vehicleId: 1, reminderId: 5, dueDate: DateTime(2026, 5, 1));
+        vehicleId: 1,
+        reminderId: 5,
+        dueDate: DateTime(2026, 5, 1),
+      );
       expect(k1, k2);
     });
 
     test('recurrence (rolled-forward due target) yields a new key', () {
       final before = reminderDueKey(
-          vehicleId: 1, reminderId: 5, dueDate: DateTime(2026, 5, 1));
+        vehicleId: 1,
+        reminderId: 5,
+        dueDate: DateTime(2026, 5, 1),
+      );
       final after = reminderDueKey(
-          vehicleId: 1, reminderId: 5, dueDate: DateTime(2026, 8, 1));
+        vehicleId: 1,
+        reminderId: 5,
+        dueDate: DateTime(2026, 8, 1),
+      );
       expect(before, isNot(after));
     });
 
@@ -116,16 +130,19 @@ void main() {
       expect(plan.toNotify, hasLength(1));
     });
 
-    test('recurrence to a new due date notifies again even if still past due', () {
-      final first = alert(1, dueDate: DateTime(2026, 1, 1));
-      final rolled = alert(1, dueDate: DateTime(2026, 6, 1));
-      // Notified on the first cycle.
-      var plan = planReminderNotifications([first], {});
-      expect(plan.toNotify, hasLength(1));
-      // Next check: same id but rolled-forward (still past due) → new key → notify.
-      plan = planReminderNotifications([rolled], plan.nextNotified);
-      expect(plan.toNotify.single.dueKey, rolled.dueKey);
-    });
+    test(
+      'recurrence to a new due date notifies again even if still past due',
+      () {
+        final first = alert(1, dueDate: DateTime(2026, 1, 1));
+        final rolled = alert(1, dueDate: DateTime(2026, 6, 1));
+        // Notified on the first cycle.
+        var plan = planReminderNotifications([first], {});
+        expect(plan.toNotify, hasLength(1));
+        // Next check: same id but rolled-forward (still past due) → new key → notify.
+        plan = planReminderNotifications([rolled], plan.nextNotified);
+        expect(plan.toNotify.single.dueKey, rolled.dueKey);
+      },
+    );
 
     test('duplicate keys within one run are collapsed', () {
       final a = alert(1);

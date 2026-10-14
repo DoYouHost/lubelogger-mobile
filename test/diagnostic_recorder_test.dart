@@ -24,16 +24,16 @@ void main() {
     resolveDirectory: () async => dir,
   );
 
-  Future<BackgroundRecording?> startWorker() =>
-      DiagnosticRecorder.startBackground(
-        sessions: SettingsSessionStore(settings),
-        stream: LogStream.worker,
-        redactor: lubeloggerRedactor,
-        sessionLimit: recordingLimit,
-        resolveDirectory: () async => dir,
-        // The error probe swaps the global handlers; a test must not keep those.
-        attachErrors: false,
-      );
+  Future<BackgroundRecording?>
+  startWorker() => DiagnosticRecorder.startBackground(
+    sessions: settings.diagnosticsSessions,
+    stream: LogStream.worker,
+    redactor: lubeloggerRedactor,
+    sessionLimit: recordingLimit,
+    resolveDirectory: () async => dir,
+    // The error probe swaps the global handlers; a test must not keep those.
+    attachErrors: false,
+  );
 
   setUp(() async {
     dir = await Directory.systemTemp.createTemp('lubelogger-diagnostics');
@@ -71,9 +71,10 @@ void main() {
     await settings.saveDiagnosticsSession(null);
 
     final merged = [
-      for (final line in const LineSplitter()
-          .convert(await build().recover(session))
-          .skip(1))
+      for (final line
+          in const LineSplitter()
+              .convert(await build().recover(session))
+              .skip(1))
         jsonDecode(line) as Map<String, Object?>,
     ];
     expect(merged.firstWhere((r) => r['evt'] == 'posted')['iso'], 'worker');

@@ -41,7 +41,39 @@ test:
 [doc('check translation status and missing keys against app_en.arb')]
 [group('1-develop')]
 l10n-status *args:
-    python3 tool/check_l10n_sync.py {{args}}
+    dart run app_guards:l10n_sync {{args}}
+
+# core.hooksPath is per-clone local config, so a fresh clone has no hooks until
+# this runs. Points git at .githooks/, which holds the commit-message check.
+[doc('point this clone at the versioned git hooks')]
+[group('1-develop')]
+hooks:
+    git config core.hooksPath .githooks
+    @echo "hooks: core.hooksPath = $(git config core.hooksPath)"
+
+# Spelling and grammar for the strings the user actually reads. Checks only what
+# this branch changed; `just l10n-check-all` sweeps every locale file. Set
+# LANGUAGETOOL_URL to a self-hosted instance to skip the public rate limit and
+# keep the copy off someone else's server. Configured by tool/l10n_language.toml.
+# usage: just l10n-check [BASE_REF]
+[doc('spell-check the .arb strings this branch changed')]
+[group('1-develop')]
+l10n-check base='dev':
+    dart run app_guards:l10n_language --base {{base}}
+
+[doc('spell-check every .arb string, not only this branch')]
+[group('1-develop')]
+l10n-check-all:
+    dart run app_guards:l10n_language --all
+
+# A one-letter word ("i", "w", "a") must not end a line in any language:
+# turns the space after each into a no-break space, then regenerates.
+# test/short_words_test.dart fails until this has run.
+[doc('glue one-letter words to the next word in every .arb, then gen-l10n')]
+[group('1-develop')]
+l10n-glue:
+    dart run app_guards:glue_short_words
+    flutter gen-l10n
 
 # Boots the AVD first if needed, then builds, installs and runs with hot reload.
 # This is the primary pre-commit verify loop.
@@ -182,7 +214,7 @@ build-aab name='' code='': (_build "appbundle" name code)
 [doc('print the versions baked into the built Play bundles')]
 [group('3-build')]
 aab-show *paths:
-    @python3 tool/aab_versions.py {{paths}}
+    @dart run app_guards:aab_versions {{paths}}
 
 [doc('delete local build outputs')]
 [group('3-build')]

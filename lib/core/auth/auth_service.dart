@@ -1,3 +1,4 @@
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 
 import '../api/api_client.dart';
@@ -20,7 +21,7 @@ typedef AuthProbeResult = ({WhoAmI who, String baseUrl});
 /// [ServerProfile].
 class AuthService {
   AuthService({required Dio bareDio, required this._credentials})
-      : _dio = bareDio;
+    : _dio = bareDio;
 
   final Dio _dio;
   final CredentialsStore _credentials;
@@ -34,10 +35,9 @@ class AuthService {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
         '$baseUrl${Endpoints.whoami}',
-        options: Options(headers: {
-          kCultureInvariantHeader: 'true',
-          'x-api-key': apiKey,
-        }),
+        options: Options(
+          headers: {kCultureInvariantHeader: 'true', 'x-api-key': apiKey},
+        ),
       );
       final body = res.data;
       if (body == null) {
@@ -46,7 +46,7 @@ class AuthService {
       await _credentials.writeApiKey(apiKey);
       return (
         who: WhoAmI.fromJson(body),
-        baseUrl: ServerProfile.baseUrlFromReached(
+        baseUrl: baseUrlFromReached(
           res.realUri,
           requested: baseUrl,
           endpointSuffix: Endpoints.whoami,

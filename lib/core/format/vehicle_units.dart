@@ -32,9 +32,9 @@ class VehicleUnits {
     final distance = useHours
         ? _hours
         : (settings.economy == FuelEconomyUnit.mpg ||
-                settings.economy == FuelEconomyUnit.mpgUk)
-            ? DistanceUnit.mi.label
-            : DistanceUnit.km.label;
+              settings.economy == FuelEconomyUnit.mpgUk)
+        ? DistanceUnit.mi.label
+        : DistanceUnit.km.label;
     final consumption = isElectric
         ? _kilowattHours
         : switch (settings.economy) {

@@ -1,4 +1,5 @@
 import 'package:app_diagnostics/app_diagnostics.dart';
+import 'package:app_util/app_util.dart';
 import 'package:dio/dio.dart';
 
 import '../core/api/api_client.dart';
@@ -39,23 +40,24 @@ class VehiclesRepository {
     CacheProbe probe, {
     bool cacheFirst = false,
     bool revalidate = false,
-  }) =>
-      VehiclesRepository(
-        _dio.clone(
-          options: _dio.options.copyWith(extra: {
-            ..._dio.options.extra,
-            kCacheProbe: probe,
-            if (cacheFirst) kCacheFirst: true,
-            if (revalidate) kRevalidate: true,
-          }),
-        ),
-      );
+  }) => VehiclesRepository(
+    _dio.clone(
+      options: _dio.options.copyWith(
+        extra: {
+          ..._dio.options.extra,
+          kCacheProbe: probe,
+          if (cacheFirst) kCacheFirst: true,
+          if (revalidate) kRevalidate: true,
+        },
+      ),
+    ),
+  );
 
   /// `GET /api/vehicles` → the household's vehicles.
   Future<List<Vehicle>> list() => guard(() async {
-        final res = await _dio.get<List<dynamic>>(Endpoints.vehicles);
-        return _parseVehicles(res.data);
-      });
+    final res = await _dio.get<List<dynamic>>(Endpoints.vehicles);
+    return _parseVehicles(res.data);
+  });
 
   /// `POST /api/vehicles/add` → create a vehicle, returning its new id (or null
   /// if the server omitted it). The app always uses the `LicensePlate`
@@ -72,29 +74,28 @@ class VehiclesRepository {
     bool odometerOptional = false,
     String tags = '',
     List<ExtraField> extraFields = const [],
-  }) =>
-      guard(() async {
-        final res = await _dio.post<Map<String, dynamic>>(
-          Endpoints.vehiclesAdd,
-          options: Options(contentType: Headers.jsonContentType),
-          data: _vehicleBody(
-            year: year,
-            make: make,
-            model: model,
-            licensePlate: licensePlate,
-            fuelType: fuelType,
-            useHours: useHours,
-            odometerOptional: odometerOptional,
-            tags: tags,
-            identifier: 'LicensePlate',
-            extraFields: extraFields,
-          ),
-        );
-        _ensureSuccess(res.data);
-        final extra = res.data?['additionalData'];
-        if (extra is Map) return (extra['vehicleId'] as num?)?.toInt();
-        return null;
-      });
+  }) => guard(() async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      Endpoints.vehiclesAdd,
+      options: Options(contentType: Headers.jsonContentType),
+      data: _vehicleBody(
+        year: year,
+        make: make,
+        model: model,
+        licensePlate: licensePlate,
+        fuelType: fuelType,
+        useHours: useHours,
+        odometerOptional: odometerOptional,
+        tags: tags,
+        identifier: 'LicensePlate',
+        extraFields: extraFields,
+      ),
+    );
+    _ensureSuccess(res.data);
+    final extra = res.data?['additionalData'];
+    if (extra is Map) return (extra['vehicleId'] as num?)?.toInt();
+    return null;
+  });
 
   /// `PUT /api/vehicles/update` → update an existing vehicle by [id]. The server
   /// replaces the identifier and extra fields with what's sent, so pass the
@@ -116,22 +117,21 @@ class VehiclesRepository {
     bool useHours = false,
     bool odometerOptional = false,
     String tags = '',
-  }) =>
-      _update(Endpoints.vehiclesUpdate, {
-        'id': id.toString(),
-        ..._vehicleBody(
-          year: year,
-          make: make,
-          model: model,
-          licensePlate: licensePlate,
-          fuelType: fuelType,
-          useHours: useHours,
-          odometerOptional: odometerOptional,
-          tags: tags,
-          identifier: identifier,
-          extraFields: extraFields,
-        ),
-      });
+  }) => _update(Endpoints.vehiclesUpdate, {
+    'id': id.toString(),
+    ..._vehicleBody(
+      year: year,
+      make: make,
+      model: model,
+      licensePlate: licensePlate,
+      fuelType: fuelType,
+      useHours: useHours,
+      odometerOptional: odometerOptional,
+      tags: tags,
+      identifier: identifier,
+      extraFields: extraFields,
+    ),
+  });
 
   /// `DELETE /api/vehicles/delete?id=` → delete a vehicle (LubeLogger 1.7.0+).
   /// The server cascades, wiping all of the vehicle's records first, so this is
@@ -157,33 +157,33 @@ class VehiclesRepository {
   /// `GET /api/vehicle/info?vehicleId=` → aggregated info for one vehicle. The
   /// endpoint returns an array; we take the first (and only) element.
   Future<VehicleInfo> info(int vehicleId) => guard(() async {
-        final res = await _dio.get<List<dynamic>>(
-          Endpoints.vehicleInfo,
-          queryParameters: {'vehicleId': vehicleId},
-        );
-        final list = res.data ?? const [];
-        if (list.isEmpty) {
-          throw const ApiException(AppErrorCode.malformedResponse);
-        }
-        return VehicleInfo.fromJson(list.first as Map<String, dynamic>);
-      });
+    final res = await _dio.get<List<dynamic>>(
+      Endpoints.vehicleInfo,
+      queryParameters: {'vehicleId': vehicleId},
+    );
+    final list = res.data ?? const [];
+    if (list.isEmpty) {
+      throw const ApiException(AppErrorCode.malformedResponse);
+    }
+    return VehicleInfo.fromJson(list.first as Map<String, dynamic>);
+  });
 
   /// `GET /api/vehicle/info` with no `vehicleId` → the same aggregate for every
   /// vehicle the key may view. This is the garage in one request; [list] plus
   /// one [info] per vehicle would return the same thing in 1+N.
   Future<List<VehicleInfo>> allInfo() => guard(() async {
-        final res = await _dio.get<List<dynamic>>(Endpoints.vehicleInfo);
-        return _parseAll(res.data, VehicleInfo.fromJson, Endpoints.vehicleInfo);
-      });
+    final res = await _dio.get<List<dynamic>>(Endpoints.vehicleInfo);
+    return parseJsonList(res.data, VehicleInfo.fromJson);
+  });
 
   /// `GET /api/vehicle/gasrecords?vehicleId=` → the vehicle's refuel log.
   Future<List<GasRecord>> gasRecords(int vehicleId) => guard(() async {
-        final res = await _dio.get<List<dynamic>>(
-          Endpoints.gasRecords,
-          queryParameters: {'vehicleId': vehicleId},
-        );
-        return _parseAll(res.data, GasRecord.fromJson, Endpoints.gasRecords);
-      });
+    final res = await _dio.get<List<dynamic>>(
+      Endpoints.gasRecords,
+      queryParameters: {'vehicleId': vehicleId},
+    );
+    return parseJsonList(res.data, GasRecord.fromJson);
+  });
 
   /// `POST /api/vehicle/gasrecords/add?vehicleId=` → add a refuel. All fields go
   /// out as strings (the server string-parses them; our `culture-invariant`
@@ -203,29 +203,28 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      guard(() async {
-        final res = await _dio.post<Map<String, dynamic>>(
-          Endpoints.gasRecordsAdd,
-          queryParameters: {'vehicleId': vehicleId},
-          options: Options(contentType: Headers.jsonContentType),
-          data: _gasRecordBody(
-            date: date,
-            odometer: odometer,
-            fuelConsumed: fuelConsumed,
-            cost: cost,
-            isFillToFull: isFillToFull,
-            missedFuelUp: missedFuelUp,
-            startingSoc: startingSoc,
-            endingSoc: endingSoc,
-            notes: notes,
-            tags: tags,
-            files: files,
-            extraFields: extraFields,
-          ),
-        );
-        _ensureSuccess(res.data);
-      });
+  }) => guard(() async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      Endpoints.gasRecordsAdd,
+      queryParameters: {'vehicleId': vehicleId},
+      options: Options(contentType: Headers.jsonContentType),
+      data: _gasRecordBody(
+        date: date,
+        odometer: odometer,
+        fuelConsumed: fuelConsumed,
+        cost: cost,
+        isFillToFull: isFillToFull,
+        missedFuelUp: missedFuelUp,
+        startingSoc: startingSoc,
+        endingSoc: endingSoc,
+        notes: notes,
+        tags: tags,
+        files: files,
+        extraFields: extraFields,
+      ),
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `PUT /api/vehicle/gasrecords/update` → update an existing refuel by [id].
   /// No query params; `id` and `vehicleId` travel in the body (the server looks
@@ -246,41 +245,40 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      guard(() async {
-        final res = await _dio.put<Map<String, dynamic>>(
-          Endpoints.gasRecordsUpdate,
-          options: Options(contentType: Headers.jsonContentType),
-          data: {
-            'id': id.toString(),
-            'vehicleId': vehicleId.toString(),
-            ..._gasRecordBody(
-              date: date,
-              odometer: odometer,
-              fuelConsumed: fuelConsumed,
-              cost: cost,
-              isFillToFull: isFillToFull,
-              missedFuelUp: missedFuelUp,
-              startingSoc: startingSoc,
-              endingSoc: endingSoc,
-              notes: notes,
-              tags: tags,
-              files: files,
-              extraFields: extraFields,
-            ),
-          },
-        );
-        _ensureSuccess(res.data);
-      });
+  }) => guard(() async {
+    final res = await _dio.put<Map<String, dynamic>>(
+      Endpoints.gasRecordsUpdate,
+      options: Options(contentType: Headers.jsonContentType),
+      data: {
+        'id': id.toString(),
+        'vehicleId': vehicleId.toString(),
+        ..._gasRecordBody(
+          date: date,
+          odometer: odometer,
+          fuelConsumed: fuelConsumed,
+          cost: cost,
+          isFillToFull: isFillToFull,
+          missedFuelUp: missedFuelUp,
+          startingSoc: startingSoc,
+          endingSoc: endingSoc,
+          notes: notes,
+          tags: tags,
+          files: files,
+          extraFields: extraFields,
+        ),
+      },
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `DELETE /api/vehicle/gasrecords/delete?id=` → delete a refuel.
   Future<void> deleteGasRecord(int id) => guard(() async {
-        final res = await _dio.delete<Map<String, dynamic>>(
-          Endpoints.gasRecordsDelete,
-          queryParameters: {'id': id},
-        );
-        _ensureSuccess(res.data);
-      });
+    final res = await _dio.delete<Map<String, dynamic>>(
+      Endpoints.gasRecordsDelete,
+      queryParameters: {'id': id},
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// Full records for one vehicle from a generic (date + cost) record [kind]
   /// (service / repair / upgrade / tax) — the source for the per-type record
@@ -291,7 +289,7 @@ class VehiclesRepository {
           kind.endpoint,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return _parseAll(res.data, VehicleRecord.fromJson, kind.endpoint);
+        return parseJsonList(res.data, VehicleRecord.fromJson);
       });
 
   /// `POST {kind}/add?vehicleId=` → add a generic (service / repair / upgrade /
@@ -310,25 +308,24 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      guard(() async {
-        final res = await _dio.post<Map<String, dynamic>>(
-          kind.addEndpoint,
-          queryParameters: {'vehicleId': vehicleId},
-          options: Options(contentType: Headers.jsonContentType),
-          data: _recordBody(
-            date: date,
-            description: description,
-            cost: cost,
-            odometer: odometer,
-            notes: notes,
-            tags: tags,
-            files: files,
-            extraFields: extraFields,
-          ),
-        );
-        _ensureSuccess(res.data);
-      });
+  }) => guard(() async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      kind.addEndpoint,
+      queryParameters: {'vehicleId': vehicleId},
+      options: Options(contentType: Headers.jsonContentType),
+      data: _recordBody(
+        date: date,
+        description: description,
+        cost: cost,
+        odometer: odometer,
+        notes: notes,
+        tags: tags,
+        files: files,
+        extraFields: extraFields,
+      ),
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `PUT {kind}/update` → update a generic record by [id]. No query params; the
   /// server resolves the record's vehicle from [id], so `vehicleId` isn't sent.
@@ -343,36 +340,35 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      guard(() async {
-        final res = await _dio.put<Map<String, dynamic>>(
-          kind.updateEndpoint,
-          options: Options(contentType: Headers.jsonContentType),
-          data: {
-            'id': id.toString(),
-            ..._recordBody(
-              date: date,
-              description: description,
-              cost: cost,
-              odometer: odometer,
-              notes: notes,
-              tags: tags,
-              files: files,
-              extraFields: extraFields,
-            ),
-          },
-        );
-        _ensureSuccess(res.data);
-      });
+  }) => guard(() async {
+    final res = await _dio.put<Map<String, dynamic>>(
+      kind.updateEndpoint,
+      options: Options(contentType: Headers.jsonContentType),
+      data: {
+        'id': id.toString(),
+        ..._recordBody(
+          date: date,
+          description: description,
+          cost: cost,
+          odometer: odometer,
+          notes: notes,
+          tags: tags,
+          files: files,
+          extraFields: extraFields,
+        ),
+      },
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `DELETE {kind}/delete?id=` → delete a generic record.
   Future<void> deleteRecord(RecordKind kind, int id) => guard(() async {
-        final res = await _dio.delete<Map<String, dynamic>>(
-          kind.deleteEndpoint,
-          queryParameters: {'id': id},
-        );
-        _ensureSuccess(res.data);
-      });
+    final res = await _dio.delete<Map<String, dynamic>>(
+      kind.deleteEndpoint,
+      queryParameters: {'id': id},
+    );
+    _ensureSuccess(res.data);
+  });
 
   // ── Supply records ──────────────────────────────────────────────────────
   // Server requires date, description, quantity and cost; part number/supplier
@@ -389,10 +385,22 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _add(Endpoints.supplyRecordsAdd, vehicleId,
-          _supplyBody(date, description, partQuantity, cost, partNumber,
-              partSupplier, notes, tags, files, extraFields));
+  }) => _add(
+    Endpoints.supplyRecordsAdd,
+    vehicleId,
+    _supplyBody(
+      date,
+      description,
+      partQuantity,
+      cost,
+      partNumber,
+      partSupplier,
+      notes,
+      tags,
+      files,
+      extraFields,
+    ),
+  );
 
   Future<void> updateSupplyRecord({
     required int id,
@@ -406,12 +414,21 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _update(Endpoints.supplyRecordsUpdate, {
-        'id': id.toString(),
-        ..._supplyBody(date, description, partQuantity, cost, partNumber,
-            partSupplier, notes, tags, files, extraFields),
-      });
+  }) => _update(Endpoints.supplyRecordsUpdate, {
+    'id': id.toString(),
+    ..._supplyBody(
+      date,
+      description,
+      partQuantity,
+      cost,
+      partNumber,
+      partSupplier,
+      notes,
+      tags,
+      files,
+      extraFields,
+    ),
+  });
 
   Future<void> deleteSupplyRecord(int id) =>
       _delete(Endpoints.supplyRecordsDelete, id);
@@ -429,12 +446,20 @@ class VehiclesRepository {
     String notes = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _add(
-          Endpoints.planRecordsAdd,
-          vehicleId,
-          _planBody(description, cost, type, priority, progress, notes, files,
-              extraFields));
+  }) => _add(
+    Endpoints.planRecordsAdd,
+    vehicleId,
+    _planBody(
+      description,
+      cost,
+      type,
+      priority,
+      progress,
+      notes,
+      files,
+      extraFields,
+    ),
+  );
 
   Future<void> updatePlanRecord({
     required int id,
@@ -446,12 +471,19 @@ class VehiclesRepository {
     String notes = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _update(Endpoints.planRecordsUpdate, {
-        'id': id.toString(),
-        ..._planBody(description, cost, type, priority, progress, notes, files,
-            extraFields),
-      });
+  }) => _update(Endpoints.planRecordsUpdate, {
+    'id': id.toString(),
+    ..._planBody(
+      description,
+      cost,
+      type,
+      priority,
+      progress,
+      notes,
+      files,
+      extraFields,
+    ),
+  });
 
   Future<void> deletePlanRecord(int id) =>
       _delete(Endpoints.planRecordsDelete, id);
@@ -468,9 +500,11 @@ class VehiclesRepository {
     num? dueOdometer,
     String notes = '',
     String tags = '',
-  }) =>
-      _add(Endpoints.remindersAdd, vehicleId,
-          _reminderBody(description, metric, dueDate, dueOdometer, notes, tags));
+  }) => _add(
+    Endpoints.remindersAdd,
+    vehicleId,
+    _reminderBody(description, metric, dueDate, dueOdometer, notes, tags),
+  );
 
   Future<void> updateReminder({
     required int id,
@@ -480,14 +514,12 @@ class VehiclesRepository {
     num? dueOdometer,
     String notes = '',
     String tags = '',
-  }) =>
-      _update(Endpoints.remindersUpdate, {
-        'id': id.toString(),
-        ..._reminderBody(description, metric, dueDate, dueOdometer, notes, tags),
-      });
+  }) => _update(Endpoints.remindersUpdate, {
+    'id': id.toString(),
+    ..._reminderBody(description, metric, dueDate, dueOdometer, notes, tags),
+  });
 
-  Future<void> deleteReminder(int id) =>
-      _delete(Endpoints.remindersDelete, id);
+  Future<void> deleteReminder(int id) => _delete(Endpoints.remindersDelete, id);
 
   // ── Notes ───────────────────────────────────────────────────────────────
   // Server requires description (title) and noteText (body).
@@ -499,9 +531,11 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _add(Endpoints.notesAdd, vehicleId,
-          _noteBody(description, noteText, pinned, tags, files, extraFields));
+  }) => _add(
+    Endpoints.notesAdd,
+    vehicleId,
+    _noteBody(description, noteText, pinned, tags, files, extraFields),
+  );
 
   Future<void> updateNote({
     required int id,
@@ -511,11 +545,10 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _update(Endpoints.notesUpdate, {
-        'id': id.toString(),
-        ..._noteBody(description, noteText, pinned, tags, files, extraFields),
-      });
+  }) => _update(Endpoints.notesUpdate, {
+    'id': id.toString(),
+    ..._noteBody(description, noteText, pinned, tags, files, extraFields),
+  });
 
   Future<void> deleteNote(int id) => _delete(Endpoints.notesDelete, id);
 
@@ -529,12 +562,11 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _add(
-          Endpoints.equipmentRecordsAdd,
-          vehicleId,
-          _equipmentBody(
-              description, isEquipped, notes, tags, files, extraFields));
+  }) => _add(
+    Endpoints.equipmentRecordsAdd,
+    vehicleId,
+    _equipmentBody(description, isEquipped, notes, tags, files, extraFields),
+  );
 
   Future<void> updateEquipmentRecord({
     required int id,
@@ -544,12 +576,10 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      _update(Endpoints.equipmentRecordsUpdate, {
-        'id': id.toString(),
-        ..._equipmentBody(
-            description, isEquipped, notes, tags, files, extraFields),
-      });
+  }) => _update(Endpoints.equipmentRecordsUpdate, {
+    'id': id.toString(),
+    ..._equipmentBody(description, isEquipped, notes, tags, files, extraFields),
+  });
 
   Future<void> deleteEquipmentRecord(int id) =>
       _delete(Endpoints.equipmentRecordsDelete, id);
@@ -562,11 +592,7 @@ class VehiclesRepository {
           Endpoints.odometerRecords,
           queryParameters: {'vehicleId': vehicleId},
         );
-        return _parseAll(
-          res.data,
-          OdometerRecord.fromJson,
-          Endpoints.odometerRecords,
-        );
+        return parseJsonList(res.data, OdometerRecord.fromJson);
       });
 
   /// `POST /api/vehicle/odometerrecords/add?vehicleId=` → add an odometer
@@ -581,23 +607,22 @@ class VehiclesRepository {
     String tags = '',
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
-  }) =>
-      guard(() async {
-        final res = await _dio.post<Map<String, dynamic>>(
-          Endpoints.odometerRecordsAdd,
-          queryParameters: {'vehicleId': vehicleId},
-          options: Options(contentType: Headers.jsonContentType),
-          data: {
-            'date': _isoDate(date),
-            'odometer': _intString(odometer),
-            'notes': notes,
-            'tags': tags,
-            'files': _filesJson(files),
-            'extraFields': ExtraField.jsonList(extraFields),
-          },
-        );
-        _ensureSuccess(res.data);
-      });
+  }) => guard(() async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      Endpoints.odometerRecordsAdd,
+      queryParameters: {'vehicleId': vehicleId},
+      options: Options(contentType: Headers.jsonContentType),
+      data: {
+        'date': calendarDateToJson(date),
+        'odometer': _intString(odometer),
+        'notes': notes,
+        'tags': tags,
+        'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
+      },
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `PUT /api/vehicle/odometerrecords/update` → update a reading by [id]. The
   /// endpoint requires [initialOdometer], so callers pass the value read back
@@ -613,34 +638,33 @@ class VehiclesRepository {
     List<Attachment> files = const [],
     List<ExtraField> extraFields = const [],
     String equipmentRecordId = '',
-  }) =>
-      guard(() async {
-        final res = await _dio.put<Map<String, dynamic>>(
-          Endpoints.odometerRecordsUpdate,
-          options: Options(contentType: Headers.jsonContentType),
-          data: {
-            'id': id.toString(),
-            'date': _isoDate(date),
-            'odometer': _intString(odometer),
-            'initialOdometer': _intString(initialOdometer),
-            'notes': notes,
-            'tags': tags,
-            'files': _filesJson(files),
-            'extraFields': ExtraField.jsonList(extraFields),
-            'equipmentRecordId': equipmentRecordId,
-          },
-        );
-        _ensureSuccess(res.data);
-      });
+  }) => guard(() async {
+    final res = await _dio.put<Map<String, dynamic>>(
+      Endpoints.odometerRecordsUpdate,
+      options: Options(contentType: Headers.jsonContentType),
+      data: {
+        'id': id.toString(),
+        'date': calendarDateToJson(date),
+        'odometer': _intString(odometer),
+        'initialOdometer': _intString(initialOdometer),
+        'notes': notes,
+        'tags': tags,
+        'files': _filesJson(files),
+        'extraFields': ExtraField.jsonList(extraFields),
+        'equipmentRecordId': equipmentRecordId,
+      },
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `DELETE /api/vehicle/odometerrecords/delete?id=` → delete a reading.
   Future<void> deleteOdometerRecord(int id) => guard(() async {
-        final res = await _dio.delete<Map<String, dynamic>>(
-          Endpoints.odometerRecordsDelete,
-          queryParameters: {'id': id},
-        );
-        _ensureSuccess(res.data);
-      });
+    final res = await _dio.delete<Map<String, dynamic>>(
+      Endpoints.odometerRecordsDelete,
+      queryParameters: {'id': id},
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `GET /api/vehicle/supplyrecords?vehicleId=` → supply / part records.
   Future<List<SupplyRecord>> supplyRecords(int vehicleId) =>
@@ -668,27 +692,29 @@ class VehiclesRepository {
     String endpoint,
     int vehicleId,
     T Function(Map<String, dynamic>) fromJson,
-  ) =>
-      guard(() async {
-        final res = await _dio.get<List<dynamic>>(
-          endpoint,
-          queryParameters: {'vehicleId': vehicleId},
-        );
-        return _parseAll(res.data, fromJson, endpoint);
-      });
+  ) => guard(() async {
+    final res = await _dio.get<List<dynamic>>(
+      endpoint,
+      queryParameters: {'vehicleId': vehicleId},
+    );
+    return parseJsonList(res.data, fromJson);
+  });
 
   /// `POST {endpoint}?vehicleId=` with a JSON [body] → add a record. Shared by
   /// the per-type add methods (all uniform-CRUD endpoints, see §6).
-  Future<void> _add(String endpoint, int vehicleId, Map<String, dynamic> body) =>
-      guard(() async {
-        final res = await _dio.post<Map<String, dynamic>>(
-          endpoint,
-          queryParameters: {'vehicleId': vehicleId},
-          options: Options(contentType: Headers.jsonContentType),
-          data: body,
-        );
-        _ensureSuccess(res.data);
-      });
+  Future<void> _add(
+    String endpoint,
+    int vehicleId,
+    Map<String, dynamic> body,
+  ) => guard(() async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      endpoint,
+      queryParameters: {'vehicleId': vehicleId},
+      options: Options(contentType: Headers.jsonContentType),
+      data: body,
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `PUT {endpoint}` with a JSON [body] (including `id`) → update a record. The
   /// server resolves the record's vehicle from its id, so no query params.
@@ -704,42 +730,40 @@ class VehiclesRepository {
 
   /// `DELETE {endpoint}?id=` → delete a record by [id].
   Future<void> _delete(String endpoint, int id) => guard(() async {
-        final res = await _dio.delete<Map<String, dynamic>>(
-          endpoint,
-          queryParameters: {'id': id},
-        );
-        _ensureSuccess(res.data);
-      });
+    final res = await _dio.delete<Map<String, dynamic>>(
+      endpoint,
+      queryParameters: {'id': id},
+    );
+    _ensureSuccess(res.data);
+  });
 
   /// `POST /api/documents/upload` (multipart, field `documents`) → upload one or
   /// more files and return the resulting [Attachment]s, which the caller stores
   /// in a record's `files` list on add/update.
   Future<List<Attachment>> uploadDocuments(
     List<({String path, String name})> files,
-  ) =>
-      guard(() async {
-        // Camel case because the lowercase spelling is what some proxies in
-        // front of LubeLogger fail to parse; both are legal per RFC 7578.
-        final form = FormData(camelCaseContentDisposition: true);
-        for (final f in files) {
-          form.files.add(MapEntry(
-            'documents',
-            await MultipartFile.fromFile(f.path, filename: f.name),
-          ));
-        }
-        final res = await _dio.post<List<dynamic>>(
-          Endpoints.documentsUpload,
-          data: form,
-          options: Options(
-            sendTimeout: kUploadSendTimeout,
-            receiveTimeout: kUploadReceiveTimeout,
-          ),
-        );
-        return [
-          for (final e in res.data ?? const [])
-            if (e is Map<String, dynamic>) Attachment.fromJson(e),
-        ];
-      });
+  ) => guard(() async {
+    // Camel case because the lowercase spelling is what some proxies in
+    // front of LubeLogger fail to parse; both are legal per RFC 7578.
+    final form = FormData(camelCaseContentDisposition: true);
+    for (final f in files) {
+      form.files.add(
+        MapEntry(
+          'documents',
+          await MultipartFile.fromFile(f.path, filename: f.name),
+        ),
+      );
+    }
+    final res = await _dio.post<List<dynamic>>(
+      Endpoints.documentsUpload,
+      data: form,
+      options: Options(
+        sendTimeout: kUploadSendTimeout,
+        receiveTimeout: kUploadReceiveTimeout,
+      ),
+    );
+    return parseJsonList(res.data, Attachment.fromJson);
+  });
 
   /// Download an attachment to [savePath]. [location] is a record's
   /// `files[].location` (e.g. `/documents/<guid>.pdf`), resolved against the
@@ -752,9 +776,9 @@ class VehiclesRepository {
 
   /// `GET /api/info` → server metadata (currency, locale, date format).
   Future<ServerInfo> serverInfo() => guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>(Endpoints.info);
-        return ServerInfo.fromJson(res.data ?? const {});
-      });
+    final res = await _dio.get<Map<String, dynamic>>(Endpoints.info);
+    return ServerInfo.fromJson(res.data ?? const {});
+  });
 
   /// `GET /api/extrafields` → the household's custom-field template per record
   /// type. Types with nothing configured are absent from the response, so a
@@ -774,78 +798,46 @@ class VehiclesRepository {
 
   /// `GET /api/whoami` → the authenticated account (username, email, roles).
   Future<WhoAmI> whoAmI() => guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>(Endpoints.whoami);
-        final me = WhoAmI.fromJson(res.data ?? const {});
-        // The privilege level only, never who it belongs to — which is also why
-        // this endpoint is the one the HTTP probe refuses to sample. LubeLogger
-        // answers 401 both for a bad key and for a valid key without the scope,
-        // so the account's rank is what separates "the app is broken" from "this
-        // account may not do that", and it is the difference between a report
-        // about a missing button and a report about a missing permission.
-        DiagnosticRecorder.active?.add(
-          LogSource.http,
-          'account',
-          fields: {
-            'role': me.isRoot
-                ? 'root'
-                : me.isAdmin
-                    ? 'admin'
-                    : 'user',
-          },
-        );
-        return me;
-      });
+    final res = await _dio.get<Map<String, dynamic>>(Endpoints.whoami);
+    final me = WhoAmI.fromJson(res.data ?? const {});
+    // The privilege level only, never who it belongs to — which is also why
+    // this endpoint is the one the HTTP probe refuses to sample. LubeLogger
+    // answers 401 both for a bad key and for a valid key without the scope,
+    // so the account's rank is what separates "the app is broken" from "this
+    // account may not do that", and it is the difference between a report
+    // about a missing button and a report about a missing permission.
+    DiagnosticRecorder.active?.add(
+      LogSource.http,
+      'account',
+      fields: {
+        'role': me.isRoot
+            ? 'root'
+            : me.isAdmin
+            ? 'admin'
+            : 'user',
+      },
+    );
+    return me;
+  });
 
   /// `GET /api/version?checkForUpdate=1` → running vs. latest release version.
   Future<ServerVersion> serverVersion() => guard(() async {
-        final res = await _dio.get<Map<String, dynamic>>(
-          Endpoints.version,
-          queryParameters: {'checkForUpdate': true},
-        );
-        return ServerVersion.fromJson(res.data ?? const {});
-      });
+    final res = await _dio.get<Map<String, dynamic>>(
+      Endpoints.version,
+      queryParameters: {'checkForUpdate': true},
+    );
+    return ServerVersion.fromJson(res.data ?? const {});
+  });
 
   /// `GET /api/makebackup` → trigger a server-side backup (root only), returning
   /// the created file's path. Throws (403) for non-root callers.
   Future<String> makeBackup() => guard(() async {
-        final res = await _dio.get<String>(Endpoints.makeBackup);
-        return res.data ?? '';
-      });
+    final res = await _dio.get<String>(Endpoints.makeBackup);
+    return res.data ?? '';
+  });
 
   List<Vehicle> _parseVehicles(List<dynamic>? data) =>
-      _parseAll(data, Vehicle.fromJson, Endpoints.vehicles);
-
-  /// Turns a list endpoint's body into typed records, skipping any element that
-  /// is not a JSON object — and saying so in the diagnostic log when it does.
-  ///
-  /// A dropped element is the quietest failure the app has: the screen renders
-  /// the records that did parse, so "three of my fuel-ups are missing" arrives
-  /// as a screenshot of a working list. The HTTP probe reports how many the
-  /// server sent; only this knows how many survived.
-  List<T> _parseAll<T>(
-    List<dynamic>? data,
-    T Function(Map<String, dynamic>) fromJson,
-    String endpoint,
-  ) {
-    final received = data ?? const [];
-    final parsed = [
-      for (final e in received)
-        if (e is Map<String, dynamic>) fromJson(e),
-    ];
-    if (parsed.length != received.length) {
-      DiagnosticRecorder.active?.add(
-        LogSource.http,
-        'records_dropped',
-        lvl: LogLevel.warn,
-        fields: {
-          'path': endpoint,
-          'n': received.length,
-          'kept': parsed.length,
-        },
-      );
-    }
-    return parsed;
-  }
+      parseJsonList(data, Vehicle.fromJson);
 
   /// Shared field set for a gas record write (add or update); all values go out
   /// as strings, per the server's string-parsed export model.
@@ -866,21 +858,20 @@ class VehiclesRepository {
     required String tags,
     required List<Attachment> files,
     required List<ExtraField> extraFields,
-  }) =>
-      {
-        'date': _isoDate(date),
-        'odometer': _intString(odometer),
-        'fuelConsumed': fuelConsumed.toString(),
-        'cost': cost.toString(),
-        'isFillToFull': isFillToFull.toString(),
-        'missedFuelUp': missedFuelUp.toString(),
-        'startingSoc': startingSoc.toString(),
-        'endingSoc': endingSoc.toString(),
-        'notes': notes,
-        'tags': tags,
-        'files': _filesJson(files),
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  }) => {
+    'date': calendarDateToJson(date),
+    'odometer': _intString(odometer),
+    'fuelConsumed': fuelConsumed.toString(),
+    'cost': cost.toString(),
+    'isFillToFull': isFillToFull.toString(),
+    'missedFuelUp': missedFuelUp.toString(),
+    'startingSoc': startingSoc.toString(),
+    'endingSoc': endingSoc.toString(),
+    'notes': notes,
+    'tags': tags,
+    'files': _filesJson(files),
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Shared field set for a generic record write (add or update). Odometer is
   /// omitted when null (tax records have none); it goes out as a whole-number
@@ -894,17 +885,16 @@ class VehiclesRepository {
     required String tags,
     required List<Attachment> files,
     required List<ExtraField> extraFields,
-  }) =>
-      {
-        'date': _isoDate(date),
-        if (odometer != null) 'odometer': _intString(odometer),
-        'description': description,
-        'cost': cost.toString(),
-        'notes': notes,
-        'tags': tags,
-        'files': _filesJson(files),
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  }) => {
+    'date': calendarDateToJson(date),
+    if (odometer != null) 'odometer': _intString(odometer),
+    'description': description,
+    'cost': cost.toString(),
+    'notes': notes,
+    'tags': tags,
+    'files': _filesJson(files),
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Supply write fields. Quantity and cost are decimals; part number/supplier
   /// are free-form and may be empty.
@@ -919,19 +909,18 @@ class VehiclesRepository {
     String tags,
     List<Attachment> files,
     List<ExtraField> extraFields,
-  ) =>
-      {
-        'date': _isoDate(date),
-        'description': description,
-        'partNumber': partNumber,
-        'partSupplier': partSupplier,
-        'partQuantity': partQuantity.toString(),
-        'cost': cost.toString(),
-        'notes': notes,
-        'tags': tags,
-        'files': _filesJson(files),
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  ) => {
+    'date': calendarDateToJson(date),
+    'description': description,
+    'partNumber': partNumber,
+    'partSupplier': partSupplier,
+    'partQuantity': partQuantity.toString(),
+    'cost': cost.toString(),
+    'notes': notes,
+    'tags': tags,
+    'files': _filesJson(files),
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Plan write fields. Enums go out as their .NET names; there is no
   /// date/odometer/tags. The server sets DateCreated/DateModified itself.
@@ -944,17 +933,16 @@ class VehiclesRepository {
     String notes,
     List<Attachment> files,
     List<ExtraField> extraFields,
-  ) =>
-      {
-        'description': description,
-        'cost': cost.toString(),
-        'type': type.wireName,
-        'priority': priority.wireName,
-        'progress': progress.wireName,
-        'notes': notes,
-        'files': _filesJson(files),
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  ) => {
+    'description': description,
+    'cost': cost.toString(),
+    'type': type.wireName,
+    'priority': priority.wireName,
+    'progress': progress.wireName,
+    'notes': notes,
+    'files': _filesJson(files),
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Reminder write fields. Metric goes out as its .NET name; the due date and
   /// odometer are sent only when set (the caller supplies whichever the metric
@@ -966,15 +954,14 @@ class VehiclesRepository {
     num? dueOdometer,
     String notes,
     String tags,
-  ) =>
-      {
-        'description': description,
-        'metric': metric.wireName,
-        if (dueDate != null) 'dueDate': _isoDate(dueDate),
-        if (dueOdometer != null) 'dueOdometer': _intString(dueOdometer),
-        'notes': notes,
-        'tags': tags,
-      };
+  ) => {
+    'description': description,
+    'metric': metric.wireName,
+    if (dueDate != null) 'dueDate': calendarDateToJson(dueDate),
+    if (dueOdometer != null) 'dueOdometer': _intString(dueOdometer),
+    'notes': notes,
+    'tags': tags,
+  };
 
   /// Note write fields: a title ([description]) + body ([noteText]) + pin flag.
   static Map<String, dynamic> _noteBody(
@@ -984,15 +971,14 @@ class VehiclesRepository {
     String tags,
     List<Attachment> files,
     List<ExtraField> extraFields,
-  ) =>
-      {
-        'description': description,
-        'noteText': noteText,
-        'pinned': pinned.toString(),
-        'tags': tags,
-        'files': _filesJson(files),
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  ) => {
+    'description': description,
+    'noteText': noteText,
+    'pinned': pinned.toString(),
+    'tags': tags,
+    'files': _filesJson(files),
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Equipment write fields: a name ([description]) + equipped flag.
   static Map<String, dynamic> _equipmentBody(
@@ -1002,15 +988,14 @@ class VehiclesRepository {
     String tags,
     List<Attachment> files,
     List<ExtraField> extraFields,
-  ) =>
-      {
-        'description': description,
-        'isEquipped': isEquipped.toString(),
-        'notes': notes,
-        'tags': tags,
-        'files': _filesJson(files),
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  ) => {
+    'description': description,
+    'isEquipped': isEquipped.toString(),
+    'notes': notes,
+    'tags': tags,
+    'files': _filesJson(files),
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Shared field set for a vehicle write (add or update). All values go out as
   /// strings (bools as "true"/"false", which the server's `bool.Parse` accepts),
@@ -1026,33 +1011,27 @@ class VehiclesRepository {
     required String tags,
     required String identifier,
     required List<ExtraField> extraFields,
-  }) =>
-      {
-        'year': year.toString(),
-        'make': make,
-        'model': model,
-        'licensePlate': licensePlate,
-        'identifier': identifier,
-        'fuelType': fuelType,
-        'useEngineHours': useHours.toString(),
-        'odometerOptional': odometerOptional.toString(),
-        'tags': tags,
-        'extraFields': ExtraField.jsonList(extraFields),
-      };
+  }) => {
+    'year': year.toString(),
+    'make': make,
+    'model': model,
+    'licensePlate': licensePlate,
+    'identifier': identifier,
+    'fuelType': fuelType,
+    'useEngineHours': useHours.toString(),
+    'odometerOptional': odometerOptional.toString(),
+    'tags': tags,
+    'extraFields': ExtraField.jsonList(extraFields),
+  };
 
   /// Serialize a record's attachments for a write body's `files` field.
-  static List<Map<String, dynamic>> _filesJson(List<Attachment> files) =>
-      [for (final f in files) f.toJson()];
+  static List<Map<String, dynamic>> _filesJson(List<Attachment> files) => [
+    for (final f in files) f.toJson(),
+  ];
 
   /// Odometer values are stored as integers server-side (`int.Parse`); emit a
   /// whole-number string so a `317240.0`-style double never reaches the parser.
   static String _intString(num value) => value.round().toString();
-
-  /// `yyyy-MM-dd` — unambiguous for the server's invariant `DateTime.Parse`.
-  static String _isoDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
 
   /// A write's `OperationResponse` reports failure in-band with HTTP 200
   /// (`{success:false, message}`); surface it as an [ApiException].

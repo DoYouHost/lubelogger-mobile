@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lubelogger_mobile/app.dart';
 import 'package:lubelogger_mobile/core/models/vehicle_info.dart';
+import 'package:lubelogger_mobile/features/bug_report/report_wiring.dart';
 import 'package:lubelogger_mobile/features/garage/widgets/vehicle_card.dart';
 import 'package:lubelogger_mobile/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// not cost is the layout itself: every vehicle on screen, the add tile still
 /// riding along at the end, and the swipe action still opening.
 void main() {
-  Future<void> pumpGarage(WidgetTester tester, List<VehicleInfo> vehicles) async {
+  Future<void> pumpGarage(
+    WidgetTester tester,
+    List<VehicleInfo> vehicles,
+  ) async {
     SharedPreferences.setMockInitialValues({
       'server_profile': jsonEncode({'baseUrl': 'https://lube.invalid'}),
     });
@@ -23,6 +27,7 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
+          reportBindingsOverride,
           garageProvider.overrideWith((ref) async => vehicles),
         ],
         child: const LubeLoggerApp(),

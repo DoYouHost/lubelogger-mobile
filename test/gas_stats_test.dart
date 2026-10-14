@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lubelogger_mobile/core/format/chart_range.dart';
 import 'package:lubelogger_mobile/core/format/gas_stats.dart';
 import 'package:lubelogger_mobile/core/models/gas_record.dart';
 
@@ -8,16 +9,22 @@ GasRecord rec(
   double fuel, {
   bool full = true,
   bool missed = false,
-}) =>
-    GasRecord(
-      id: 0,
-      date: DateTime.parse(date),
-      odometer: odo,
-      fuelConsumed: fuel,
-      cost: 0,
-      isFillToFull: full,
-      missedFuelUp: missed,
-    );
+}) => GasRecord(
+  id: 0,
+  date: DateTime.parse(date),
+  odometer: odo,
+  fuelConsumed: fuel,
+  cost: 0,
+  isFillToFull: full,
+  missedFuelUp: missed,
+);
+
+/// Calendar months [first] through [last] of 2025–2026, as a chart window.
+ChartWindow months(DateTime first, DateTime last) => ChartWindow(
+  start: first,
+  end: DateTime(last.year, last.month + 1, 0),
+  bucket: ChartBucket.month,
+);
 
 void main() {
   group('GasStats.from', () {
@@ -53,8 +60,10 @@ void main() {
         rec('2026-02-01', 1100, 10, full: false),
         rec('2026-03-01', 1300, 15),
       ]);
-      final march = stats.monthly.firstWhere((m) => m.month == 3);
-      expect(march.rawRatio, closeTo(300 / 25, 1e-9));
+      final byMonth = stats.economyByBucket(
+        months(DateTime(2026, 3), DateTime(2026, 3)),
+      );
+      expect(byMonth.single, closeTo(300 / 25, 1e-9));
     });
 
     test('missed fuel-up resets the accumulator', () {
@@ -66,9 +75,41 @@ void main() {
         rec('2026-03-01', 1400, 20),
       ]);
       // Only the 1200→1400 interval resolves: 200 km / 20 L.
-      final march = stats.monthly.firstWhere((m) => m.month == 3);
-      expect(march.rawRatio, closeTo(200 / 20, 1e-9));
-      expect(stats.monthly.where((m) => m.month == 2), isEmpty);
+      final byMonth = stats.economyByBucket(
+        months(DateTime(2026, 2), DateTime(2026, 3)),
+      );
+      expect(byMonth.first, isNull);
+      expect(byMonth.last, closeTo(200 / 20, 1e-9));
+    });
+
+    test('economy keeps the same month of different years apart', () {
+      final stats = GasStats.from([
+        rec('2025-02-01', 1000, 18), // primer
+        rec('2025-03-01', 1200, 20),
+        rec('2026-03-01', 1500, 10),
+      ]);
+      final byMonth = stats.economyByBucket(
+        months(DateTime(2025, 3), DateTime(2026, 3)),
+      );
+      expect(byMonth.first, closeTo(200 / 20, 1e-9));
+      expect(byMonth.last, closeTo(300 / 10, 1e-9));
+      expect(byMonth.whereType<double>(), hasLength(2));
+    });
+
+    test('fill-ups in one slot are averaged, the window average spans all', () {
+      final stats = GasStats.from([
+        rec('2026-03-01', 1000, 18), // primer
+        rec('2026-03-10', 1200, 20), // 10
+        rec('2026-03-20', 1500, 20), // 15
+        rec('2026-04-05', 1700, 10), // 20
+      ]);
+      final window = months(DateTime(2026, 3), DateTime(2026, 4));
+      expect(stats.economyByBucket(window), [12.5, 20]);
+      expect(stats.averageRatioIn(window), closeTo(15, 1e-9));
+      expect(
+        stats.averageRatioIn(months(DateTime(2026, 5), DateTime(2026, 5))),
+        isNull,
+      );
     });
 
     test('empty log yields no economy', () {
@@ -76,7 +117,7 @@ void main() {
       expect(stats.hasEconomy, isFalse);
       expect(stats.averageRawRatio, isNull);
       expect(stats.distanceSpan, 0);
-      expect(stats.monthly, isEmpty);
+      expect(stats.economyPoints, isEmpty);
     });
   });
 
@@ -84,24 +125,24 @@ void main() {
     // A 40 kWh pack: each session adds 40 × the charge it gains, so the pack
     // size the server infers per record lands back on 40.
     GasRecord charge(String date, double odo, int from, int to) => GasRecord(
-          id: 0,
-          date: DateTime.parse(date),
-          odometer: odo,
-          fuelConsumed: 40 * (to - from) / 100,
-          cost: 0,
-          isFillToFull: true,
-          missedFuelUp: false,
-          startingSoc: from,
-          endingSoc: to,
-        );
+      id: 0,
+      date: DateTime.parse(date),
+      odometer: odo,
+      fuelConsumed: 40 * (to - from) / 100,
+      cost: 0,
+      isFillToFull: true,
+      missedFuelUp: false,
+      startingSoc: from,
+      endingSoc: to,
+    );
 
     test('consumption is the charge lost since the previous session', () {
       // Charged to 80%, driven down to 20% → 60% of a 40 kWh pack = 24 kWh,
       // over 200 km. The 20 kWh this session *added* is not what was used.
-      final rows = fuelRows(
-        [charge('2026-01-01', 1000, 30, 80), charge('2026-02-01', 1200, 20, 70)],
-        isElectric: true,
-      );
+      final rows = fuelRows([
+        charge('2026-01-01', 1000, 30, 80),
+        charge('2026-02-01', 1200, 20, 70),
+      ], isElectric: true);
 
       expect(rows.last.rawConsumption, closeTo(24, 1e-9));
       expect(rows.last.rawRatio, closeTo(200 / 24, 1e-9));
@@ -110,30 +151,33 @@ void main() {
     test('the same log read as combustion uses the record amount instead', () {
       // Guards the flag itself: without it the economy is computed off the
       // energy put in (20 kWh), which is the bug the derivation exists to fix.
-      final rows = fuelRows(
-        [charge('2026-01-01', 1000, 30, 80), charge('2026-02-01', 1200, 20, 70)],
-      );
+      final rows = fuelRows([
+        charge('2026-01-01', 1000, 30, 80),
+        charge('2026-02-01', 1200, 20, 70),
+      ]);
       expect(rows.last.rawConsumption, closeTo(20, 1e-9));
     });
 
     test('a session that adds no charge sizes no pack', () {
       // Equal ends divide by zero on the server; here they contribute nothing.
-      final rows = fuelRows(
-        [charge('2026-01-01', 1000, 30, 80), charge('2026-02-01', 1200, 50, 50)],
-        isElectric: true,
-      );
+      final rows = fuelRows([
+        charge('2026-01-01', 1000, 30, 80),
+        charge('2026-02-01', 1200, 50, 50),
+      ], isElectric: true);
       expect(rows.last.rawConsumption, 0);
       expect(rows.last.rawRatio, isNull);
     });
 
-    test('charging past the previous level consumes nothing, never a negative',
-        () {
-      final rows = fuelRows(
-        [charge('2026-01-01', 1000, 30, 60), charge('2026-02-01', 1200, 70, 90)],
-        isElectric: true,
-      );
-      expect(rows.last.rawConsumption, 0);
-    });
+    test(
+      'charging past the previous level consumes nothing, never a negative',
+      () {
+        final rows = fuelRows([
+          charge('2026-01-01', 1000, 30, 60),
+          charge('2026-02-01', 1200, 70, 90),
+        ], isElectric: true);
+        expect(rows.last.rawConsumption, 0);
+      },
+    );
 
     test('fill-to-full does not gate a battery', () {
       // A partial fill defers a tank's economy to the next full one; a charge is
@@ -157,14 +201,11 @@ void main() {
     });
 
     test('the lifetime average uses the derived consumption', () {
-      final stats = GasStats.from(
-        [
-          charge('2026-01-01', 1000, 30, 80),
-          charge('2026-02-01', 1200, 20, 70),
-          charge('2026-03-01', 1500, 20, 70),
-        ],
-        isElectric: true,
-      );
+      final stats = GasStats.from([
+        charge('2026-01-01', 1000, 30, 80),
+        charge('2026-02-01', 1200, 20, 70),
+        charge('2026-03-01', 1500, 20, 70),
+      ], isElectric: true);
       expect(stats.totalRawDistance, 500);
       // 80% → 20% is 24 kWh; the third session starts from 70%, so 70% → 20%
       // is 20. Each drop is measured from where the previous one left off.

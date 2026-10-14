@@ -13,6 +13,10 @@ import 'package:lubelogger_mobile/data/vehicles_repository.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/add_odometer_form.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:lubelogger_mobile/providers.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 class _WriteCapturingAdapter implements HttpClientAdapter {
   final writes = <RequestOptions>[];
@@ -117,17 +121,20 @@ void main() {
   }
 
   Future<void> save(WidgetTester tester) async {
-    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await tester.tap(find.widgetWithText(FilledButton, en.actionAdd));
     await tester.pumpAndSettle();
   }
 
   testWidgets('the last reading is offered as a hint', (tester) async {
-    await pump(tester, records: [
-      record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
-      record(id: 2, odometer: 64200, date: DateTime(2026, 1, 1)),
-    ]);
+    await pump(
+      tester,
+      records: [
+        record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
+        record(id: 2, odometer: 64200, date: DateTime(2026, 1, 1)),
+      ],
+    );
 
-    expect(find.text('Last reading: 67,650 km'), findsOneWidget);
+    expect(find.text(en.formOdometerLast('67,650 km')), findsOneWidget);
   });
 
   testWidgets('a garage that logs only fuel-ups falls back to the server', (
@@ -137,65 +144,72 @@ void main() {
     // in with fill-ups and services.
     await pump(tester, vehicleInfo: info(88000));
 
-    expect(find.text('Last reading: 88,000 km'), findsOneWidget);
+    expect(find.text(en.formOdometerLast('88,000 km')), findsOneWidget);
   });
 
   testWidgets('a lower reading warns while it is typed', (tester) async {
-    await pump(tester, records: [
-      record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
-    ]);
+    await pump(
+      tester,
+      records: [record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1))],
+    );
 
     await type(tester, '6765'); // a dropped digit
-    expect(find.text('Below the last reading (67,650 km).'), findsOneWidget);
-    expect(find.text('Last reading: 67,650 km'), findsNothing);
+    expect(find.text(en.formOdometerBackwards('67,650 km')), findsOneWidget);
+    expect(find.text(en.formOdometerLast('67,650 km')), findsNothing);
   });
 
   testWidgets('a higher reading keeps the plain hint', (tester) async {
-    await pump(tester, records: [
-      record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
-    ]);
+    await pump(
+      tester,
+      records: [record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1))],
+    );
 
     await type(tester, '67900');
-    expect(find.text('Last reading: 67,650 km'), findsOneWidget);
+    expect(find.text(en.formOdometerLast('67,650 km')), findsOneWidget);
   });
 
-  testWidgets('saving a lower reading asks first, and a cancel writes nothing',
-      (tester) async {
-    final adapter = await pump(tester, records: [
-      record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
-    ]);
+  testWidgets(
+    'saving a lower reading asks first, and a cancel writes nothing',
+    (tester) async {
+      final adapter = await pump(
+        tester,
+        records: [record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1))],
+      );
 
-    await type(tester, '6765');
-    await save(tester);
+      await type(tester, '6765');
+      await save(tester);
 
-    expect(find.text('Reading goes backwards'), findsOneWidget);
-    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
-    await tester.pumpAndSettle();
-    expect(adapter.writes, isEmpty);
-  });
+      expect(find.text(en.formOdometerBackwardsTitle), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, en.actionCancel));
+      await tester.pumpAndSettle();
+      expect(adapter.writes, isEmpty);
+    },
+  );
 
   testWidgets('confirming saves it anyway', (tester) async {
-    final adapter = await pump(tester, records: [
-      record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
-    ]);
+    final adapter = await pump(
+      tester,
+      records: [record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1))],
+    );
 
     await type(tester, '6765');
     await save(tester);
-    await tester.tap(find.widgetWithText(TextButton, 'Save anyway'));
+    await tester.tap(find.widgetWithText(FilledButton, en.actionSaveAnyway));
     await tester.pumpAndSettle();
 
     expect(adapter.writes, hasLength(1));
   });
 
   testWidgets('a rising reading is never questioned', (tester) async {
-    final adapter = await pump(tester, records: [
-      record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1)),
-    ]);
+    final adapter = await pump(
+      tester,
+      records: [record(id: 1, odometer: 67650, date: DateTime(2026, 4, 1))],
+    );
 
     await type(tester, '67900');
     await save(tester);
 
-    expect(find.text('Reading goes backwards'), findsNothing);
+    expect(find.text(en.formOdometerBackwardsTitle), findsNothing);
     expect(adapter.writes, hasLength(1));
   });
 
@@ -216,6 +230,6 @@ void main() {
       ],
     );
 
-    expect(find.text('Last reading: 61,000 km'), findsOneWidget);
+    expect(find.text(en.formOdometerLast('61,000 km')), findsOneWidget);
   });
 }
