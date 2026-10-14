@@ -216,12 +216,18 @@ build-aab name='' code='': (_build "appbundle" name code)
 aab-show *paths:
     @dart run app_guards:aab_versions {{paths}}
 
+# Read-only. Needs uv and the service-account key (tool/play.toml says where).
+[doc('list the Google Play tracks and the releases on them')]
+[group('3-build')]
+play-tracks:
+    @dart run app_guards:play tracks
+
 [doc('delete local build outputs')]
 [group('3-build')]
 clean:
     flutter clean
 
-# ---- 4-release — writes to the checked-out branch and to GitHub ----
+# ---- 4-release — writes to the checked-out branch, to GitHub and to Google Play ----
 #
 # `ship` and `ship-dev` produce the same two artifacts in the same order; they
 # differ only in where the version comes from. Both build the Play bundle
@@ -305,8 +311,8 @@ _upload-asset tag file:
     fi
 
 # Produces everything a stable version needs: the APK for the GitHub release (and
-# Obtainium), plus the Play bundle in build/dist/, which you upload to Play by
-# hand.
+# Obtainium), plus the Play bundle released to internal testing. Promoting it
+# to production stays a click in the Play Console.
 # usage: just ship X.Y.Z
 [doc('bump, test, build and publish a stable release')]
 [group('4-release')]
@@ -317,6 +323,7 @@ ship ver:
     just build-aab
     just release-publish {{ver}}
     just aab-show {{aab}}
+    just play-internal
 
 # Test, build and publish the current commit as a dev prerelease.
 #
@@ -332,7 +339,7 @@ ship ver:
 # points at a SHA. Obtainium hides prereleases by default, so a tester opts in
 # with one switch and everyone else keeps seeing stable only.
 #
-# The Play bundle stays in build/dist/ for the internal testing track; pass
+# The Play bundle goes out to internal testing as the last step; pass
 # `bundle=no` when a build is only meant for Obtainium. The parameter is `bundle`
 # and not `aab` because a parameter shadows the global of the same name for the
 # whole recipe, which would expand `{{aab}}` to `yes`.
@@ -467,8 +474,8 @@ ship-dev target='' bundle='yes':
     git fetch --tags origin
     echo "Published $tag"
     if [ '{{bundle}}' != 'no' ]; then
-        echo "Upload to Play internal testing ($name):"
         just aab-show {{aab}}
+        just play-internal
     fi
 
 # Assumes the APK is already built.
@@ -497,6 +504,15 @@ release-publish ver:
     just _upload-asset "v{{ver}}" {{apk}}
     # Sync the server-created tag back to the local repo.
     git fetch --tags origin
+
+# Releases the Play bundle in build/dist to internal testing. Safe to re-run:
+# a versionCode already on the track is skipped.
+# Needs uv and the service-account key (tool/play.toml says where).
+# usage: just play-internal [--dry-run]
+[doc('release the built Play bundle to internal testing')]
+[group('4-release')]
+play-internal *flags:
+    dart run app_guards:play internal {{flags}} {{aab}}
 
 # ---- 5-danger — deletes what cannot be restored ----
 #
