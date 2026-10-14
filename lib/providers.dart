@@ -14,6 +14,7 @@ import 'core/app_localizations_loader.dart';
 import 'core/auth/auth_service.dart';
 import 'core/auth/whoami.dart';
 import 'core/auth/credentials_store.dart';
+import 'core/cache/http_cache.dart';
 import 'core/cache/offline_interceptor.dart';
 import 'core/cache/photo_cache.dart';
 import 'core/cache/sync_service.dart';
@@ -253,9 +254,11 @@ class ServerProfileNotifier extends Notifier<ServerProfile?> {
   /// background pass, and remove the launcher shortcuts (none of them can work
   /// without credentials).
   Future<void> clear() async {
-    // Before the profile goes: the cache is keyed by the server it came from,
-    // and the client that knows which one that is is built from the profile.
-    await ref.read(apiClientProvider).cache.clear();
+    // Before the profile goes: the cache is keyed by the server it came from.
+    // Not via apiClientProvider — it watches this notifier, so reading it here
+    // is a CircularDependencyError.
+    final profile = state;
+    if (profile != null) await HttpCache(baseUrl: profile.baseUrl).clear();
     await ref.read(writeQueueProvider).clear();
     await ref.read(settingsRepositoryProvider).clearProfile();
     await ref.read(credentialsStoreProvider).clearAll();

@@ -1,0 +1,13 @@
+# lubelogger's half of `dart run app_guards:play` (`just play-tracks`,
+# `just play-internal`).
+
+# The frozen applicationId — the Play listing's identity, see
+# android/app/build.gradle.kts.
+package = "page.codeberg.doyouhost.lubelogger_mobile"
+
+# The service-account key, outside the repo; PLAY_SA_KEY overrides it.
+key = "~/.config/lubelogger/play-sa.json"
+
+[[bands]]
+from = 0
+track = "internal"
