@@ -99,7 +99,12 @@ class _AddRecordGrid extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              padding: const EdgeInsets.fromLTRB(
+                DashSpace.xl,
+                0,
+                DashSpace.xl,
+                DashSpace.md,
+              ),
               child: Text(
                 l10n.addRecordTitle,
                 style: TextStyle(
@@ -114,11 +119,16 @@ class _AddRecordGrid extends StatelessWidget {
             Flexible(
               child: GridView(
                 shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  DashSpace.lg,
+                  0,
+                  DashSpace.lg,
+                  DashSpace.sm,
+                ),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
+                  mainAxisSpacing: DashSpace.md,
+                  crossAxisSpacing: DashSpace.md,
                   mainAxisExtent: 60,
                 ),
                 children: [
@@ -159,7 +169,10 @@ class _RecordTypeTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: radius,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: DashSpace.md,
+            vertical: DashSpace.sm,
+          ),
           child: Row(
             children: [
               CircleAvatar(
@@ -168,7 +181,7 @@ class _RecordTypeTile extends StatelessWidget {
                 foregroundColor: t.accentGoldInk,
                 child: Icon(tab.icon, size: 18),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: DashSpace.md),
               Expanded(
                 child: Text(
                   tab.label(l10n),

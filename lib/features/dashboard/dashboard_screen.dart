@@ -1,3 +1,4 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -108,7 +109,7 @@ class _DashboardBody extends ConsumerWidget {
               ref.read(chartRangeOverridesProvider.notifier).set(key, picked);
             }
           },
-        ),
+        ).tagged('dashboard.chartRange'),
       );
     }
 
@@ -246,7 +247,12 @@ class _DashboardBody extends ConsumerWidget {
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          padding: const EdgeInsets.fromLTRB(
+            DashSpace.lg,
+            DashSpace.lg,
+            DashSpace.lg,
+            DashSpace.lg,
+          ),
           sliver: SliverToBoxAdapter(
             child: _StatBlock(
               info: info,
@@ -260,8 +266,8 @@ class _DashboardBody extends ConsumerWidget {
           padding: EdgeInsets.fromLTRB(16, 0, 16, fabScrollClearance(context)),
           sliver: SliverResponsiveCards(
             maxColumns: 2,
-            spacing: 16,
-            runSpacing: 16,
+            spacing: DashSpace.lg,
+            runSpacing: DashSpace.lg,
             itemCount: charts.length,
             itemBuilder: (context, index) => charts[index],
           ),
@@ -382,7 +388,7 @@ class _StatBlock extends ConsumerWidget {
                 Row(
                   children: [
                     for (final (j, _) in line.indexed) ...[
-                      if (j > 0) const SizedBox(width: 16),
+                      if (j > 0) const SizedBox(width: DashSpace.lg),
                       Expanded(child: divider),
                     ],
                   ],
@@ -392,7 +398,7 @@ class _StatBlock extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final (j, row) in line.indexed) ...[
-                      if (j > 0) const SizedBox(width: 16),
+                      if (j > 0) const SizedBox(width: DashSpace.lg),
                       Expanded(child: row),
                     ],
                   ],
@@ -448,7 +454,10 @@ class _StatBlock extends ConsumerWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DashSpace.lg,
+                vertical: DashSpace.sm,
+              ),
               child: content,
             ),
           ],
@@ -498,10 +507,10 @@ class _StatRow extends StatelessWidget {
               ),
               child: Icon(icon, size: 17, color: t.accentInk),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: DashSpace.md),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.symmetric(vertical: DashSpace.sm),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -531,7 +540,7 @@ class _StatRow extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: DashSpace.md),
             Text(
               value,
               style: TextStyle(

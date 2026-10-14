@@ -105,7 +105,7 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
               ? l10n.validationRequired
               : null,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: DashSpace.sm),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.formEquipmentEquipped),
@@ -114,7 +114,7 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
               ? null
               : (v) => setState(() => _isEquipped = v),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DashSpace.sm),
         TextFormField(
           controller: _notes,
           enabled: !_submitting,
@@ -122,20 +122,20 @@ class _AddEquipmentFormState extends ConsumerState<_AddEquipmentForm> {
           maxLines: 4,
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _tags,
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         ExtraFieldsField(
           recordType: ExtraFieldRecordType.equipment,
           initial: _extraFields,
           enabled: !_submitting,
           onChanged: (fields) => _extraFields = fields,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         AttachmentsField(
           initial: _files,
           enabled: !_submitting,

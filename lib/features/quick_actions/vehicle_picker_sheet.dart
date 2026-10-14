@@ -49,7 +49,12 @@ class _VehiclePickerSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              padding: const EdgeInsets.fromLTRB(
+                DashSpace.xl,
+                DashSpace.xs,
+                DashSpace.xl,
+                DashSpace.md,
+              ),
               child: Text(
                 l10n.quickActionSelectVehicle,
                 style: TextStyle(
@@ -63,7 +68,7 @@ class _VehiclePickerSheet extends ConsumerWidget {
             Flexible(
               child: ListView.builder(
                 shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: DashSpace.sm),
                 itemCount: vehicles.length,
                 itemBuilder: (context, i) {
                   final vehicle = vehicles[i].vehicle;

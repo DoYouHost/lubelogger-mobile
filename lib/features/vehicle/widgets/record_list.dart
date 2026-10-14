@@ -68,7 +68,7 @@ class RecordCard extends StatelessWidget {
     final t = DashTokens.of(context);
     final radius = BorderRadius.circular(14);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: DashSpace.sm),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: t.subCard,
@@ -83,7 +83,10 @@ class RecordCard extends StatelessWidget {
             onTap: onTap,
             borderRadius: radius,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DashSpace.md,
+                vertical: DashSpace.md,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -105,7 +108,7 @@ class RecordCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: DashSpace.sm),
                       Text(
                         headline,
                         style: TextStyle(
@@ -118,7 +121,7 @@ class RecordCard extends StatelessWidget {
                     ],
                   ),
                   if (description != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: DashSpace.xs),
                     Text(
                       description!,
                       maxLines: 2,
@@ -132,25 +135,25 @@ class RecordCard extends StatelessWidget {
                     ),
                   ],
                   if (meta.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: DashSpace.sm),
                     Wrap(
-                      spacing: 14,
-                      runSpacing: 4,
+                      spacing: DashSpace.lg,
+                      runSpacing: DashSpace.xs,
                       children: [for (final m in meta) _MetaItem(item: m)],
                     ),
                   ],
                   if (tags.isNotEmpty && onTagTap != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: DashSpace.sm),
                     Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
+                      spacing: DashSpace.sm,
+                      runSpacing: DashSpace.xs,
                       children: [
                         for (final tag in tags)
                           RecordTagChip(
                             tag: tag,
                             selected: activeTags.contains(tag),
                             onTap: () => onTagTap!(tag),
-                          ),
+                          ).tagged('records.tag'),
                       ],
                     ),
                   ],
@@ -179,7 +182,7 @@ class _MetaItem extends StatelessWidget {
       children: [
         Icon(item.icon, size: 14, color: t.textTertiary),
         if (item.value.isNotEmpty) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: DashSpace.xs),
           Text(
             item.value,
             style: TextStyle(
@@ -363,7 +366,7 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               bar,
-              const SizedBox(height: 24),
+              const SizedBox(height: DashSpace.xl),
               EmptyStateView(
                 message: controls.filtering
                     ? l10n.recordsNoMatches
@@ -375,7 +378,7 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
                 TextButton(
                   onPressed: _clearFilters,
                   child: Text(l10n.recordsClearFilters),
-                ),
+                ).tagged('records.clearFilters'),
             ],
           ),
         ),
@@ -397,7 +400,12 @@ class _RecordsTabBodyState<T> extends State<RecordsTabBody<T>> {
       slivers: [
         if (top != null)
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+              DashSpace.lg,
+              DashSpace.sm,
+              DashSpace.lg,
+              0,
+            ),
             sliver: SliverToBoxAdapter(child: top),
           ),
         SliverPadding(
@@ -426,8 +434,12 @@ class SummaryPillRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Wrap(spacing: 6, runSpacing: 6, children: pills),
+      padding: const EdgeInsets.only(bottom: DashSpace.md),
+      child: Wrap(
+        spacing: DashSpace.sm,
+        runSpacing: DashSpace.sm,
+        children: pills,
+      ),
     );
   }
 }

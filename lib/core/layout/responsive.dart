@@ -88,7 +88,9 @@ class SliverResponsiveCards extends StatelessWidget {
       itemCount: rows,
       itemBuilder: (context, row) => Padding(
         // Like the wrap's runSpacing: between rows only, never trailing.
-        padding: EdgeInsets.only(bottom: row == rows - 1 ? 0 : runSpacing),
+        padding: row == rows - 1
+            ? EdgeInsets.zero
+            : EdgeInsets.only(bottom: runSpacing),
         child: columns == 1
             ? itemBuilder(context, row)
             : _row(context, row, columns),

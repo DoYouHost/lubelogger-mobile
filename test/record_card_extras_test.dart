@@ -8,6 +8,10 @@ import 'package:lubelogger_mobile/core/settings/units_settings.dart';
 import 'package:lubelogger_mobile/features/vehicle/widgets/record_tabs.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:lubelogger_mobile/providers.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 /// A record's attachments and its note are stored, editable — and used to be
 /// invisible on the card, so the only way to learn a record had photos on it
@@ -61,7 +65,7 @@ void main() {
 
     expect(find.byIcon(Icons.attach_file), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
-    expect(find.byTooltip('3 attachments'), findsOneWidget);
+    expect(find.byTooltip(en.cardAttachments(3)), findsOneWidget);
   });
 
   testWidgets('a record with a note is flagged, without printing it', (
@@ -70,7 +74,7 @@ void main() {
     await pump(tester, [record(id: 1, notes: 'ordered the wrong filter')]);
 
     expect(find.byIcon(Icons.notes), findsOneWidget);
-    expect(find.byTooltip('Has a note'), findsOneWidget);
+    expect(find.byTooltip(en.cardHasNote), findsOneWidget);
     // The note is a flag, not content: the card would otherwise show two blocks
     // of prose (description + note) and stop being scannable.
     expect(find.text('ordered the wrong filter'), findsNothing);

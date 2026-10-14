@@ -5,6 +5,10 @@ import 'package:lubelogger_mobile/core/format/expense_timeline.dart';
 import 'package:lubelogger_mobile/features/dashboard/widgets/chart_range_sheet.dart';
 import 'package:lubelogger_mobile/features/dashboard/widgets/dashboard_charts.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 void main() {
   Future<void> pump(WidgetTester tester, Widget chart) async {
@@ -65,7 +69,7 @@ void main() {
           ],
         ),
       );
-      expect(find.text('Tax'), findsOneWidget);
+      expect(find.text(en.catTax), findsOneWidget);
       expect(find.text(r'$0'), findsOneWidget);
       expect(find.text('75.0%'), findsOneWidget);
       expect(find.text('25.0%'), findsOneWidget);
@@ -90,7 +94,7 @@ void main() {
         ),
       );
       expect(find.text('nothing'), findsOneWidget);
-      expect(find.text('Fuel'), findsNothing);
+      expect(find.text(en.catFuel), findsNothing);
     });
   });
 
@@ -103,14 +107,14 @@ void main() {
     testWidgets('no reminders at all shows the empty label', (tester) async {
       await pump(tester, UrgencyChart(items: items(0), emptyLabel: 'nothing'));
       expect(find.text('nothing'), findsOneWidget);
-      expect(find.text('Past Due'), findsNothing);
+      expect(find.text(en.urgencyPastDue), findsNothing);
     });
 
     testWidgets('every level gets a tile, zero included', (tester) async {
       await pump(tester, UrgencyChart(items: items(3), emptyLabel: 'nothing'));
-      expect(find.text('Past Due'), findsOneWidget);
+      expect(find.text(en.urgencyPastDue), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
-      expect(find.text('Not Urgent'), findsOneWidget);
+      expect(find.text(en.urgencyNotUrgent), findsOneWidget);
       expect(find.text('0'), findsOneWidget);
     });
   });
@@ -155,8 +159,8 @@ void main() {
       );
       expect(find.text(r'$100'), findsOneWidget);
       expect(find.text('500 km'), findsOneWidget);
-      expect(find.text('Fuel'), findsOneWidget);
-      expect(find.text('Repairs'), findsNothing);
+      expect(find.text(en.catFuel), findsOneWidget);
+      expect(find.text(en.catRepairs), findsNothing);
       expect(find.text('nothing'), findsNothing);
     });
 
@@ -170,12 +174,12 @@ void main() {
             const ExpenseSlot(costs: {ExpenseCategory.fuel: 10}, distance: 0),
         ]),
       );
-      expect(find.text('Distance'), findsNothing);
+      expect(find.text(en.settingsDistance), findsNothing);
 
       await tapSlot(tester, ExpenseDistanceChart, last: true);
       await tester.pump();
       expect(find.text('Jan 2026'), findsOneWidget);
-      expect(find.text('Distance'), findsNothing);
+      expect(find.text(en.settingsDistance), findsNothing);
     });
 
     testWidgets('an empty slot opens no tooltip', (tester) async {
@@ -211,8 +215,8 @@ void main() {
       await tester.pump();
       expect(find.text('Jan 2026'), findsOneWidget);
       expect(find.text(r'$120'), findsOneWidget);
-      expect(find.text('Total'), findsOneWidget);
-      expect(find.text('Repairs'), findsNWidgets(2)); // legend + tooltip
+      expect(find.text(en.chartTotal), findsOneWidget);
+      expect(find.text(en.catRepairs), findsNWidgets(2)); // legend + tooltip
 
       await tapSlot(tester, ExpenseDistanceChart, last: true);
       await tester.pump();
@@ -319,8 +323,8 @@ void main() {
         tester,
         current: const PresetRange(ChartRangePreset.threeMonths),
         choose: () async {
-          expect(find.text('default'), findsOneWidget);
-          await tester.tap(find.text('6 months'));
+          expect(find.text(en.chartRangeDefault), findsOneWidget);
+          await tester.tap(find.text(en.chartRangeSixMonths));
         },
       );
       expect(picked, const PresetRange(ChartRangePreset.sixMonths));

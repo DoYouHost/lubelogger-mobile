@@ -57,7 +57,12 @@ class RecordFormScaffold extends StatelessWidget {
       // Lift the sheet above the keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.xl,
+          DashSpace.xs,
+          DashSpace.xl,
+          DashSpace.xl,
+        ),
         child: Form(
           key: formKey,
           child: Column(
@@ -91,11 +96,14 @@ class RecordFormScaffold extends StatelessWidget {
                   ).tagged('form.close'),
                 ],
               ),
-              const SizedBox(height: 8),
-              if (notice != null) ...[notice!, const SizedBox(height: 14)],
+              const SizedBox(height: DashSpace.sm),
+              if (notice != null) ...[
+                notice!,
+                const SizedBox(height: DashSpace.lg),
+              ],
               ...fields,
               if (error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DashSpace.md),
                 Text(
                   error!,
                   style: TextStyle(
@@ -104,7 +112,7 @@ class RecordFormScaffold extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: DashSpace.xl),
               Row(
                 children: [
                   Expanded(
@@ -113,7 +121,7 @@ class RecordFormScaffold extends StatelessWidget {
                       child: Text(l10n.actionCancel),
                     ).tagged('form.cancel'),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: DashSpace.md),
                   Expanded(
                     child: FilledButton(
                       onPressed: submitting || onSubmit == null

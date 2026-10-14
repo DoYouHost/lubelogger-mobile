@@ -102,7 +102,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUnitsMetricNote =>
-      'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.';
+      'Set the units your LubeLogger server stores values in (metric = km & liters). The app converts them to your chosen display units.';
 
   @override
   String get settingsVisibleTabs => 'Visible tabs';
@@ -289,7 +289,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cardHasNote => 'Has a note';
+  String get cardHasNote => 'Has a note';
 
   @override
   String get tabDashboard => 'Dashboard';
@@ -580,7 +580,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String vehicleDeleteUnsupportedMessage(String required, String current) {
-    return 'Deleting a vehicle requires LubeLogger $required or newer, but your server is running $current. Update the server to use this.';
+    return 'Deleting a vehicle requires LubeLogger $required or newer, but your server is running $current. Update the server to use this.';
   }
 
   @override
@@ -643,12 +643,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String attachmentUploadRejected(String size, int status) {
-    return 'The server rejected this upload ($size MB, HTTP $status). The file is probably too large for the server or for a proxy in front of it.';
+    return 'The server rejected this upload ($size MB, HTTP $status). The file is probably too large for the server or for a proxy in front of it.';
   }
 
   @override
   String attachmentUploadInterrupted(String size) {
-    return 'The upload was interrupted ($size MB). On a slow connection a large file may not get through.';
+    return 'The upload was interrupted ($size MB). On a slow connection a large file may not get through.';
   }
 
   @override
@@ -690,7 +690,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get validationRequired => 'Required';
 
   @override
-  String get validationNumber => 'Enter a valid number';
+  String get validationNumber => 'Enter a valid number';
 
   @override
   String get recordAdded => 'Record added';
@@ -745,7 +745,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errUnauthorized =>
-      'Authentication failed or the key lacks the required permission.';
+      'Authentication failed, or the key lacks the required permission.';
 
   @override
   String get errForbidden => 'You do not have permission for this action.';
@@ -774,7 +774,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errInvalidCredentials => 'Invalid username or password.';
 
   @override
-  String get errApiKeyRejected => 'The API key was rejected by the server.';
+  String get errApiKeyRejected => 'The server rejected the API key.';
 
   @override
   String appVersion(String version, String build) {
@@ -814,7 +814,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotificationsNote =>
-      'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.';
+      'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.';
 
   @override
   String get notifRemindersToggle => 'Past-due reminders';
@@ -843,10 +843,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDiagnosticsNote =>
-      'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.';
+      'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.';
 
   @override
-  String get bugReportTitle => 'Report a bug or an idea';
+  String get bugReportTitle => 'Report a bug or an idea';
 
   @override
   String get bugReportLogScreens => 'Screens you open and buttons you press';
@@ -897,7 +897,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planDoneReadOnly =>
-      'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
+      'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.';
 
   @override
   String get syncTitle => 'Sync';
@@ -1002,7 +1002,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsBackgroundRefreshSub =>
-      'Keeps the stored copy current, so the app opens on your records instead of a spinner.';
+      'Keeps the stored copy current, so the app opens on your records instead of a spinner.';
 
   @override
   String get settingsStoredData => 'Stored data';

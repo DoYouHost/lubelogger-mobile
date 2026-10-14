@@ -141,7 +141,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
             return null;
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _make,
           enabled: !_submitting,
@@ -149,7 +149,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           decoration: dashFieldDecoration(t, labelText: l10n.formVehicleMake),
           validator: _requiredValidator,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _model,
           enabled: !_submitting,
@@ -157,7 +157,7 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           decoration: dashFieldDecoration(t, labelText: l10n.formVehicleModel),
           validator: _requiredValidator,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _licensePlate,
           enabled: !_submitting,
@@ -168,22 +168,27 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
           ),
           validator: _requiredValidator,
         ),
-        const SizedBox(height: 14),
-        DropdownButtonFormField<_FuelType>(
-          initialValue: _fuelType,
-          decoration: dashFieldDecoration(
-            t,
-            labelText: l10n.formVehicleFuelType,
-          ),
-          items: [
+        const SizedBox(height: DashSpace.lg),
+        dashCombo<_FuelType>(
+          context,
+          id: 'form.fuel_type',
+          label: Text(l10n.formVehicleFuelType),
+          initialSelection: _fuelType,
+          enabled: !_submitting,
+          entries: [
             for (final v in _FuelType.values)
-              DropdownMenuItem(value: v, child: Text(v.label(l10n))),
+              DropdownMenuEntry(
+                value: v,
+                label: v.label(l10n),
+                labelWidget: logTag(
+                  'form.fuel_type.option',
+                  Text(v.label(l10n)),
+                ),
+              ),
           ],
-          onChanged: _submitting
-              ? null
-              : (v) => setState(() => _fuelType = v ?? _fuelType),
+          onSelected: (v) => setState(() => _fuelType = v ?? _fuelType),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: DashSpace.sm),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.formVehicleUseHours),
@@ -198,13 +203,13 @@ class _VehicleFormState extends ConsumerState<_VehicleForm> {
               ? null
               : (v) => setState(() => _odometerOptional = v),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DashSpace.sm),
         TextFormField(
           controller: _tags,
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         ExtraFieldsField(
           recordType: ExtraFieldRecordType.vehicle,
           initial: _extraFields,

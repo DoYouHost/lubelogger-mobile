@@ -1,0 +1,45 @@
+# lubelogger's half of `dart run app_guards:l10n_language` (the LanguageTool
+# check behind `just l10n-check`). The engine and the rules every app shares
+# live in app_guards; what is here is this app's own copy and vocabulary.
+
+# The branch the default run diffs against.
+base = "dev"
+
+# Rules this app's own copy overrules, each checked against the existing
+# strings rather than assumed.
+ignored_rules = [
+  # A UI label is a phrase and takes no full stop (73 hits, every one a label).
+  "BRAK_KROPKI",
+  # "śr. 5" — the chart's abbreviated label for an average starts lower case.
+  "UPPERCASE_SENTENCE_START",
+  # "LubeLoggera": the product name, inflected.
+  "NIETYPOWA_KOMBINACJA_DUZYCH_I_MALYCH_LITER",
+  # "Due odometer": a field label, not a misspelt "do".
+  "CONFUSION_DUE_DO",
+  # The English copy takes no serial comma, as bambuddy's does.
+  "SERIAL_COMMA_ON",
+  # "Ustaw jednostki, w jakich…": the rule misses the plural antecedent, and
+  # flags "w których" the same way.
+  "ZDANIE_PODRZEDNE_Z_KTORY_LUB_JAKI",
+]
+
+# Words a dictionary hit on says nothing about, matched case-insensitively.
+known_words = [
+  # The server this app talks to, and the protocol names its copy uses.
+  "LubeLogger", "API", "URL", "HTTP", "HTTPS",
+  # The chart range's short labels: "1 mo", "1 yr".
+  "mo", "yr",
+  # English the Polish copy quotes verbatim: "Licencje open source".
+  "open", "source",
+]
+
+# Each file with its LanguageTool language and the plural arm whose wording
+# agrees with the numeral a placeholder becomes (5): Polish puts 5 in `many`.
+[[files]]
+path = "lib/l10n/app_en.arb"
+language = "en-US"
+
+[[files]]
+path = "lib/l10n/app_pl.arb"
+language = "pl-PL"
+arm = "many"

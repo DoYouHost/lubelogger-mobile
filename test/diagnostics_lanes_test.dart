@@ -13,6 +13,10 @@ import 'package:dash_kit/dash_kit.dart';
 import 'package:lubelogger_mobile/features/vehicle/forms/record_form_scaffold.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 /// The lanes that exist so a failure the user *sees* is not invisible in the
 /// log: a fetch the app decided to swallow, a screen that gave up, an image
@@ -244,7 +248,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Save'));
+      await tester.tap(find.text(en.actionSave));
       await tester.pump();
 
       final record = only(await stopAndRead(), 'submit');

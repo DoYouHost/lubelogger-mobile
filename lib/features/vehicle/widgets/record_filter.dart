@@ -136,7 +136,7 @@ class RecordFilterBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final t = DashTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: DashSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -167,9 +167,9 @@ class RecordFilterBar extends StatelessWidget {
                             tooltip: l10n.recordsSearchClear,
                           ).tagged('records.search.clear'),
                   ),
-                ),
+                ).tagged('records.search'),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: DashSpace.sm),
               PopupMenuButton<int>(
                 tooltip: l10n.recordsSortBy,
                 icon: Icon(Icons.sort, color: t.textSecondary),
@@ -179,7 +179,7 @@ class RecordFilterBar extends StatelessWidget {
                     CheckedPopupMenuItem<int>(
                       value: i,
                       checked: i == sortIndex,
-                      child: Text(sortLabels[i]),
+                      child: logTag('records.sort.option', Text(sortLabels[i])),
                     ),
                 ],
               ).tagged('records.sort'),
@@ -197,17 +197,17 @@ class RecordFilterBar extends StatelessWidget {
             ],
           ),
           if (activeTags.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: DashSpace.sm),
             Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: DashSpace.sm,
+              runSpacing: DashSpace.sm,
               children: [
                 for (final tag in activeTags)
                   RecordTagChip(
                     tag: tag,
                     selected: true,
                     onTap: () => onTagTap(tag),
-                  ),
+                  ).tagged('records.tag'),
               ],
             ),
           ],
@@ -240,7 +240,10 @@ class RecordTagChip extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DashSpace.sm,
+          vertical: DashSpace.xs,
+        ),
         decoration: BoxDecoration(
           color: accent.withValues(alpha: selected ? 0.22 : 0.10),
           borderRadius: BorderRadius.circular(20),
@@ -261,7 +264,7 @@ class RecordTagChip extends StatelessWidget {
               ),
             ),
             if (selected) ...[
-              const SizedBox(width: 3),
+              const SizedBox(width: DashSpace.xs),
               Icon(Icons.close, size: 12, color: accent),
             ],
           ],

@@ -6,6 +6,8 @@ analyzer:
     # Generated localizations and json_serializable output.
     - lib/l10n/app_localizations*.dart
     - "**/*.g.dart"
+    - build/**
+    - android/**
 
 linter:
   rules:

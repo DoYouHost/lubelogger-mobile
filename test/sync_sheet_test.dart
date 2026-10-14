@@ -8,6 +8,11 @@ import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
 import 'package:lubelogger_mobile/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lubelogger_mobile/core/models/vehicle_tab.dart';
+import 'package:lubelogger_mobile/features/common/vehicle_tab_ui.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 /// A write held on the phone is invisible everywhere else in the app — the list
 /// it belongs to still shows what the server has — so what the sheet says about
@@ -94,10 +99,13 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('2 changes waiting to be sent'), findsOneWidget);
-    expect(find.text('Add Fuel'), findsOneWidget);
-    expect(find.text('Delete Notes'), findsOneWidget);
-    expect(find.text('Send now'), findsOneWidget);
+    expect(find.text(en.syncPendingCount(2)), findsOneWidget);
+    expect(find.text(en.syncOpAdd(VehicleTab.fuel.label(en))), findsOneWidget);
+    expect(
+      find.text(en.syncOpDelete(VehicleTab.note.label(en))),
+      findsOneWidget,
+    );
+    expect(find.text(en.syncSendNow), findsOneWidget);
   });
 
   testWidgets('a refused write is set apart, with the reason and a way out', (
@@ -126,14 +134,14 @@ void main() {
     showSyncSheet(context);
     await tester.pumpAndSettle();
 
-    expect(find.text('Refused by the server'), findsOneWidget);
+    expect(find.text(en.syncRejectedTitle), findsOneWidget);
     expect(find.text('Progress cannot be set to Done.'), findsOneWidget);
     // Nothing is queued, so the sheet must not offer to send anything.
-    expect(find.text('Send now'), findsNothing);
+    expect(find.text(en.syncSendNow), findsNothing);
 
-    await tester.tap(find.text('Discard').first);
+    await tester.tap(find.text(en.syncDiscard).first);
     await tester.pumpAndSettle();
-    expect(find.text('Refused by the server'), findsNothing);
+    expect(find.text(en.syncRejectedTitle), findsNothing);
     expect(queue.rejected, isEmpty);
   });
 }

@@ -150,4 +150,28 @@ void main() {
     expect(reported.single.value, matches(RegExp(r'^\d{2}\.\d{2}\.\d{4}$')));
     expect(find.text(reported.single.value), findsOneWidget);
   });
+
+  testWidgets('a stored date outside the calendar still opens it', (
+    tester,
+  ) async {
+    // `showDatePicker` asserts that it opens inside its range; a value typed on
+    // the server before 1900 used to throw instead of opening the picker.
+    await pump(
+      tester,
+      initial: const [ExtraField(name: 'Warranty until', value: '01.01.1850')],
+      templates: {
+        ExtraFieldRecordType.service: const [
+          ExtraField(name: 'Warranty until', fieldType: ExtraFieldType.date),
+        ],
+      },
+    );
+
+    await tester.tap(find.text('01.01.1850'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    expect(reported.last.value, '01.01.1900');
+  });
 }

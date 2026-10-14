@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsUnitsMetricNote.
   ///
   /// In en, this message translates to:
-  /// **'Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.'**
+  /// **'Set the units your LubeLogger server stores values in (metric = km & liters). The app converts them to your chosen display units.'**
   String get settingsUnitsMetricNote;
 
   /// No description provided for @settingsVisibleTabs.
@@ -611,7 +611,7 @@ abstract class AppLocalizations {
   /// Long-press text on a record card's note icon.
   ///
   /// In en, this message translates to:
-  /// **'Has a note'**
+  /// **'Has a note'**
   String get cardHasNote;
 
   /// No description provided for @tabDashboard.
@@ -1139,7 +1139,7 @@ abstract class AppLocalizations {
   /// No description provided for @vehicleDeleteUnsupportedMessage.
   ///
   /// In en, this message translates to:
-  /// **'Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.'**
+  /// **'Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.'**
   String vehicleDeleteUnsupportedMessage(String required, String current);
 
   /// No description provided for @actionOk.
@@ -1241,13 +1241,13 @@ abstract class AppLocalizations {
   /// Shown for 413/502/504, where retrying the same file cannot help — so the message must not say 'try again'.
   ///
   /// In en, this message translates to:
-  /// **'The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.'**
+  /// **'The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.'**
   String attachmentUploadRejected(String size, int status);
 
   /// No description provided for @attachmentUploadInterrupted.
   ///
   /// In en, this message translates to:
-  /// **'The upload was interrupted ({size} MB). On a slow connection a large file may not get through.'**
+  /// **'The upload was interrupted ({size} MB). On a slow connection a large file may not get through.'**
   String attachmentUploadInterrupted(String size);
 
   /// No description provided for @attachmentOpenError.
@@ -1325,7 +1325,7 @@ abstract class AppLocalizations {
   /// No description provided for @validationNumber.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid number'**
+  /// **'Enter a valid number'**
   String get validationNumber;
 
   /// No description provided for @recordAdded.
@@ -1427,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @errUnauthorized.
   ///
   /// In en, this message translates to:
-  /// **'Authentication failed or the key lacks the required permission.'**
+  /// **'Authentication failed, or the key lacks the required permission.'**
   String get errUnauthorized;
 
   /// No description provided for @errForbidden.
@@ -1475,7 +1475,7 @@ abstract class AppLocalizations {
   /// No description provided for @errApiKeyRejected.
   ///
   /// In en, this message translates to:
-  /// **'The API key was rejected by the server.'**
+  /// **'The server rejected the API key.'**
   String get errApiKeyRejected;
 
   /// App version + build number, shown in Settings > About.
@@ -1541,7 +1541,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotificationsNote.
   ///
   /// In en, this message translates to:
-  /// **'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.'**
+  /// **'Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it\'s resolved.'**
   String get settingsNotificationsNote;
 
   /// No description provided for @notifRemindersToggle.
@@ -1589,13 +1589,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDiagnosticsNote.
   ///
   /// In en, this message translates to:
-  /// **'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.'**
+  /// **'Report a bug with a recording of what the app was doing, or ask for a change or a new feature.'**
   String get settingsDiagnosticsNote;
 
   /// No description provided for @bugReportTitle.
   ///
   /// In en, this message translates to:
-  /// **'Report a bug or an idea'**
+  /// **'Report a bug or an idea'**
   String get bugReportTitle;
 
   /// No description provided for @bugReportLogScreens.
@@ -1679,7 +1679,7 @@ abstract class AppLocalizations {
   /// Warning shown on the plan form when the item's progress is Done
   ///
   /// In en, this message translates to:
-  /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
+  /// **'This plan is done. LubeLogger\'s API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.'**
   String get planDoneReadOnly;
 
   /// No description provided for @syncTitle.
@@ -1817,7 +1817,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsBackgroundRefreshSub.
   ///
   /// In en, this message translates to:
-  /// **'Keeps the stored copy current, so the app opens on your records instead of a spinner.'**
+  /// **'Keeps the stored copy current, so the app opens on your records instead of a spinner.'**
   String get settingsBackgroundRefreshSub;
 
   /// No description provided for @settingsStoredData.

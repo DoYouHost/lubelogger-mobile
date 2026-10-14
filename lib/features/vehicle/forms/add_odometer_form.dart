@@ -118,7 +118,12 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
       // Lift the sheet above the keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.xl,
+          DashSpace.xs,
+          DashSpace.xl,
+          DashSpace.xl,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -153,12 +158,12 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   ).tagged('form.close'),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DashSpace.sm),
               DateField(
                 text: units.formatDate(_date),
                 onPick: _submitting ? null : _pickDate,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _odometer,
                 enabled: !_submitting,
@@ -196,7 +201,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   return null;
                 },
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
@@ -205,7 +210,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   labelText: l10n.formTagsOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _notes,
                 enabled: !_submitting,
@@ -216,21 +221,21 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   labelText: l10n.formNotesOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               ExtraFieldsField(
                 recordType: ExtraFieldRecordType.odometer,
                 initial: _extraFields,
                 enabled: !_submitting,
                 onChanged: (fields) => _extraFields = fields,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               AttachmentsField(
                 initial: _files,
                 enabled: !_submitting,
                 onChanged: (files) => _files = files,
               ),
               if (_error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DashSpace.md),
                 Text(
                   _error!,
                   style: TextStyle(
@@ -239,7 +244,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: DashSpace.xl),
               Row(
                 children: [
                   Expanded(
@@ -250,7 +255,7 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
                       child: Text(l10n.actionCancel),
                     ).tagged('form.cancel'),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: DashSpace.md),
                   Expanded(
                     child: FilledButton(
                       onPressed: _submitting ? null : _submit,
@@ -317,9 +322,9 @@ class _AddOdometerFormState extends ConsumerState<_AddOdometerForm> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
+    final picked = await pickDate(
+      context,
+      initial: _date,
       firstDate: DateTime(1900),
       lastDate: DateTime(_date.year + 1, 12, 31),
     );

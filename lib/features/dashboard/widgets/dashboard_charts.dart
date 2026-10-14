@@ -26,7 +26,7 @@ class ChartCard extends StatelessWidget {
     final t = DashTokens.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DashSpace.lg),
       decoration: BoxDecoration(
         gradient: t.cardGradient,
         borderRadius: BorderRadius.circular(16),
@@ -50,11 +50,14 @@ class ChartCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+                if (trailing != null) ...[
+                  const SizedBox(width: DashSpace.md),
+                  trailing!,
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: DashSpace.lg),
           child,
         ],
       ),
@@ -99,7 +102,12 @@ class ChartRangeChip extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(999),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 5, 6, 5),
+              padding: const EdgeInsets.fromLTRB(
+                DashSpace.md,
+                DashSpace.xs,
+                DashSpace.sm,
+                DashSpace.xs,
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -109,7 +117,7 @@ class ChartRangeChip extends StatelessWidget {
                       size: 13,
                       color: t.textSecondary,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: DashSpace.xs),
                   ],
                   Text(
                     label,
@@ -175,7 +183,7 @@ class CategoryShareChart extends StatelessWidget {
           height: 12,
           segments: [for (final i in items) (color: i.color, value: i.value)],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         for (final item in items)
           _ShareRow(
             item: item,
@@ -209,7 +217,7 @@ class _ShareRow extends StatelessWidget {
       child: Row(
         children: [
           _Swatch(color: item.color, size: 10, radius: 3, hollow: muted),
-          const SizedBox(width: 10),
+          const SizedBox(width: DashSpace.md),
           Expanded(
             child: Text(
               item.label,
@@ -281,7 +289,12 @@ class UrgencyChart extends StatelessWidget {
       return _NoData(label: emptyLabel, height: 96);
     }
     Widget tile(UrgencyItem item) => Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+      padding: const EdgeInsets.fromLTRB(
+        DashSpace.md,
+        DashSpace.md,
+        DashSpace.md,
+        DashSpace.sm,
+      ),
       decoration: BoxDecoration(
         color: t.subCard,
         borderRadius: BorderRadius.circular(12),
@@ -293,7 +306,7 @@ class UrgencyChart extends StatelessWidget {
           Row(
             children: [
               _Swatch(color: item.color, size: 8, radius: 4),
-              const SizedBox(width: 7),
+              const SizedBox(width: DashSpace.sm),
               Flexible(
                 child: Text(
                   item.label,
@@ -309,7 +322,7 @@ class UrgencyChart extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: DashSpace.xs),
           Text(
             '${item.count}',
             style: TextStyle(
@@ -332,13 +345,13 @@ class UrgencyChart extends StatelessWidget {
             for (final i in items) (color: i.color, value: i.count.toDouble()),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         for (var row = 0; row < items.length; row += 2) ...[
-          if (row > 0) const SizedBox(height: 8),
+          if (row > 0) const SizedBox(height: DashSpace.sm),
           Row(
             children: [
               Expanded(child: tile(items[row])),
-              const SizedBox(width: 8),
+              const SizedBox(width: DashSpace.sm),
               Expanded(
                 child: row + 1 < items.length
                     ? tile(items[row + 1])
@@ -443,8 +456,8 @@ class _ExpenseDistanceChartState extends State<ExpenseDistanceChart> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Wrap(
-          spacing: 28,
-          runSpacing: 8,
+          spacing: DashSpace.xxl,
+          runSpacing: DashSpace.sm,
           children: [
             _Figure(
               label: widget.expensesLabel,
@@ -461,7 +474,7 @@ class _ExpenseDistanceChartState extends State<ExpenseDistanceChart> {
               ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         if (totalCost <= 0 && !hasDistance)
           _NoData(
             label: widget.emptyLabel,
@@ -519,12 +532,12 @@ class _ExpenseDistanceChartState extends State<ExpenseDistanceChart> {
               );
             },
           ),
-        const SizedBox(height: 12),
+        const SizedBox(height: DashSpace.md),
         ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 18),
           child: Wrap(
-            spacing: 16,
-            runSpacing: 8,
+            spacing: DashSpace.lg,
+            runSpacing: DashSpace.sm,
             children: [
               for (final c in chartCategoryOrder)
                 if (present.contains(c))
@@ -1328,7 +1341,7 @@ class _Figure extends StatelessWidget {
             color: t.textTertiary,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: DashSpace.xs),
         Text(
           value,
           style: TextStyle(
@@ -1364,7 +1377,12 @@ class _Tooltip extends StatelessWidget {
     return IgnorePointer(
       child: Container(
         constraints: const BoxConstraints(minWidth: 150, maxWidth: 200),
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.md,
+          DashSpace.md,
+          DashSpace.md,
+          DashSpace.md,
+        ),
         decoration: BoxDecoration(
           color: t.overlaySurface,
           borderRadius: BorderRadius.circular(12),
@@ -1393,17 +1411,17 @@ class _Tooltip extends StatelessWidget {
             for (final row in rows)
               if (row == null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  padding: const EdgeInsets.symmetric(vertical: DashSpace.xs),
                   child: Divider(height: 1, thickness: 1, color: t.hairline),
                 )
               else
                 Padding(
-                  padding: const EdgeInsets.only(top: 5),
+                  padding: const EdgeInsets.only(top: DashSpace.xs),
                   child: Row(
                     children: [
                       if (row.swatch != null) ...[
                         _Swatch(color: row.swatch!, size: 8, radius: 2),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: DashSpace.sm),
                       ],
                       Expanded(
                         child: Text(
@@ -1418,7 +1436,7 @@ class _Tooltip extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: DashSpace.md),
                       Text(
                         row.value,
                         style: TextStyle(
@@ -1492,7 +1510,7 @@ class _LegendItem extends StatelessWidget {
         line
             ? Container(width: 14, height: 1.5, color: color)
             : _Swatch(color: color, size: 9, radius: 2),
-        const SizedBox(width: 6),
+        const SizedBox(width: DashSpace.sm),
         Text(
           label,
           style: TextStyle(

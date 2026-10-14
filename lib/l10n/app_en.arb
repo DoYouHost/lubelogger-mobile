@@ -47,7 +47,7 @@
       "symbol": { "type": "String" }
     }
   },
-  "settingsUnitsMetricNote": "Set the units your LubeLogger server stores values in (metric = km & litres). The app converts them to your chosen display units.",
+  "settingsUnitsMetricNote": "Set the units your LubeLogger server stores values in (metric = km & liters). The app converts them to your chosen display units.",
   "settingsVisibleTabs": "Visible tabs",
   "settingsVisibleTabsNote": "Choose which record tabs appear on the vehicle screen and in the add menu, and drag to reorder them. The Dashboard is always shown first.",
 
@@ -135,7 +135,7 @@
       "count": { "type": "int" }
     }
   },
-  "cardHasNote": "Has a note",
+  "cardHasNote": "Has a note",
   "@cardHasNote": {
     "description": "Long-press text on a record card's note icon."
   },
@@ -276,7 +276,7 @@
   "confirmDeleteVehicleFinalMessage": "This is your last chance to cancel. The vehicle and every record for it will be gone for good.",
   "actionDeletePermanently": "Delete permanently",
   "vehicleDeleteUnsupportedTitle": "Server update required",
-  "vehicleDeleteUnsupportedMessage": "Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.",
+  "vehicleDeleteUnsupportedMessage": "Deleting a vehicle requires LubeLogger {required} or newer, but your server is running {current}. Update the server to use this.",
   "@vehicleDeleteUnsupportedMessage": {
     "placeholders": {
       "required": { "type": "String" },
@@ -326,7 +326,7 @@
   "attachmentsLabel": "Attachments (optional)",
   "attachmentAddButton": "Add file",
   "attachmentUploadError": "Couldn't upload the file. Try again.",
-  "attachmentUploadRejected": "The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.",
+  "attachmentUploadRejected": "The server rejected this upload ({size} MB, HTTP {status}). The file is probably too large for the server or for a proxy in front of it.",
   "@attachmentUploadRejected": {
     "description": "Shown for 413/502/504, where retrying the same file cannot help — so the message must not say 'try again'.",
     "placeholders": {
@@ -334,7 +334,7 @@
       "status": { "type": "int" }
     }
   },
-  "attachmentUploadInterrupted": "The upload was interrupted ({size} MB). On a slow connection a large file may not get through.",
+  "attachmentUploadInterrupted": "The upload was interrupted ({size} MB). On a slow connection a large file may not get through.",
   "@attachmentUploadInterrupted": {
     "placeholders": {
       "size": { "type": "String" }
@@ -362,7 +362,7 @@
   "actionSave": "Save",
   "actionDelete": "Delete",
   "validationRequired": "Required",
-  "validationNumber": "Enter a valid number",
+  "validationNumber": "Enter a valid number",
   "recordAdded": "Record added",
   "recordAddError": "Couldn't add the record. Try again.",
   "recordUpdated": "Record updated",
@@ -389,7 +389,7 @@
   "errMissingApiKey": "Enter your API key.",
 
   "errServerUnreachable": "Cannot reach the server. Check the address and your network.",
-  "errUnauthorized": "Authentication failed or the key lacks the required permission.",
+  "errUnauthorized": "Authentication failed, or the key lacks the required permission.",
   "errForbidden": "You do not have permission for this action.",
   "errBadResponse": "Unexpected server response (HTTP {status}).",
   "@errBadResponse": {
@@ -405,7 +405,7 @@
   "errConnection": "Connection error. Please try again.",
   "errMalformedResponse": "The server response could not be understood.",
   "errInvalidCredentials": "Invalid username or password.",
-  "errApiKeyRejected": "The API key was rejected by the server.",
+  "errApiKeyRejected": "The server rejected the API key.",
 
   "appVersion": "Version {version} ({build})",
   "@appVersion": {
@@ -435,7 +435,7 @@
   "roleRoot": "Root",
 
   "settingsNotifications": "Notifications",
-  "settingsNotificationsNote": "Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it's resolved.",
+  "settingsNotificationsNote": "Check for past-due reminders in the background (about every 3 hours) and post a notification. Each reminder notifies once until it's resolved.",
   "notifRemindersToggle": "Past-due reminders",
   "notifPermissionDenied": "Notification permission is required. Enable it in system settings.",
   "notifReminderChannelName": "Reminders",
@@ -450,8 +450,8 @@
   },
 
   "settingsDiagnostics": "Bugs and ideas",
-  "settingsDiagnosticsNote": "Report a bug with a recording of what the app was doing, or ask for a change or a new feature.",
-  "bugReportTitle": "Report a bug or an idea",
+  "settingsDiagnosticsNote": "Report a bug with a recording of what the app was doing, or ask for a change or a new feature.",
+  "bugReportTitle": "Report a bug or an idea",
 
   "bugReportLogScreens": "Screens you open and buttons you press",
   "bugReportLogRequests": "Requests to the server and its answers",
@@ -474,7 +474,7 @@
   },
   "statAvgConsumption": "Average Consumption",
   "chartConsumption": "Consumption",
-  "planDoneReadOnly": "This plan is done. LubeLogger's API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.",
+  "planDoneReadOnly": "This plan is done. LubeLogger's API refuses to store a finished plan, and every state it would accept sends it backwards — so it can be read and deleted here, but not edited. Change it on the planner board.",
   "@planDoneReadOnly": {
     "description": "Warning shown on the plan form when the item's progress is Done"
   },
@@ -524,7 +524,7 @@
   "syncOfflineTooltip": "No connection to the server",
   "settingsOfflineSection": "Offline",
   "settingsBackgroundRefresh": "Refresh in the background",
-  "settingsBackgroundRefreshSub": "Keeps the stored copy current, so the app opens on your records instead of a spinner.",
+  "settingsBackgroundRefreshSub": "Keeps the stored copy current, so the app opens on your records instead of a spinner.",
   "settingsStoredData": "Stored data",
   "settingsStoredDataSize": "{size} on this phone",
   "@settingsStoredDataSize": {

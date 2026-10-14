@@ -52,7 +52,12 @@ class VehicleCard extends StatelessWidget {
               children: [
                 _photo(t),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(
+                    DashSpace.lg,
+                    DashSpace.lg,
+                    DashSpace.lg,
+                    DashSpace.lg,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -68,7 +73,7 @@ class VehicleCard extends StatelessWidget {
                       ),
                       if (v.licensePlate.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.only(top: DashSpace.xs),
                           child: Text(v.licensePlate, style: _sub(t)),
                         ),
                     ],
@@ -98,7 +103,7 @@ class VehicleCard extends StatelessWidget {
                 useHours: info.vehicle.useHours,
               ).distance(info.lastReportedOdometer),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DashSpace.sm),
             _Badge(
               icon: Icons.payments_outlined,
               label: Formatters.currency(info.totalCost, currencySymbol),
@@ -155,7 +160,10 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DashSpace.md,
+        vertical: DashSpace.sm,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xCC000000),
         borderRadius: BorderRadius.circular(999),
@@ -164,7 +172,7 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 6),
+          const SizedBox(width: DashSpace.sm),
           Text(
             label,
             style: const TextStyle(

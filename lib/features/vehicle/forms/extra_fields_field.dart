@@ -138,7 +138,7 @@ class _ExtraFieldsFieldState extends ConsumerState<ExtraFieldsField> {
             ),
           ),
           for (final field in fields) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DashSpace.md),
             _input(field, l10n, t),
           ],
         ],
@@ -209,9 +209,9 @@ class _ExtraFieldsFieldState extends ConsumerState<ExtraFieldsField> {
       : null;
 
   Future<void> _pickDate(ExtraField field) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _parseDate(field.value, _dateFormat) ?? DateTime.now(),
+    final picked = await pickDate(
+      context,
+      initial: _parseDate(field.value, _dateFormat) ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime(DateTime.now().year + 50, 12, 31),
     );

@@ -74,6 +74,9 @@ void main() {
       // Twice: the destructive confirmation and the merely risky one.
       'lib/features/common/confirm_dialog.dart: "confirm.\$what"',
       'lib/features/common/confirm_dialog.dart: "confirm.\$what"',
+      // A settings select's rows: `id` is the literal the call site names it
+      // by (`settings.currency`), so a row records as `settings.currency.option`.
+      'lib/features/settings/settings_screen.dart: "\$id.option"',
       'lib/features/settings/settings_screen.dart: "settings.\$id"',
       'lib/features/vehicle/add_record_sheet.dart: "add_sheet.\${tab.name}"',
       'lib/features/vehicle/forms/add_generic_record_form.dart: '

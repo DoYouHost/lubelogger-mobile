@@ -192,14 +192,14 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
             ),
           ),
           if (_files.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: DashSpace.sm),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: DashSpace.sm,
+              runSpacing: DashSpace.sm,
               children: [for (final f in _files) _chip(t, f)],
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: DashSpace.md),
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
@@ -215,7 +215,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
             ),
           ),
           if (_error != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: DashSpace.sm),
             Text(
               _error!,
               style: TextStyle(
@@ -230,7 +230,12 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
   }
 
   Widget _chip(DashTokens t, Attachment file) => Container(
-    padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+    padding: const EdgeInsets.fromLTRB(
+      DashSpace.md,
+      DashSpace.xs,
+      DashSpace.xs,
+      DashSpace.xs,
+    ),
     decoration: BoxDecoration(
       color: t.subCard,
       borderRadius: BorderRadius.circular(10),
@@ -243,7 +248,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
           onTap: () => openAttachment(context, ref, file),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
+            padding: const EdgeInsets.symmetric(vertical: DashSpace.xs),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -252,7 +257,7 @@ class _AttachmentsFieldState extends ConsumerState<AttachmentsField> {
                   size: 15,
                   color: t.textTertiary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: DashSpace.sm),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 180),
                   child: Text(

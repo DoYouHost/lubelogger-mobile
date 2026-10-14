@@ -110,7 +110,12 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
       // Lift the sheet above the keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.xl,
+          DashSpace.xs,
+          DashSpace.xl,
+          DashSpace.xl,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -143,18 +148,18 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                   ).tagged('form.close'),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DashSpace.sm),
               DateField(
                 text: units.formatDate(_date),
                 onPick: _submitting ? null : _pickDate,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               _numberField(
                 controller: _odometer,
                 label: l10n.formOdometerLabel(units.distanceLabel),
                 decimal: false,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               _numberField(
                 controller: _fuel,
                 label: units.isElectric
@@ -164,14 +169,14 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
               // Electric only, like the web's dual-range slider: the server
               // reads state of charge for no other kind of vehicle.
               if (units.isElectric) ...[
-                const SizedBox(height: 14),
+                const SizedBox(height: DashSpace.lg),
                 _SocField(
                   values: _soc,
                   enabled: !_submitting,
                   onChanged: (v) => setState(() => _soc = v),
                 ),
               ],
-              const SizedBox(height: 8),
+              const SizedBox(height: DashSpace.sm),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.formFillToFull),
@@ -190,13 +195,13 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                     ? null
                     : (v) => setState(() => _missedFuelUp = v ?? false),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: DashSpace.sm),
               _numberField(
                 controller: _cost,
                 label: l10n.colCost,
                 allowZero: true,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _tags,
                 enabled: !_submitting,
@@ -205,7 +210,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                   labelText: l10n.formTagsOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               TextFormField(
                 controller: _notes,
                 enabled: !_submitting,
@@ -216,21 +221,21 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                   labelText: l10n.formNotesOptional,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               ExtraFieldsField(
                 recordType: ExtraFieldRecordType.gas,
                 initial: _extraFields,
                 enabled: !_submitting,
                 onChanged: (fields) => _extraFields = fields,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DashSpace.lg),
               AttachmentsField(
                 initial: _files,
                 enabled: !_submitting,
                 onChanged: (files) => _files = files,
               ),
               if (_error != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DashSpace.md),
                 Text(
                   _error!,
                   style: TextStyle(
@@ -239,7 +244,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              const SizedBox(height: DashSpace.xl),
               Row(
                 children: [
                   Expanded(
@@ -250,7 +255,7 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
                       child: Text(l10n.actionCancel),
                     ).tagged('form.cancel'),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: DashSpace.md),
                   Expanded(
                     child: FilledButton(
                       onPressed: _submitting ? null : _submit,
@@ -305,9 +310,9 @@ class _AddFuelFormState extends ConsumerState<_AddFuelForm> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
+    final picked = await pickDate(
+      context,
+      initial: _date,
       firstDate: DateTime(1900),
       lastDate: DateTime(_date.year + 1, 12, 31),
     );

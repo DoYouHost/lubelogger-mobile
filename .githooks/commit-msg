@@ -1,0 +1,5 @@
+#!/bin/sh
+# One Conventional Commits line, nothing after it. The check itself is shared
+# with the other DoYouHost apps and lives in app_guards (tool/commit-msg there).
+# Install (once per clone): just hooks
+exec dart run app_guards:commit_msg "$1"

@@ -1,3 +1,4 @@
+import 'package:app_diagnostics/app_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -107,13 +108,23 @@ class _RangeSheet extends StatelessWidget {
       left: false,
       right: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.fromLTRB(
+          DashSpace.lg,
+          0,
+          DashSpace.lg,
+          DashSpace.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+              padding: const EdgeInsets.fromLTRB(
+                DashSpace.xs,
+                0,
+                DashSpace.xs,
+                DashSpace.md,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -126,7 +137,7 @@ class _RangeSheet extends StatelessWidget {
                       color: t.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: DashSpace.xs),
                   Text(
                     chartTitle,
                     style: TextStyle(
@@ -141,12 +152,14 @@ class _RangeSheet extends StatelessWidget {
             ),
             for (final preset in ChartRangePreset.values)
               _Option(
+                id: 'chartRange.preset',
                 label: chartPresetLabel(preset, l10n),
                 selected: range is PresetRange && range.preset == preset,
                 badge: preset == defaultPreset ? l10n.chartRangeDefault : null,
                 onTap: () => Navigator.pop(context, PresetRange(preset)),
               ),
             _Option(
+              id: 'chartRange.custom',
               label: l10n.chartRangeCustom,
               selected: range is CustomRange,
               detail: range is CustomRange
@@ -156,7 +169,12 @@ class _RangeSheet extends StatelessWidget {
               onTap: () => Navigator.pop(context, _customRequested),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+              padding: const EdgeInsets.fromLTRB(
+                DashSpace.xs,
+                DashSpace.md,
+                DashSpace.xs,
+                0,
+              ),
               child: Text(
                 l10n.chartRangeSettingsHint,
                 style: TextStyle(
@@ -175,6 +193,7 @@ class _RangeSheet extends StatelessWidget {
 
 class _Option extends StatelessWidget {
   const _Option({
+    required this.id,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -183,6 +202,8 @@ class _Option extends StatelessWidget {
     this.trailing,
   });
 
+  /// Log identifier: every preset shares one, the custom range has its own.
+  final String id;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -202,7 +223,7 @@ class _Option extends StatelessWidget {
       ),
     );
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: DashSpace.xs),
       child: Material(
         color: selected ? t.accent.withValues(alpha: 0.10) : Colors.transparent,
         shape: shape,
@@ -216,21 +237,21 @@ class _Option extends StatelessWidget {
               constraints: const BoxConstraints(minHeight: 52),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: DashSpace.md,
+                  vertical: DashSpace.sm,
                 ),
                 child: Row(
                   children: [
                     _RadioMark(selected: selected),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: DashSpace.lg),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
+                            spacing: DashSpace.sm,
+                            runSpacing: DashSpace.xs,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
@@ -253,7 +274,7 @@ class _Option extends StatelessWidget {
                           ),
                           if (detail != null)
                             Padding(
-                              padding: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.only(top: DashSpace.xs),
                               child: Text(
                                 detail!,
                                 style: TextStyle(
@@ -276,7 +297,7 @@ class _Option extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ).tagged(id);
   }
 }
 

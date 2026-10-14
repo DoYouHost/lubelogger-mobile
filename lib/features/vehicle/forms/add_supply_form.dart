@@ -114,7 +114,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           text: units.formatDate(_date),
           onPick: _submitting ? null : _pickDate,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _description,
           enabled: !_submitting,
@@ -123,7 +123,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
               ? l10n.validationRequired
               : null,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _partNumber,
           enabled: !_submitting,
@@ -132,7 +132,7 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
             labelText: l10n.formSupplyPartNumber,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _partSupplier,
           enabled: !_submitting,
@@ -141,11 +141,11 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
             labelText: l10n.formSupplyPartSupplier,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         _numberField(controller: _quantity, label: l10n.formSupplyQuantity),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         _numberField(controller: _cost, label: l10n.colCost, allowZero: true),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _notes,
           enabled: !_submitting,
@@ -153,20 +153,20 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
           maxLines: 4,
           decoration: dashFieldDecoration(t, labelText: l10n.formNotesOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _tags,
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         ExtraFieldsField(
           recordType: ExtraFieldRecordType.supply,
           initial: _extraFields,
           enabled: !_submitting,
           onChanged: (fields) => _extraFields = fields,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         AttachmentsField(
           initial: _files,
           enabled: !_submitting,
@@ -206,9 +206,9 @@ class _AddSupplyFormState extends ConsumerState<_AddSupplyForm> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date,
+    final picked = await pickDate(
+      context,
+      initial: _date,
       firstDate: DateTime(1900),
       lastDate: DateTime(_date.year + 1, 12, 31),
     );

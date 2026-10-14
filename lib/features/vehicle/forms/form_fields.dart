@@ -88,7 +88,7 @@ class DateField extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: DashSpace.sm),
         SizedBox(
           width: 48,
           height: 48,

@@ -235,7 +235,12 @@ class _VehicleHeader extends ConsumerWidget {
           ].where((s) => s.isNotEmpty).join(' ');
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(
+        DashSpace.xs,
+        DashSpace.sm,
+        DashSpace.lg,
+        DashSpace.md,
+      ),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: t.hairline)),
       ),
@@ -246,7 +251,7 @@ class _VehicleHeader extends ConsumerWidget {
             onPressed: () => context.pop(),
           ).tagged('vehicle.back'),
           _Avatar(vehicle: vehicle, baseUrl: baseUrl, apiKey: apiKey),
-          const SizedBox(width: 12),
+          const SizedBox(width: DashSpace.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +269,7 @@ class _VehicleHeader extends ConsumerWidget {
                 ),
                 if (vehicle != null && vehicle!.licensePlate.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.only(top: DashSpace.xs),
                     child: Text(
                       '(${vehicle!.licensePlate})',
                       style: TextStyle(
@@ -359,7 +364,7 @@ class _VehicleTabBar extends StatelessWidget {
         ),
         labelColor: t.accentGoldInk,
         unselectedLabelColor: t.textSecondary,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+        labelPadding: const EdgeInsets.symmetric(horizontal: DashSpace.sm),
         labelStyle: const TextStyle(
           fontFamily: DashTokens.fontUi,
           fontSize: 13,
@@ -377,12 +382,12 @@ class _VehicleTabBar extends StatelessWidget {
               Tab(
                 height: 44,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: DashSpace.md),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(tab.icon, size: 17),
-                      const SizedBox(width: 7),
+                      const SizedBox(width: DashSpace.sm),
                       Text(tab.label),
                     ],
                   ),

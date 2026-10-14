@@ -1,0 +1,14 @@
+# lubelogger's half of `dart run app_guards:log_coverage`: what names a control
+# in this app's diagnostic log.
+
+# Calls that tag the widget they wrap. `logSurface` names a whole area — a form,
+# a sheet — and the probe hands that name down to every control inside it.
+tag_functions = ["logTag", "logSurface"]
+
+# Extension methods that tag the widget they hang off: `widget.tagged(id)`.
+tag_methods = ["tagged"]
+
+# Functions that tag whatever they are handed, so their arguments inherit the
+# name. `dashAppBar` names the whole bar, back button and actions included.
+[wrappers]
+dashAppBar = "chrome.appbar"

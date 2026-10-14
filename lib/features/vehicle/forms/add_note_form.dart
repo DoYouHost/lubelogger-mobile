@@ -105,7 +105,7 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
               ? l10n.validationRequired
               : null,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         TextFormField(
           controller: _body,
           enabled: !_submitting,
@@ -116,27 +116,27 @@ class _AddNoteFormState extends ConsumerState<_AddNoteForm> {
               ? l10n.validationRequired
               : null,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: DashSpace.sm),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.formNotePinned),
           value: _pinned,
           onChanged: _submitting ? null : (v) => setState(() => _pinned = v),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DashSpace.sm),
         TextFormField(
           controller: _tags,
           enabled: !_submitting,
           decoration: dashFieldDecoration(t, labelText: l10n.formTagsOptional),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         ExtraFieldsField(
           recordType: ExtraFieldRecordType.note,
           initial: _extraFields,
           enabled: !_submitting,
           onChanged: (fields) => _extraFields = fields,
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: DashSpace.lg),
         AttachmentsField(
           initial: _files,
           enabled: !_submitting,

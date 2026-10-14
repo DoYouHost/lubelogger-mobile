@@ -8,6 +8,10 @@ import 'package:lubelogger_mobile/features/vehicle/widgets/record_filter.dart';
 import 'package:lubelogger_mobile/features/vehicle/widgets/record_tabs.dart';
 import 'package:lubelogger_mobile/l10n/app_localizations.dart';
 import 'package:lubelogger_mobile/providers.dart';
+import 'package:lubelogger_mobile/l10n/app_localizations_en.dart';
+
+/// The copy the tests render in, read rather than spelled out.
+final en = AppLocalizationsEn();
 
 /// Record lists were sorted one way, forever, with no way to search them — and
 /// tags were stored and editable while being printed nowhere at all.
@@ -116,10 +120,10 @@ void main() {
       await pump(tester, [oil, brakes, tyres]);
 
       await search(tester, 'gearbox');
-      expect(find.text('No records match.'), findsOneWidget);
-      expect(find.text('No records yet.'), findsNothing);
+      expect(find.text(en.recordsNoMatches), findsOneWidget);
+      expect(find.text(en.recordsEmpty), findsNothing);
 
-      await tester.tap(find.text('Clear filters'));
+      await tester.tap(find.text(en.recordsClearFilters));
       await tester.pumpAndSettle();
       expect(find.text('Oil change'), findsOneWidget);
     });
@@ -129,7 +133,7 @@ void main() {
     ) async {
       await pump(tester, []);
 
-      expect(find.text('No records yet.'), findsOneWidget);
+      expect(find.text(en.recordsEmpty), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
     });
   });
@@ -200,7 +204,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.sort));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cost').last);
+      await tester.tap(find.text(en.colCost).last);
       await tester.pumpAndSettle();
 
       var order = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data);
@@ -224,7 +228,7 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.sort));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Description').last);
+      await tester.tap(find.text(en.colDescription).last);
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.arrow_upward), findsOneWidget);
